@@ -1,0 +1,36 @@
+# absolute path to the project folder
+project-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig
+pipeline-folder: /scratch/project_2001310/Pipeline-miRNA
+pipeline-config: miRNA-pipeline_config-bovreg_twinbull.yaml
+server-config: /scratch/project_2001310/BovReg_TwinBullSperm-orig/miRNA-pipeline_puhti-config.yaml
+scratch-folder: $LOCAL_SCRATCH
+species-id: bta  # used to filter mature.fa and hairpin.fa, check for required identifier.
+
+# absolute path to sample sheet (list of sample identifiers)
+rawsamples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/rawsamples
+samples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samples
+
+adapter: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/Adapter.fa
+tRNARef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/tRNA/bosTau8-tRNAs.fa
+phixRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/phix/phix174.fa
+matureRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/mature.fa
+hairpinRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/hairpin.fa
+reference: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa
+refAnnot: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf
+starbase: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/STAR
+
+
+params:
+  bowtie:
+    m: 1
+    mMulti: 5
+    k: 1
+    threads: 20
+  cutadapt:
+    minLength: 15
+    threads: 20
+    qualtrim: 10
+  fastx:
+    length: 20
+  extractSoftClipped:
+    length: 15

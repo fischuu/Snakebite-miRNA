@@ -1,0 +1,233 @@
+rule bowtie_createIndex_tRNA:
+    """
+    Create tRNA Bowtie Index (BOWTIE).
+    """
+    input:
+        config["tRNARef"]
+    output:
+        "%s.1.ebwt" % (config["tRNARef"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_tRNA.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_tRNA.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_tRNA"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_tRNA"]["time"],
+        mem=cluster["bowtie_createIndex_tRNA"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """
+    
+rule bowtie_createIndex_phix:
+    """
+    Create Bowtie Index for phix(BOWTIE).
+    """
+    input:
+        config["phixRef"]
+    output:
+        "%s.1.ebwt" % (config["phixRef"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_phix.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_phix.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_phix"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_phix"]["time"],
+        mem=cluster["bowtie_createIndex_phix"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """
+
+rule bash_prepare_mirdb_references:
+    """
+    Filter and adjust the mirDB references
+    """
+    input:
+        mature=config["matureRef"],
+        hairpin=config["hairpinRef"],
+        species=config["species-id"]
+    output:
+        mature="%s/References/mature_basesAdjusted.fa" % (config["project-folder"]),
+        matureSpecies="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"]),
+        hairpin="%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
+    log:
+        "%s/logs/BASH/prepare_mirdb_references.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BASH/prepare_mirdb_references.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # Change bases U to T
+     sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
+     sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
+
+     # Filter species
+     grep -A 1 '{input.species}' {output.mature}  > {output.matureSpecies}
+    """
+    
+rule bowtie_createIndex_mature:
+    """
+    Create Bowtie Index for mature(BOWTIE).
+    """
+    input:
+        "%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
+    output:
+        "%s/References/mature_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_mature.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_mature.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_mature"]["time"],
+        mem=cluster["bowtie_createIndex_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """
+    
+rule bowtie_createIndex_matureSpecies:
+    """
+    Create Bowtie Index for mature(BOWTIE).
+    """
+    input:
+        "%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"])
+    output:
+        "%s/References/mature_basesAdjusted_species.fa.1.ebwt" % (config["project-folder"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_mature_species.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_mature_species.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_mature"]["time"],
+        mem=cluster["bowtie_createIndex_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """
+
+rule bowtie_createIndex_hairpin:
+    """
+    Create Bowtie Index for hairpin(BOWTIE).
+    """
+    input:
+        "%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
+    output:
+        "%s/References/hairpin_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_hairpin.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_hairpin.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_hairpin"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_hairpin"]["time"],
+        mem=cluster["bowtie_createIndex_hairpin"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """
+    
+rule bowtie_createIndex_reference:
+    """
+    Create Bowtie Index for reference(BOWTIE).
+    """
+    input:
+        config["reference"]
+    output:
+        "%s.1.ebwt" % (config["reference"])
+    log:
+        "%s/logs/BOWTIE/bowtie_index_reference.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_index_reference.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["bowtie_createIndex_reference"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_createIndex_reference"]["time"],
+        mem=cluster["bowtie_createIndex_reference"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build --threads {threads} {input} {input} > {log} 2>&1;
+    """
+
+rule star_createIndex_mature:
+    """
+    Create Bowtie Index for mature.fa (STAR).
+    """
+    input:
+        fasta="%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
+    output:
+        "%s/chrName.txt" % (config["matureSTARIndex"])
+    log:
+        "%s/logs/STAR/star_index_mature.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_index_mature.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["matureSTARIndex"]
+    group: "star-index"
+    threads: cluster["star_createIndex_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["star_createIndex_mature"]["time"],
+        mem=cluster["star_createIndex_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        STAR --runThreadN {threads} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+    """ 
+    
+rule star_createIndex_mature_species:
+    """
+    Create Bowtie Index for mature_basesAdjusted_species.fa (STAR).
+    """
+    input:
+        fasta="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"])
+    output:
+        "%s/chrName.txt" % (config["matureSpeciesSTARIndex"])
+    log:
+        "%s/logs/STAR/star_index_mature_species.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_index_mature_species.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["matureSpeciesSTARIndex"]
+    group: "star-index"
+    threads: cluster["star_createIndex_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["star_createIndex_mature"]["time"],
+        mem=cluster["star_createIndex_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        STAR --runThreadN {threads} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+    """ 
+
+rule star_createIndex_reference:
+    """
+    Create Bowtie Index for reference (STAR).
+    """
+    input:
+        fasta=config["reference"]
+    output:
+        "%s/chrName.txt" % (config["referenceSTARIndex"])
+    log:
+        "%s/logs/STAR/star_index_reference.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_index_reference.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["referenceSTARIndex"]
+    group: "star-index"
+    threads: cluster["star_createIndex_reference"]["cpus-per-task"]
+    resources:
+        time=cluster["star_createIndex_reference"]["time"],
+        mem=cluster["star_createIndex_reference"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        STAR --runThreadN {threads}  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+    """    

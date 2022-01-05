@@ -1,0 +1,636 @@
+---
+title: "MiRNA-Pipeline report"
+subtitle: "QC and basic stats"
+author: "Daniel Fischer"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float:
+      toc_collapsed: true
+    number_sections: true
+    theme: lumen
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+#.libPaths(c("/projappl/project_2001746/R/libraries", .libPaths()))
+#library("knitr")
+library("GenomicTools")
+library("xtable")   # Needed for LaTeX output of the tables
+library("viridis")  # Needed for the colouring of the plots
+library("rjson")    # Needed for multiqc dgsb etail data
+library("DT")
+library("kableExtra")
+options(scipen=999,
+        stringsAsFactors=FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      cache = FALSE,
+                      cache.lazy = FALSE,
+                      dev = c('png', 'pdf'),
+                      fig.align = 'center', fig.height = 5, fig.width = 8.5)
+# To run locally on terminal type this command in the pipeline folder:
+# R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
+
+if(!is.element("snakemake",ls())){
+  projFolder <- "/scratch/project_2001310/BovReg_TwinBullSperm"
+  pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
+  pipelineConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/ExosomeMirna-pipeline_config-bovreg_twinbull.yaml"
+  serverConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/ExosomeMirna-pipeline_puhti-config.yaml"
+  refGenome.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
+}
+refGenome.file <- basename(refGenome.file)
+ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
+```
+
+```{r helpFunctions, include=FALSE}
+# folder: referes to the FASTQ subfolder, e.g. tRNA, PhiX, etc
+# mode: referes to the statistic, either wcl (for wc lines = reads) or wcc (for wc characters=bases)
+
+getReadCounts <- function(folder, mode){  
+  unmapped.files <- list.files(file.path(projFolder, "FASTQ",folder, "unmapped"), pattern=paste0("*.", mode))
+  mapped.files <- list.files(file.path(projFolder, "FASTQ",folder, "mapped"), pattern=paste0("*.", mode))  
+
+  unmapped <- c()
+  mapped <- c()
+
+  for(i in 1:length(unmapped.files)){
+    unmapped[i] <- read.table(file.path(projFolder, "FASTQ", folder, "unmapped", unmapped.files[i]))[1,1]
+  }
+
+  for(i in 1:length(mapped.files)){
+    mapped[i] <- read.table(file.path(projFolder, "FASTQ", folder, "mapped", mapped.files[i]))[1,1]
+  }
+
+  names(unmapped) <- unmapped.files
+  names(mapped) <- mapped.files
+
+  if(mode=="wcl"){
+    unmapped <- unmapped / 4
+    mapped <- mapped / 4
+  }
+  
+  list(unmapped = unmapped,
+       mapped = mapped)
+}
+```
+
+
+# General workflow
+
+## Directed acyclic graph (DAG)
+
+The DAG of the used pipeline with rule dependencies.
+
+```{r import workflow, echo=FALSE, fig.cap="Overview of the applied workflow", out.width = '100%'}
+if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(file.path(projFolder,"workflow.png"))
+```
+
+# Basic stats
+
+```{r get pipeline version}
+pipeSMK <- readLines(file.path(pipelineFolder,"miRNA-pipeline.smk"))
+pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])
+```
+
+```{r import barcodesID, results="asis"}
+rawsamples <- as.vector(as.matrix(read.table(file.path(projFolder, "rawsamples"))))
+samples <- as.vector(as.matrix(read.table(file.path(projFolder, "samples"), header=FALSE)))
+
+out <- data.frame(c("Project folder",
+                    "Number of raw-samples",
+                    "Number of samples (after concatenating)",
+                    "Used reference genome",
+                    "Used annotation file",
+                    "Pipeline version"),
+                  c(projFolder,
+                    length(rawsamples),
+                    length(samples),
+                    basename(refGenome.file),
+                    basename(refAnnot.file),
+                    pipeVersion))
+
+out_html <- knitr::kable(out, col.names = NULL, "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+## Concatenating stats
+As the concatenating is a crucial step in this pipeline, it is important to make this correct. As a double check that things went right, we check how
+many raw samples were concatenated per sample. We do this visually. Basically, the height of the bars should correspond to your number of used lanes,
+normally 1,2 or 4. Sometimes, you might want to concatenate also more files together (e.g. technical replicates), in this case the bar can be also higher.
+
+```{r import the conc report files}
+conc.reports.files <- list.files(file.path(projFolder, "FASTQ", "CONCATENATED"), pattern="*.report")
+
+conc.reports <- list()
+conc.reports[[1]] <- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.reports.files[1]))
+
+for(i in 2:length(conc.reports.files)){
+  conc.reports[[i]]<- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.reports.files[i]))
+}
+```
+
+```{r visualize concatenation reports}
+par(oma=c(6,5,0,0))
+labels <- gsub(".fastq.gz.report","",conc.reports.files)
+barplot(sapply(conc.reports,nrow), ylab="Concatenated files", names=labels, las=2)
+```
+
+## Sequencing depth
+Importing the sequencing depths from RAW data and then check the trimming as well as concatenating stats
+
+### Raw, lane-wise reads
+```{r}
+raw.read.files <- list.files(file.path(projFolder, "FASTQ", "RAW"), pattern="*.wcl")
+
+raw.reads <- c()
+for(i in 1:length(raw.read.files)){
+  raw.reads[i] <- read.table(file.path(projFolder, "FASTQ", "RAW", raw.read.files[i]))[1,1]
+}
+
+names(raw.reads) <- raw.read.files
+raw.reads <- raw.reads / 4
+```
+
+```{r}
+par(mar=c(15,5,2,0))
+barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=4)
+```
+
+### Trimmed, lane-wise reads
+
+```{r}
+trimmed.read.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*.wcl")
+
+trimmed.reads <- c()
+for(i in 1:length(trimmed.read.files)){
+  trimmed.reads[i] <- read.table(file.path(projFolder, "FASTQ", "TRIMMED", trimmed.read.files[i]))[1,1]
+}
+
+names(trimmed.reads) <- trimmed.read.files
+trimmed.reads <- trimmed.reads / 4
+```
+
+```{r}
+par(mar=c(15,5,2,0))
+barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=7)
+```
+
+### Raw and trimmed, lane-wise reads
+
+```{r}
+par(mar=c(15,5,2,8), xpd=TRUE)
+barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(4,7))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+```
+
+### Concatenated reads
+
+```{r}
+conc.read.files <- list.files(file.path(projFolder, "FASTQ", "CONCATENATED"), pattern="*.wcl")
+
+conc.reads <- c()
+for(i in 1:length(conc.read.files)){
+  conc.reads[i] <- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.read.files[i]))[1,1]
+}
+
+names(conc.reads) <- conc.read.files
+conc.reads <- conc.reads / 4
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(conc.reads, las=2, main="Concatenated reads", col=4)
+```
+
+
+## Sequenced bases
+### Raw, lane-wise bases
+```{r}
+raw.bases.files <- list.files(file.path(projFolder, "FASTQ", "RAW"), pattern="*.wcc")
+
+raw.bases <- c()
+for(i in 1:length(raw.bases.files)){
+  raw.bases[i] <- read.table(file.path(projFolder, "FASTQ", "RAW", raw.bases.files[i]))[1,1]
+}
+
+names(raw.bases) <- raw.bases.files
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=4)
+```
+```{r}
+par(mar=c(15,6,2,0))
+barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=4)
+```
+### Trimmed, lane-wise bases
+```{r}
+trimmed.bases.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*.wcc")
+
+trimmed.bases <- c()
+for(i in 1:length(trimmed.bases.files)){
+  trimmed.bases[i] <- read.table(file.path(projFolder, "FASTQ", "TRIMMED", trimmed.bases.files[i]))[1,1]
+}
+
+names(trimmed.bases) <- trimmed.bases.files
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=4)
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=4)
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=4)
+```
+
+### Raw and trimmed, lane-wise reads
+
+```{r}
+par(mar=c(15,5,2,8), xpd=TRUE)
+barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(4,7))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+```
+### Concatenated bases
+
+```{r}
+conc.bases.files <- list.files(file.path(projFolder, "FASTQ", "CONCATENATED"), pattern="*.wcc")
+
+conc.bases <- c()
+for(i in 1:length(conc.bases.files)){
+  conc.bases[i] <- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.bases.files[i]))[1,1]
+}
+
+names(conc.bases) <- conc.bases.files
+```
+
+```{r}
+par(mar=c(15,6,2,0))
+barplot(conc.bases, las=2, main="Concatenated Bases", col=4)
+```
+
+# Contamination removal
+
+## tRNA
+
+### Reads
+Before aligning the data against the various mirDB references as well as the reference genome, we align the reads against a tRNA database and only proceed with those that do not align there.
+
+```{r}
+tmp <- getReadCounts("tRNA", mode="wcl")
+trna.unmapped.reads <- tmp$unmapped
+trna.mapped.reads <- tmp$mapped
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+```
+
+### Bases
+```{r}
+tmp <- getReadCounts("tRNA", mode="wcc")
+trna.unmapped.bases <- tmp$unmapped
+trna.mapped.bases <- tmp$mapped
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+```
+
+
+## PhiX
+Further, we align reads that do not map against the tRNA database also against a PhiX genome and those reads that do not align against this reference, we use then for the downstream analysis
+
+### Reads
+```{r}
+
+tmp <- getReadCounts("PhiX", mode="wcl")
+phix.unmapped.reads <- tmp$unmapped
+phix.mapped.reads <- tmp$mapped
+
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+```
+
+### Bases
+```{r}
+tmp <- getReadCounts("PhiX", mode="wcc")
+phix.unmapped.bases <- tmp$unmapped
+phix.mapped.bases <- tmp$mapped
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+```
+
+
+# Alignments
+
+## Bowtie
+
+### Mature
+First, we align the reads against the mature.fa file from mirbase.
+
+```{r}
+tmp <- getReadCounts("Mature", mode="wcl")
+mature.unmapped.reads <- tmp$unmapped.reads
+mature.mapped.reads <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(phix.unmapped.reads,mature.unmapped.reads, mature.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
+        aligned to Mature.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+```
+
+```{r}
+tmp <- getReadCounts("Mature", mode="wcc")
+mature.unmapped.bases <- tmp$unmapped.reads
+mature.mapped.bases <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+```
+
+### Hairpin
+Then, we align the reads that do not align to mature.fa against the hairpin.fa file from mirbase.
+
+```{r}
+tmp <- getReadCounts("Hairpin", mode="wcl")
+hairpin.unmapped.reads <- tmp$unmapped.reads
+hairpin.mapped.reads <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+```
+
+```{r}
+tmp <- getReadCounts("Hairpin", mode="wcc")
+hairpin.unmapped.bases <- tmp$unmapped.reads
+hairpin.mapped.bases <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="FMature.fa unaligned bases aligned to Hairpin.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+```
+
+### Reference
+The remaining reads we align then against the reference genome
+
+```{r}
+tmp <- getReadCounts("Reference", mode="wcl")
+reference.bowtie.unmapped.reads <- tmp$unmapped.reads
+reference.bowtie.mapped.reads <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main="Hairpin.fa unaligned reads aligned to reference genome", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+```
+
+```{r}
+tmp <- getReadCounts("Reference", mode="wcc")
+reference.bowtie.unmapped.bases <- tmp$unmapped.reads
+reference.bowtie.mapped.bases <- tmp$mapped.reads
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main="Hairpin.fa unaligned bases aligned to reference genome", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+```
+
+## STAR
+We align the data also with STAR, due to its soft-clipping feature
+
+### Mature
+Analysis of the STAR alignment logs
+
+```{r}
+starlogs.dirs <- list.dirs(file.path(projFolder,"BAM", "STAR", "Mature"))[-1]
+
+starlogs <- list()
+
+for(i in 1:length(starlogs.dirs)){
+starlogs[[i]] <- importSTARLog(starlogs.dirs[i])
+}
+
+starlogs.totalReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",1))
+starlogs.inputReadLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",2))
+starlogs.uniqueReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",1))
+starlogs.uniqueReadsPercent <- as.numeric(gsub("%","",sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",2)))
+starlogs.uniqueReadsLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",3))
+starlogs.multiReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",1))
+starlogs.multiReads.toomany <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",3))
+starlogs.umappedReads.mismatch <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",1))
+starlogs.umappedReads.tooShort <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",3))
+starlogs.chimericReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",6),"[",2),"[",1))
+```
+
+```{r}
+par(mar=c(5,6,2,12), xpd=TRUE)
+starlogs.matrix <- rbind(starlogs.uniqueReads,
+                         starlogs.multiReads,
+                         starlogs.multiReads.toomany,
+                         starlogs.umappedReads.mismatch,
+                         starlogs.umappedReads.tooShort,
+                         starlogs.chimericReads)
+colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
+
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature.fa)", las=2)
+legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
+```
+
+Unmapped 'Others' is currently not imported from the STAR-logs functions, hence some reads do not add up to 100% here, per sample this is:
+
+```{r}
+barplot(phix.unmapped.reads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+```
+### Reference
+Analysis of the STAR alignment logs
+
+```{r}
+starlogs.dirs <- list.dirs(file.path(projFolder,"BAM", "STAR", "Reference"))[-1]
+
+starlogs <- list()
+
+for(i in 1:length(starlogs.dirs)){
+starlogs[[i]] <- importSTARLog(starlogs.dirs[i])
+}
+
+starlogs.totalReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",1))
+starlogs.inputReadLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",2))
+starlogs.uniqueReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",1))
+starlogs.uniqueReadsPercent <- as.numeric(gsub("%","",sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",2)))
+starlogs.uniqueReadsLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",3))
+starlogs.multiReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",1))
+starlogs.multiReads.toomany <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",3))
+starlogs.umappedReads.mismatch <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",1))
+starlogs.umappedReads.tooShort <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",3))
+starlogs.chimericReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",6),"[",2),"[",1))
+```
+
+```{r}
+par(mar=c(5,6,2,12), xpd=TRUE)
+starlogs.matrix <- rbind(starlogs.uniqueReads,
+                         starlogs.multiReads,
+                         starlogs.multiReads.toomany,
+                         starlogs.umappedReads.mismatch,
+                         starlogs.umappedReads.tooShort,
+                         starlogs.chimericReads)
+colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Reference"),"/"),"",starlogs.dirs)
+
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Reference)", las=2)
+legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
+```
+
+Unmapped 'Others' is currently not imported from the STAR-logs functions, hence some reads do not add up to 100% here, per sample this is:
+
+```{r}
+barplot(phix.unmapped.reads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+```
+
+ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE SOFT-CLIPPED AGAIN, HOW FAR ARE THE ALIGNED SOFT-CLIPPED PARTS AWAY FROM THEIR 'PARTNER'?
+
+# Quantification
+
+## Mature.fa
+
+## Reference
+First some general stats about the used reference genome annotation
+
+```{r}
+annotation <- importGTF(refAnnot.file)
+```
+
+Following numbers of various annotations per biotype are available inside annotaiton file
+
+```{r}
+out_html <- knitr::kable(table(annotation$gene_biotype), col.names = NULL, "html")
+kable_styling(out_html, "striped", position = "left")
+``` 
+
+### Bowtie
+```{r}
+fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference"), pattern="*.txt$")
+fc.in <- list()
+for(i in 1:length(fc.files)){
+  fc.in[[i]] <- importFeatureCounts(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference", fc.files[i]))
+}
+
+fc.expr.bowtie <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
+
+for(i in 3:length(fc.files)){
+  fc.expr.bowtie <- merge(fc.expr.bowtie, fc.in[[i]]$expValues, by="Geneid")
+}
+colnames(fc.expr.bowtie) <- sub(".*?Reference.", "",colnames(fc.expr.bowtie))
+colnames(fc.expr.bowtie) <- sub("_reference_star.bam", "",colnames(fc.expr.bowtie))
+```
+
+Now get the counts per biotype
+
+```{r}
+biotypes <- names(table(annotation$gene_biotype))
+
+counts_per_biotype.bowtie <- matrix(0, ncol=ncol(fc.expr.bowtie)-1, nrow=length(biotypes))
+rownames(counts_per_biotype.bowtie) <- biotypes
+colnames(counts_per_biotype.bowtie) <- colnames(fc.expr.bowtie)[-1]
+
+for(i in 1:length(biotypes)){
+  biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
+  counts_per_biotype.bowtie[i,] <- apply(fc.expr.bowtie[is.element(fc.expr.bowtie$Geneid, biotype.genes),-1],2,sum)
+}
+```
+
+```{r}
+out_html <- knitr::kable(counts_per_biotype.bowtie, "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+```{r}
+out_html <- knitr::kable(round(t(t(counts_per_biotype.bowtie)/apply(counts_per_biotype.bowtie,2,sum))*100,2), "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+
+### STAR
+The quantification of the multimapping reads is as follows. With featureCounts, we only count the primary alignment, all secondary alignments we ignore. However, while aligning the data, we assign the primary alignment for multi-mapped reads randomly!!!
+
+```{r}
+fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Reference"), pattern="*.txt$")
+fc.in <- list()
+for(i in 1:length(fc.files)){
+  fc.in[[i]] <- importFeatureCounts(file.path(projFolder, "QUANTIFICATION", "STAR", "Reference", fc.files[i]))
+}
+
+fc.expr.star <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
+
+for(i in 3:length(fc.files)){
+  fc.expr.star <- merge(fc.expr.star, fc.in[[i]]$expValues, by="Geneid")
+}
+colnames(fc.expr.star) <- sub(".*?Reference.", "",colnames(fc.expr.star))
+colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
+```
+
+Now get the counts per biotype
+
+```{r}
+biotypes <- names(table(annotation$gene_biotype))
+
+counts_per_biotype <- matrix(0, ncol=ncol(fc.expr.star)-1, nrow=length(biotypes))
+rownames(counts_per_biotype) <- biotypes
+colnames(counts_per_biotype) <- colnames(fc.expr.star)[-1]
+
+for(i in 1:length(biotypes)){
+  biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
+  counts_per_biotype[i,] <- apply(fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),-1],2,sum)
+}
+```
+
+```{r}
+out_html <- knitr::kable(counts_per_biotype, "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+```{r}
+out_html <- knitr::kable(round(t(t(counts_per_biotype)/apply(counts_per_biotype,2,sum))*100,2), "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+
+ADD STILL THE FEATURE COUNTS STATS ANALYSIS HERE!!!
+
+# Runtime checks
+Add here:
+* Table the bases of each inputer reference, in case they contain "U"'s, throw a warning and a suggestion how to fix it to "T"

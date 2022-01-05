@@ -1,0 +1,524 @@
+rule bowtie_map_clear_reads_mature:
+    """
+    Map non-tRNA and non-phiX samples against the mature.fa reference (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
+        index="%s/References/mature_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
+    output:
+        mappedReads="%s/FASTQ/Mature/mapped/{samples}_mature_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/Mature/unmapped/{samples}_mature_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/Mature/{samples}_mature.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/Mature/mapped/{samples}_mature_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/Mature/unmapped/{samples}_mature_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/Mature/mapped/{samples}_mature_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/Mature/unmapped/{samples}_mature_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/Mature" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/Mature" % (config["project-folder"]),
+        index=config["matureIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_mature.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_mature.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_clear_reads_mature"
+    threads: cluster["bowtie_map_clear_reads_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_clear_reads_mature"]["time"],
+        mem=cluster["bowtie_map_clear_reads_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS - > {output.file} 2> {log};
+        
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_clear_reads_mature_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/Mature/{samples}_mature.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/Mature/{samples}_mature.stats" % (config["project-folder"]),
+    group: "bowtie_map_clear_reads_mature"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+    
+rule bowtie_map_clear_reads_mature_species:
+    """
+    Map non-tRNA and non-phiX samples against the mature.fa reference (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
+        index="%s/References/mature_basesAdjusted_species.fa.1.ebwt" % (config["project-folder"])
+    output:
+        mappedReads="%s/FASTQ/Mature_Species/mapped/{samples}_mature_species_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/Mature_Species/unmapped/{samples}_mature_species_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/Mature_Species/{samples}_mature_species.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/Mature_Species/mapped/{samples}_mature_species_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/Mature_Species/unmapped/{samples}_mature_species_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/Mature_Species/mapped/{samples}_mature_species_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/Mature_Species/unmapped/{samples}_mature_species_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/Mature_Species" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/Mature_Species" % (config["project-folder"]),
+        index=config["matureSpeciesIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_mature_species.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_mature_species.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_clear_reads_mature_species"
+    threads: cluster["bowtie_map_clear_reads_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_clear_reads_mature"]["time"],
+        mem=cluster["bowtie_map_clear_reads_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS - > {output.file} 2> {log};
+        
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_clear_reads_mature_species_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/Mature_Species/{samples}_mature_species.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
+    group: "bowtie_map_clear_reads_mature_species"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule bowtie_map_nonmature_reads_hairpin:
+    """
+    Map non-tRNA, non-phiX and non-mature samples against the hairpin.fa reference (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/Mature/unmapped/{samples}_mature_unmapped.fastq" % (config["project-folder"]),
+        index="%s/References/hairpin_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
+    output:
+        mappedReads="%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/Hairpin/unmapped/{samples}_hairpin_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/Hairpin/{samples}_hairpin.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/Hairpin/unmapped/{samples}_hairpin_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/Hairpin/unmapped/{samples}_hairpin_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/Hairpin" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/Hairpin" % (config["project-folder"]),
+        index=config["hairpinIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_hairpin.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_hairpin.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_nonmature_reads_hairpin"
+    threads: cluster["bowtie_map_nonmature_reads_hairpin"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_nonmature_reads_hairpin"]["time"],
+        mem=cluster["bowtie_map_nonmature_reads_hairpin"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_nonmature_reads_hairpin_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/Hairpin/{samples}_hairpin.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.stats" % (config["project-folder"]),
+    group: "bowtie_map_nonmature_reads_hairpin"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule bowtie_map_clear_reads_reference:
+    """
+    Map non-tRNA and non-phiX samples against the reference genome (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
+        index="%s.1.ebwt" % (config["reference"])
+    output:
+        mappedReads="%s/FASTQ/Reference/mapped/{samples}_reference_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/Reference/unmapped/{samples}_reference_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/Reference/{samples}_reference.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/Reference/unmapped/{samples}_reference_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/Reference/unmapped/{samples}_reference_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/Reference" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/Reference" % (config["project-folder"]),
+        index=config["referenceIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_reference.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_reference.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_clear_reads_reference"
+    threads: cluster["bowtie_map_clear_reads_reference"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_clear_reads_reference"]["time"],
+        mem=cluster["bowtie_map_clear_reads_reference"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_clear_reads_reference_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/Reference/{samples}_reference.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/Reference/{samples}_reference.stats" % (config["project-folder"]),
+    group: "bowtie_map_clear_reads_reference"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule star_map_clear_reads_mature:
+    """
+    Map non-tRNA and non-phiX samples against the mature.fa (STAR).
+    """
+    input:
+        "%s/chrName.txt" % (config["matureSTARIndex"]),
+        fastq="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"])
+    output:
+        file="%s/BAM/STAR/Mature/{samples}_mature_star.bam" % (config["project-folder"]),
+        dir=directory("%s/BAM/STAR/Mature/{samples}" % (config["project-folder"]))
+    log:
+        "%s/logs/STAR/star_mature.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_mature.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["matureSTARIndex"],
+        tmpdirTop="%s/STAR_tmp/Mature" % (config["project-folder"]),
+        tmpdir="%s/STAR_tmp/Mature/{samples}" % (config["project-folder"])
+    group: "star_alignments"
+    threads: cluster["star_map_clear_reads_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["star_map_clear_reads_mature"]["time"],
+        mem=cluster["star_map_clear_reads_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        mkdir -p {output.dir};
+        mkdir -p {params.tmpdirTop};
+
+        printf \"%s\t%s\t%s\t%s\t%s\n\" {params.index} {input.fastq} {output} {log} {threads}
+      	[ ! -d \"{output.dir}\" ] && mkdir {output.dir}
+        
+        cd {params.tmpdirTop}
+        
+        STAR --genomeDir {params.index} \
+            --outTmpDir {params.tmpdir} \
+            --readFilesIn {input.fastq} \
+            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMatchNmin 16 \
+            --outFilterScoreMinOverLread 0  \
+            --outFilterMatchNminOverLread 0 \
+            --outFilterMultimapNmax 50 \
+            --chimSegmentMin 20 \
+            --chimOutType WithinBAM \
+            --alignIntronMax 1 \
+            --outSAMtype BAM SortedByCoordinate \
+            --outSAMunmapped Within \
+            --outMultimapperOrder Random \
+            --runThreadN {threads} \
+            --outFileNamePrefix {wildcards.samples}_ 2> {log};
+            
+        cd {params.tmpdirTop};
+            
+        mv {wildcards.samples}_Aligned.sortedByCoord.out.bam {output.file}
+        mv {wildcards.samples}_Log.final.out {wildcards.samples}_Log.progress.out {wildcards.samples}_Log.out {wildcards.samples}_SJ.out.tab {output.dir}
+    """
+
+rule samtools_star_reads_mature_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/STAR/Mature/{samples}_mature_star.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/STAR/Mature/{samples}_mature.stats" % (config["project-folder"])
+    group: "star_stats"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule star_map_clear_reads_mature_species:
+    """
+    Map non-tRNA and non-phiX samples against the mature_basedAdjusted_species.fa (STAR).
+    """
+    input:
+        "%s/chrName.txt" % (config["matureSpeciesSTARIndex"]),
+        fastq="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"])
+    output:
+        file="%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"]),
+        dir=directory("%s/BAM/STAR/Mature_Species/{samples}" % (config["project-folder"]))
+    log:
+        "%s/logs/STAR/star_mature_species.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_mature_species.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["matureSpeciesSTARIndex"],
+        tmpdirTop="%s/STAR_tmp/Mature_Species" % (config["project-folder"]),
+        tmpdir="%s/STAR_tmp/Mature_Species/{samples}" % (config["project-folder"])
+    group: "star_alignments"
+    threads: cluster["star_map_clear_reads_mature"]["cpus-per-task"]
+    resources:
+        time=cluster["star_map_clear_reads_mature"]["time"],
+        mem=cluster["star_map_clear_reads_mature"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        mkdir -p {output.dir};
+        mkdir -p {params.tmpdirTop};
+
+        printf \"%s\t%s\t%s\t%s\t%s\n\" {params.index} {input.fastq} {output} {log} {threads}
+      	[ ! -d \"{output.dir}\" ] && mkdir {output.dir}
+        
+        cd {params.tmpdirTop}
+        
+        STAR --genomeDir {params.index} \
+            --outTmpDir {params.tmpdir} \
+            --readFilesIn {input.fastq} \
+            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMatchNmin 16 \
+            --outFilterScoreMinOverLread 0  \
+            --outFilterMatchNminOverLread 0 \
+            --outFilterMultimapNmax 50 \
+            --chimSegmentMin 20 \
+            --chimOutType WithinBAM \
+            --alignIntronMax 1 \
+            --outSAMtype BAM SortedByCoordinate \
+            --outSAMunmapped Within \
+            --outMultimapperOrder Random \
+            --runThreadN {threads} \
+            --outFileNamePrefix {wildcards.samples}_ 2> {log};
+            
+        cd {params.tmpdirTop};
+            
+        mv {wildcards.samples}_Aligned.sortedByCoord.out.bam {output.file}
+        mv {wildcards.samples}_Log.final.out {wildcards.samples}_Log.progress.out {wildcards.samples}_Log.out {wildcards.samples}_SJ.out.tab {output.dir}
+    """
+
+rule samtools_star_reads_mature_species_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/STAR/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"])
+    group: "star_stats"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule star_map_clear_reads_reference:
+    """
+    Map non-tRNA and non-phiX samples against the host reference (STAR).
+    """
+    input:
+        "%s/chrName.txt" % (config["referenceSTARIndex"]),
+        fastq="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"])
+    output:
+        file="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
+        dir=directory("%s/BAM/STAR/Reference/{samples}" % (config["project-folder"]))
+    log:
+        "%s/logs/STAR/star_reference.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_reference.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["referenceSTARIndex"],
+        tmpdirTop="%s/STAR_tmp/Reference" % (config["project-folder"]),
+        tmpdir="%s/STAR_tmp/Reference/{samples}" % (config["project-folder"])
+    group: "star_alignments"
+    threads: cluster["star_map_clear_reads_reference"]["cpus-per-task"]
+    resources:
+        time=cluster["star_map_clear_reads_reference"]["time"],
+        mem=cluster["star_map_clear_reads_reference"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        mkdir -p {output.dir};
+        mkdir -p {params.tmpdirTop};
+
+        printf \"%s\t%s\t%s\t%s\t%s\n\" {params.index} {input.fastq} {output} {log} {threads}
+      	[ ! -d \"{output.dir}\" ] && mkdir {output.dir}
+        
+        cd {params.tmpdirTop} 
+        
+        STAR --genomeDir {params.index} \
+            --outTmpDir {params.tmpdir} \
+            --readFilesIn {input.fastq} \
+            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMatchNmin 16 \
+            --outFilterScoreMinOverLread 0  \
+            --outFilterMatchNminOverLread 0 \
+            --outFilterMultimapNmax 50 \
+            --chimSegmentMin 20 \
+            --chimOutType WithinBAM \
+            --alignIntronMax 1 \
+            --outSAMtype BAM SortedByCoordinate \
+            --outSAMunmapped Within \
+            --outMultimapperOrder Random \
+            --runThreadN {threads} \
+            --outFileNamePrefix {wildcards.samples}_ 2> {log};
+            
+        cd {params.tmpdirTop};           
+            
+        mv {wildcards.samples}_Aligned.sortedByCoord.out.bam {output.file}
+        mv {wildcards.samples}_Log.final.out {wildcards.samples}_Log.progress.out {wildcards.samples}_Log.out {wildcards.samples}_SJ.out.tab {output.dir}
+    """
+
+rule samtools_star_reads_reference_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/STAR/Reference/{samples}_reference.stats" % (config["project-folder"])
+    group: "star_stats"   
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """
+
+rule bash_get_softclipped_fasta:
+    """
+    Extract the soft-clipped parts from the STAR alignments.
+    """
+    input:
+        ref="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
+        mature="%s/BAM/STAR/Mature/{samples}_mature_star.bam" % (config["project-folder"]),
+        matureSpecies="%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"])
+    output:
+        ref="%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]),
+        mature="%s/FASTA/STAR/Mature_softclipped/{samples}_mature_softclipped.fasta.gz" % (config["project-folder"]),
+        matureSpecies="%s/FASTA/STAR/MatureSpecies_softclipped/{samples}_mature_species_softclipped.fasta.gz" % (config["project-folder"])
+    log:
+        "%s/logs/bash_getSoftclipped.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/bash_getSoftclipped.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        l=config["params"]["extractSoftClipped"]["length"],
+        pipe=config["pipeline-folder"]
+    shell:"""
+        {params.pipe}/scripts/extractSoftclipped -l {params.l} {input.ref} > {output.ref} 2> {log}
+        {params.pipe}/scripts/extractSoftclipped -l {params.l} {input.mature} > {output.mature} 2> {log}
+        {params.pipe}/scripts/extractSoftclipped -l {params.l} {input.matureSpecies} > {output.matureSpecies} 2> {log}
+    """ 

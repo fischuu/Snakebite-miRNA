@@ -1,0 +1,147 @@
+__default__:
+    job-name:  ExosomeMirna
+    account: project_2001310
+    time: 30
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    ntasks: 1
+    nvme: 0
+    partition: small
+    working-directory: /scratch/project_2001310/logs
+
+# Module0 - Preparations
+################################################################################
+
+bowtie_createIndex_tRNA:
+    job-name: bowtieIndex_tRNA
+    time: 120
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    
+bowtie_createIndex_phix:
+    job-name: bowtieIndex_phix
+    time: 120
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    
+bowtie_createIndex_mature:
+    job-name: bowtieIndex_mature
+    time: 120
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    
+bowtie_createIndex_hairpin:
+    job-name: bowtieIndex_hairpin
+    time: 120
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    
+bowtie_createIndex_reference:
+    job-name: bowtieIndex_reference
+    time: 120
+    cpus-per-task: 20
+    mem-per-cpu: 6000
+    
+star_createIndex_mature:
+    job-name: starIndex_mature
+    time: 120
+    cpus-per-task: 10
+    mem-per-cpu: 6000
+
+star_createIndex_reference:
+    job-name: starIndex_reference
+    time: 120
+    cpus-per-task: 10
+    mem-per-cpu: 6000
+
+
+# Module 1 - QC
+################################################################################
+
+fastqc:
+    job-name: fastqc
+    time: 30
+    cpus-per-task: 12
+    mem-per-cpu: 10000
+
+multiqc:
+    job-name: multiqc
+    time: 20
+    cpus-per-task: 1
+    mem-per-cpu: 4000
+    
+# Module 2
+################################################################################
+cutadapt_trimming:
+    job-name: cutadapt
+    time: 30
+    cpus-per-task: 20
+    mem-per-cpu: 4000
+    
+# Module 3 - ContaminationRemoval
+################################################################################
+bowtie_map_concatenated_reads_tRNA:
+    job-name: bowtie_map_concatenated_reads_tRNA
+    time: 100
+    cpus-per-task: 1
+    mem-per-cpu: 40000
+
+bowtie_map_nonTRNA_reads_phix:
+    job-name: bowtie_map_nonTRNA_reads_phix
+    time: 100
+    cpus-per-task: 1
+    mem-per-cpu: 40000
+    
+# Module 4 - Alignments
+################################################################################
+bowtie_map_clear_reads_mature:
+    job-name: bowtie_map_clear_reads_mature
+    time: 100
+    cpus-per-task: 1
+    mem-per-cpu: 40000
+
+bowtie_map_clear_reads_reference:
+    job-name: bowtie_map_clear_reads_reference
+    time: 100
+    cpus-per-task: 20
+    mem-per-cpu: 4000
+
+bowtie_map_nonmature_reads_hairpin:
+    job-name: bowtie_map_nonmature_reads_hairpin
+    time: 100
+    cpus-per-task: 1
+    mem-per-cpu: 40000
+
+star_map_clear_reads_mature:
+    job-name: star_map_clear_reads_mature
+    time: 100
+    cpus-per-task: 20
+    mem-per-cpu: 4000
+    
+star_map_clear_reads_reference:
+    job-name: star_map_clear_reads_reference
+    time: 100
+    cpus-per-task: 20
+    mem-per-cpu: 4000
+    
+# Module 5 - Quantification
+################################################################################
+featureCounts_quantify_reference_BOWTIE:
+    job-name: featureCounts_quantify_reference_BOWTIE
+    time: 100
+    cpus-per-task: 16
+    mem-per-cpu: 4000
+    
+featureCounts_quantify_reference_STAR:
+    job-name: featureCounts_quantify_reference_STAR
+    time: 100
+    cpus-per-task: 16
+    mem-per-cpu: 4000
+    
+# Module 6 - Reporting
+################################################################################
+R_pipelineReport:
+    job-name: R_pipelineReport
+    time: 30
+    cpus-per-task: 1
+    mem-per-cpu: 4000

@@ -1,0 +1,139 @@
+# vim: set filetype=sh :
+
+rule bowtie_map_concatenated_reads_tRNA:
+    """
+    Map samples against the tRNA database (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz" % (config["project-folder"]),
+        index="%s.1.ebwt" % (config["tRNARef"])
+    output:
+        mappedReads="%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/tRNA/unmapped/{samples}_tRNA_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/tRNA/{samples}_tRNA.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/tRNA/unmapped/{samples}_tRNA_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/tRNA/unmapped/{samples}_tRNA_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/tRNA" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/tRNA" % (config["project-folder"]),
+        index=config["tRNAIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_tRNA.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_tRNA.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_concatenated_reads_tRNA"
+    threads: cluster["bowtie_map_concatenated_reads_tRNA"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_concatenated_reads_tRNA"]["time"],
+        mem=cluster["bowtie_map_concatenated_reads_tRNA"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -t -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_concatenated_reads_tRNA_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/tRNA/{samples}_tRNA.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.stats" % (config["project-folder"])
+    group: "bowtie_map_concatenated_reads_tRNA"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat}
+        samtools stats {input} > {output.stats};
+    """
+
+
+rule bowtie_map_nonTRNA_reads_phix:
+    """
+    Map non-tRNA samples against the PhiX genome (bowtie).
+    """
+    input:
+        reads="%s/FASTQ/tRNA/unmapped/{samples}_tRNA_unmapped.fastq" % (config["project-folder"]),
+        index="%s.1.ebwt" % (config["phixRef"])
+    output:
+        mappedReads="%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"]),
+        unmappedReads="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
+        file="%s/BAM/BOWTIE/PhiX/{samples}_PhiX.bam" % (config["project-folder"]),
+        wclmapped="%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.wcl" % (config["project-folder"]),
+        wclunmapped="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.wcl" % (config["project-folder"]),
+        wccmapped="%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.wcc" % (config["project-folder"]),
+        wccunmapped="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.wcc" % (config["project-folder"])
+    params:
+        bamFolder="%s/BAM/BOWTIE/PhiX" % (config["project-folder"]),
+        fastqFolder="%s/FASTQ/PhiX" % (config["project-folder"]),
+        index=config["phixIndex"],
+        m=config["params"]["bowtie"]["m"],
+        k=config["params"]["bowtie"]["k"]
+    log:
+        "%s/logs/BOWTIE/bowtie_map_PhiX.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BOWTIE/bowtie_map_PhiX.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "bowtie_map_nonTRNA_reads_phix"
+    threads: cluster["bowtie_map_nonTRNA_reads_phix"]["cpus-per-task"]
+    resources:
+        time=cluster["bowtie_map_nonTRNA_reads_phix"]["time"],
+        mem=cluster["bowtie_map_nonTRNA_reads_phix"]["mem-per-cpu"]
+    singularity: config["singularity"]["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+
+rule samtools_nonTRNA_reads_phix_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/BOWTIE/PhiX/{samples}_PhiX.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/BOWTIE/PhiX/{samples}_PhiX.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/BOWTIE/PhiX/{samples}_PhiX.stats" % (config["project-folder"])
+    group: "bowtie_map_nonTRNA_reads_phix"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat};
+        samtools stats {input} > {output.stats};
+    """

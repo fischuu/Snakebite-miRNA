@@ -1,0 +1,11 @@
+################################################################################
+#####                                                                      #####
+#####                           CHANGELOG                                  #####
+#####                                                                      #####
+################################################################################
+
+* 0.3.3: Softclipped reads from STAR alignments are now extracted
+* 0.3.2: Added a species filter for the mature.fa mirbase file
+* 0.3.1: Switched from conda to singularity environment
+* 0.2  : Stable release with pipeline report added
+* 0.1.1: Module0 intruduced and organised

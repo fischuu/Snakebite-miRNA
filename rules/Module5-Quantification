@@ -1,0 +1,59 @@
+rule featureCounts_quantify_reference_BOWTIE:
+    """
+    Quantify the BOWTIE aligned reads to reference (featureCounts).
+    """
+    input:
+        bam="%s/BAM/BOWTIE/Reference/{samples}_reference.bam" % (config["project-folder"])
+    output:
+        file="%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"])
+    log:
+        "%s/logs/FC/featureCounts_bowtie_reference.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FC/featureCounts_bowtie_reference.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        annot=config["refAnnot"]
+    params: tmpdir=config["scratch-folder"]
+    threads: cluster["featureCounts_quantify_reference_BOWTIE"]["cpus-per-task"]
+    resources:
+        time=cluster["featureCounts_quantify_reference_BOWTIE"]["time"],
+        mem=cluster["featureCounts_quantify_reference_BOWTIE"]["mem-per-cpu"]
+    singularity: config["singularity"]["subread"]
+    shell:"""
+        featureCounts --primary -M \
+                      -T {threads} \
+                      -a {params.annot} \
+                      -t gene \
+                      -g gene_id \
+                      -o {output.file} \
+                      {input.bam} 2> {log}
+    """
+
+rule featureCounts_quantify_reference_STAR:
+    """
+    Quantify the STAR aligned reads to reference (featureCounts).
+    """
+    input:
+        bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
+    output:
+        file="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"])
+    log:
+        "%s/logs/FC/featureCounts_star_reference.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FC/featureCounts_star_reference.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        annot=config["refAnnot"]
+    params: tmpdir=config["scratch-folder"]
+    threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
+    resources:
+        time=cluster["featureCounts_quantify_reference_STAR"]["time"],
+        mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    singularity: config["singularity"]["subread"]
+    shell:"""
+        featureCounts --primary -M \
+                      -T {threads} \
+                      -a {params.annot} \
+                      -t gene \
+                      -g gene_id \
+                      -o {output.file} \
+                      {input.bam} 2> {log}
+    """

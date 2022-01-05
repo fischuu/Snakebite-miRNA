@@ -1,0 +1,67 @@
+rule cutadapt_trimming:
+    """
+    Trimming adapter sequences (CUTADAPT).
+    """
+    input:
+        "%s/FASTQ/RAW/{raw_samples}.fastq.gz" % (config["project-folder"])
+    output:
+        fastq="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]),
+        wclin="%s/FASTQ/RAW/{raw_samples}.wcl" % (config["project-folder"]),
+        wclout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcl" % (config["project-folder"]),
+        wccin="%s/FASTQ/RAW/{raw_samples}.wcc" % (config["project-folder"]),
+        wccout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcc" % (config["project-folder"])
+    log:
+        "%s/logs/CUTADAPT/cutadapt.{raw_samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/CUTADAPT/cutadapt.{raw_samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        adapter=config["adapter"],
+        minLength=config["params"]["cutadapt"]["minLength"],
+        qualtrim=config["params"]["cutadapt"]["qualtrim"]
+    threads: cluster["cutadapt_trimming"]["cpus-per-task"]
+    resources:
+        time=cluster["cutadapt_trimming"]["time"],
+        mem=cluster["cutadapt_trimming"]["mem-per-cpu"]
+    singularity: config["singularity"]["cutadapt"]
+    shell:"""
+      cutadapt -a file:{params.adapter} \
+               --minimum-length {params.minLength} \
+               -j {threads} -q {params.qualtrim} --trim-n \
+               -o {output.fastq} {input} 2> {log};
+               
+      zcat {input} | wc -l > {output.wclin}
+      zcat {output.fastq} | wc -l > {output.wclout}
+      
+      zcat {input} | sed -n '2~4p' | wc -c  > {output.wccin}
+      zcat {output.fastq} | sed -n '2~4p' | wc -c  > {output.wccout}
+    """
+    
+rule bash_catFastq:
+    """
+    Concatenate the different lanes into single files (BASH).
+    """
+    input:
+        expand("%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]), raw_samples=rawsamples)
+    output:
+        fastq="%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz" % (config["project-folder"]),
+        report="%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz.report" % (config["project-folder"]),
+        wclout="%s/FASTQ/CONCATENATED/{samples}_R1.wcl" % (config["project-folder"]),
+        wccout="%s/FASTQ/CONCATENATED/{samples}_R1.wcc" % (config["project-folder"])
+    log:
+        "%s/logs/BASH/catFastq_{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/BASH/catFastq_{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+       infolder="%s/FASTQ/TRIMMED" % (config["project-folder"]),
+       outfolder="%s/FASTQ/CONCATENATED" % (config["project-folder"])
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    shell:"""
+        mkdir -p {params.outfolder}
+        cat {params.infolder}/{wildcards.samples}*_R1_001_trimmed.fastq.gz > {output.fastq} 2> {log}
+        ls {params.infolder}/{wildcards.samples}*_R1_001_trimmed.fastq.gz > {output.report} 2> {log}
+        zcat {output.fastq} | wc -l > {output.wclout}
+        zcat {output.fastq} | sed -n '2~4p' | wc -c  > {output.wccout}
+    """

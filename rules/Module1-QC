@@ -1,0 +1,344 @@
+rule fastqc_quality_control_raw_data:
+    """
+    Quality control of fastq files (FASTQC).
+    """
+    input:
+        "%s/FASTQ/RAW/{rawsamples}.fastq.gz" % (config["project-folder"])
+    output:
+        "%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_raw.{rawsamples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_raw.{rawsamples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/RAW/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input} > {log} 2>&1;
+    """
+    
+rule multiqc_quality_control_raw_data:
+    """
+    Quality control of fastq files in lr1(MULTIQC).
+    """
+    input:
+        expand("%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"]), rawsamples=rawsamples)
+    output:
+        folder=directory("%s/QC/RAW/multiqc/" % (config["project-folder"])),
+        file="%s/QC/RAW/multiqc/multiqc_rawreport.html" % (config["project-folder"])
+    log:
+        "%s/logs/MULTIQC/multiqc_raw.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_raw.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output.folder} --filename {output.file} {input} > {log} 2>&1;
+    """
+    
+rule fastqc_quality_control_trimmedData:
+    """
+    Quality control of fastq files (FASTQC).
+    """
+    input:
+        "%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"])
+    output:
+        "%s/QC/TRIMMED/{raw_samples}_trimmed_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_trimmed.{raw_samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_trimmed.{raw_samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/TRIMMED/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input} 2> {log};
+    """
+
+rule multiqc_quality_control_trimmedData:
+    """
+    Quality control of fastq files (MULTIQC).
+    """
+    input:
+        expand("%s/QC/TRIMMED/{temp2}_trimmed_fastqc.zip" % (config["project-folder"]), temp2=rawsamples)
+    output:
+        directory("%s/QC/TRIMMED/multiqc/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_trimmed.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_trimmed.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output} {input} 2> {log};
+    """
+    
+rule fastqc_quality_control_concatenatedData:
+    """
+    Quality control of concatenated fastq files (FASTQC).
+    """
+    input:
+        "%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz" % (config["project-folder"])
+    output:
+        "%s/QC/CONCATENATED/{samples}_R1_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_concatenated.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_concatenated.{samples}.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    params:
+        outfolder="%s/QC/CONCATENATED/" % (config["project-folder"])
+    singularity: config["singularity"]["fastqc"]    
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input} 2> {log};
+    """
+    
+
+rule multiqc_quality_control_concatenatedData:
+    """
+    Quality control of concatenated fastq files (MULTIQC).
+    """
+    input:
+        expand("%s/QC/CONCATENATED/{samples}_R1_fastqc.zip" % (config["project-folder"]), samples=samples)
+    output:
+        directory("%s/QC/CONCATENATED/multiqc/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_concatenated.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_concatenated.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output} {input} 2> {log};
+    """
+    
+rule fastqc_quality_control_tRNA:
+    """
+    Quality control of fastq files after tRNA mapping (FASTQC).
+    """
+    input:
+        unmapped="%s/FASTQ/tRNA/unmapped/{samples}_tRNA_unmapped.fastq" % (config["project-folder"]),
+        mapped="%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"])
+    output:
+        unmapped="%s/QC/tRNA/{samples}_tRNA_unmapped_fastqc.zip" % (config["project-folder"]),
+        mapped="%s/QC/tRNA/{samples}_tRNA_mapped_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_tRNA.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_tRNA.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/tRNA/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.unmapped} 2> {log};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.mapped} 2> {log};
+    """
+
+
+rule multiqc_quality_control_tRNA:
+    """
+    Quality control of fastq files after tRNA mapping (MULTIQC).
+    """
+    input:
+        unmapped=expand("%s/QC/tRNA/{samples}_tRNA_unmapped_fastqc.zip" % (config["project-folder"]), samples=samples),
+        mapped=expand("%s/QC/tRNA/{samples}_tRNA_mapped_fastqc.zip" % (config["project-folder"]), samples=samples)
+    output:
+        unmapped=directory("%s/QC/tRNA/multiqc_unmapped/" % (config["project-folder"])),
+        mapped=directory("%s/QC/tRNA/multiqc_mapped/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_tRNA.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_tRNA.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
+        multiqc -f -o {output.mapped} {input.mapped} 2> {log};
+    """
+    
+rule fastqc_quality_control_PhiX:
+    """
+    Quality control of fastq files after PhiX mapping (FASTQC).
+    """
+    input:
+        unmapped="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
+        mapped="%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"])
+    output:
+        unmapped="%s/QC/PhiX/{samples}_PhiX_unmapped_fastqc.zip" % (config["project-folder"]),
+        mapped="%s/QC/PhiX/{samples}_PhiX_mapped_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_PhiX.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_PhiX.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/PhiX/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.unmapped} 2> {log};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.mapped} 2> {log};
+    """
+
+
+rule multiqc_quality_control_PhiX:
+    """
+    Quality control of fastq files after PhiX mapping (MULTIQC).
+    """
+    input:
+        unmapped=expand("%s/QC/PhiX/{samples}_PhiX_unmapped_fastqc.zip" % (config["project-folder"]), samples=samples),
+        mapped=expand("%s/QC/PhiX/{samples}_PhiX_mapped_fastqc.zip" % (config["project-folder"]), samples=samples)
+    output:
+        unmapped=directory("%s/QC/PhiX/multiqc_unmapped/" % (config["project-folder"])),
+        mapped=directory("%s/QC/PhiX/multiqc_mapped/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_PhiX.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_PhiX.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
+        multiqc -f -o {output.mapped} {input.mapped} 2> {log};
+    """
+    
+rule fastqc_quality_control_Mature:
+    """
+    Quality control of fastq files after Mature mapping (FASTQC).
+    """
+    input:
+        unmapped="%s/FASTQ/Mature/unmapped/{samples}_mature_unmapped.fastq" % (config["project-folder"]),
+        mapped="%s/FASTQ/Mature/mapped/{samples}_mature_mapped.fastq" % (config["project-folder"])
+    output:
+        unmapped="%s/QC/Mature/{samples}_mature_unmapped_fastqc.zip" % (config["project-folder"]),
+        mapped="%s/QC/Mature/{samples}_mature_mapped_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_mature.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_mature.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/Mature/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.unmapped} 2> {log};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.mapped} 2> {log};
+    """
+
+
+rule multiqc_quality_control_Mature:
+    """
+    Quality control of fastq files after Mature mapping (MULTIQC).
+    """
+    input:
+        unmapped=expand("%s/QC/Mature/{samples}_mature_unmapped_fastqc.zip" % (config["project-folder"]), samples=samples),
+        mapped=expand("%s/QC/Mature/{samples}_mature_mapped_fastqc.zip" % (config["project-folder"]), samples=samples)
+    output:
+        unmapped=directory("%s/QC/Mature/multiqc_unmapped/" % (config["project-folder"])),
+        mapped=directory("%s/QC/Mature/multiqc_mapped/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_mature.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_mature.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
+        multiqc -f -o {output.mapped} {input.mapped} 2> {log};
+    """
+    
+rule fastqc_quality_control_Hairpin:
+    """
+    Quality control of fastq files after Hairpin mapping (FASTQC).
+    """
+    input:
+        unmapped="%s/FASTQ/Hairpin/unmapped/{samples}_hairpin_unmapped.fastq" % (config["project-folder"]),
+        mapped="%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.fastq" % (config["project-folder"])
+    output:
+        unmapped="%s/QC/Hairpin/{samples}_hairpin_unmapped_fastqc.zip" % (config["project-folder"]),
+        mapped="%s/QC/Hairpin/{samples}_hairpin_mapped_fastqc.zip" % (config["project-folder"])
+    log:
+        "%s/logs/FASTQC/fastqc_hairpin.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FASTQC/fastqc_hairpin.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        outfolder="%s/QC/Hairpin/" % (config["project-folder"])
+    threads: cluster["fastqc"]["cpus-per-task"]
+    resources:
+        time=cluster["fastqc"]["time"],
+        mem=cluster["fastqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["fastqc"]
+    shell:"""
+        mkdir -p {params.outfolder};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.unmapped} 2> {log};
+        fastqc -t {threads} -o {params.outfolder} --extract {input.mapped} 2> {log};
+    """
+
+
+rule multiqc_quality_control_Hairpin:
+    """
+    Quality control of fastq files after Hairpin mapping (MULTIQC).
+    """
+    input:
+        unmapped=expand("%s/QC/Hairpin/{samples}_hairpin_unmapped_fastqc.zip" % (config["project-folder"]), samples=samples),
+        mapped=expand("%s/QC/Hairpin/{samples}_hairpin_mapped_fastqc.zip" % (config["project-folder"]), samples=samples)
+    output:
+        unmapped=directory("%s/QC/Hairpin/multiqc_unmapped/" % (config["project-folder"])),
+        mapped=directory("%s/QC/Hairpin/multiqc_mapped/" % (config["project-folder"]))
+    log:
+        "%s/logs/MULTIQC/multiqc_hairpin.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/MULTIQC/multiqc_hairpin.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["multiqc"]["cpus-per-task"]
+    resources:
+        time=cluster["multiqc"]["time"],
+        mem=cluster["multiqc"]["mem-per-cpu"]
+    singularity: config["singularity"]["multiqc"]
+    shell:"""
+        multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
+        multiqc -f -o {output.mapped} {input.mapped} 2> {log};
+    """

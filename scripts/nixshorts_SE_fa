@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# This removes reads of a below a certain length from single-end read files in fastq format
+
+# Usage: $ bash nixshorts_SE [input fastq] [minimum read length to keep]
+
+# PROCESS:
+
+#0. Unzip the fastq (add here later your script to unzip and zip ater again...)
+filename=$(basename -- "$1")
+directory=$(dirname -- "$1")
+extension="${filename##*.}"
+filename="$directory/${filename%.*}"
+
+if [ "$extension" == "gz" ]; then
+  echo "Zipped file, start to unzip"
+  gunzip $1
+  R1fq=$filename
+else 
+  R1fq=$1
+fi
+
+#1. Start with inputs
+minlen=$2
+
+echo "Remove all entries shorter than" $minlen "bases"
+
+#2. Find all entries with read length less than minimum length and print line numbers
+awk -v min=$minlen '{if(length($0)<min) print NR"\n"NR-1}' $R1fq > $R1fq.temp.lines1
+
+#3. Combine both line files into one, sort them numerically, and collapse redundant entries
+sort -n $R1fq.temp.lines1 | uniq > $R1fq.temp.lines
+rm $R1fq.temp.lines1
+
+#4. Remove the line numbers recorded in "lines" from the fastq
+rm $R1fq.temp.lines
+if [[ $(wc -l <$R1fq.temp.lines) > 0 ]];then  
+  echo "Found short sequences, remove them now"
+echo  awk 'NR==FNR{l[$0];next;} !(FNR in l)' $R1fq.temp.lines $R1fq > $R1fq.$minlen
+else
+  echo "No short sequences, copy the original input to output"
+  cp $R1fq $R1fq.$minlen
+fi
+
+#5. Conclude
+echo "Reads shorter than $minlen bases removed from $R1fq and $R2fq" 
+
+if [ "$extension" == "gz" ]; then
+  echo "Input file was zipped, zip output"
+  gzip $R1fq.$minlen
+  gzip $filename
+fi
