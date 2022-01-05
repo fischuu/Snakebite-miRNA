@@ -517,6 +517,10 @@ rule bash_get_softclipped_fasta:
     params:
         l=config["params"]["extractSoftClipped"]["length"],
         pipe=config["pipeline-folder"]
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
     shell:"""
         {params.pipe}/scripts/extractSoftclipped -l {params.l} {input.ref} > {output.ref} 2> {log}
         {params.pipe}/scripts/extractSoftclipped -l {params.l} {input.mature} > {output.mature} 2> {log}

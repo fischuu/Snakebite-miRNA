@@ -354,8 +354,8 @@ First, we align the reads against the mature.fa file from mirbase.
 
 ```{r}
 tmp <- getReadCounts("Mature", mode="wcl")
-mature.unmapped.reads <- tmp$unmapped.reads
-mature.mapped.reads <- tmp$mapped.reads
+mature.unmapped.reads <- tmp$unmapped
+mature.mapped.reads <- tmp$mapped
 ```
 
 ```{r}
@@ -367,8 +367,8 @@ legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)
 
 ```{r}
 tmp <- getReadCounts("Mature", mode="wcc")
-mature.unmapped.bases <- tmp$unmapped.reads
-mature.mapped.bases <- tmp$mapped.reads
+mature.unmapped.bases <- tmp$unmapped
+mature.mapped.bases <- tmp$mapped
 ```
 
 ```{r}
@@ -382,8 +382,8 @@ Then, we align the reads that do not align to mature.fa against the hairpin.fa f
 
 ```{r}
 tmp <- getReadCounts("Hairpin", mode="wcl")
-hairpin.unmapped.reads <- tmp$unmapped.reads
-hairpin.mapped.reads <- tmp$mapped.reads
+hairpin.unmapped.reads <- tmp$unmapped
+hairpin.mapped.reads <- tmp$mapped
 ```
 
 ```{r}
@@ -394,8 +394,8 @@ legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa 
 
 ```{r}
 tmp <- getReadCounts("Hairpin", mode="wcc")
-hairpin.unmapped.bases <- tmp$unmapped.reads
-hairpin.mapped.bases <- tmp$mapped.reads
+hairpin.unmapped.bases <- tmp$unmapped
+hairpin.mapped.bases <- tmp$mapped
 ```
 
 ```{r}
@@ -409,8 +409,8 @@ The remaining reads we align then against the reference genome
 
 ```{r}
 tmp <- getReadCounts("Reference", mode="wcl")
-reference.bowtie.unmapped.reads <- tmp$unmapped.reads
-reference.bowtie.mapped.reads <- tmp$mapped.reads
+reference.bowtie.unmapped.reads <- tmp$unmapped
+reference.bowtie.mapped.reads <- tmp$mapped
 ```
 
 ```{r}
@@ -421,8 +421,8 @@ legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference 
 
 ```{r}
 tmp <- getReadCounts("Reference", mode="wcc")
-reference.bowtie.unmapped.bases <- tmp$unmapped.reads
-reference.bowtie.mapped.bases <- tmp$mapped.reads
+reference.bowtie.unmapped.bases <- tmp$unmapped
+reference.bowtie.mapped.bases <- tmp$mapped
 ```
 
 ```{r}
@@ -477,6 +477,51 @@ Unmapped 'Others' is currently not imported from the STAR-logs functions, hence 
 ```{r}
 barplot(phix.unmapped.reads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
 ```
+### Mature-Species
+Analysis of the STAR alignment logs
+
+```{r}
+starlogs.dirs <- list.dirs(file.path(projFolder,"BAM", "STAR", "Mature_Species"))[-1]
+
+starlogs <- list()
+
+for(i in 1:length(starlogs.dirs)){
+starlogs[[i]] <- importSTARLog(starlogs.dirs[i])
+}
+
+starlogs.totalReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",1))
+starlogs.inputReadLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",2),"[",2),"[",2))
+starlogs.uniqueReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",1))
+starlogs.uniqueReadsPercent <- as.numeric(gsub("%","",sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",2)))
+starlogs.uniqueReadsLength <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",3),"[",2),"[",3))
+starlogs.multiReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",1))
+starlogs.multiReads.toomany <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",4),"[",2),"[",3))
+starlogs.umappedReads.mismatch <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",1))
+starlogs.umappedReads.tooShort <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",5),"[",2),"[",3))
+starlogs.chimericReads <- as.numeric(sapply(sapply(sapply(sapply(starlogs,"[",2),"[",6),"[",2),"[",1))
+```
+
+```{r}
+par(mar=c(5,6,2,12), xpd=TRUE)
+starlogs.matrix <- rbind(starlogs.uniqueReads,
+                         starlogs.multiReads,
+                         starlogs.multiReads.toomany,
+                         starlogs.umappedReads.mismatch,
+                         starlogs.umappedReads.tooShort,
+                         starlogs.chimericReads)
+colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
+
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature_species.fa)", las=2)
+legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
+```
+
+Unmapped 'Others' is currently not imported from the STAR-logs functions, hence some reads do not add up to 100% here, per sample this is:
+
+```{r}
+barplot(phix.unmapped.reads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+```
+
+
 ### Reference
 Analysis of the STAR alignment logs
 

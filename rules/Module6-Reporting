@@ -1,0 +1,42 @@
+rule R_pipelineReport:
+    """
+    Create the pipeline report (R).
+    """
+    input:
+        expand("%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
+        expand("%s/FASTQ/Mature/mapped/{samples}_mature_mapped.wcl" % (config["project-folder"]), samples=samples),
+        expand("%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.wcl" % (config["project-folder"]), samples=samples),
+        expand("%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]), samples=samples)
+    output:
+        "%s/pipelineReport.html" % (config["project-folder"])
+    log:
+        "%s/logs/R/pipelineReport.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/R/pipelineReport.benchmark.tsv" % (config["project-folder"])
+    singularity:
+        "docker://fischuu/r-gbs:4.1.2-0.1"
+    params:
+       script=config["report-script"],
+       projFolder=config["project-folder"],
+       pipeFolder=config["pipeline-folder"],
+       pipeConfig=config["pipeline-config"],
+       refGenome=config["reference"],
+       refAnnot=config["refAnnot"]
+    threads: cluster["R_pipelineReport"]["cpus-per-task"]
+    resources:
+        time=cluster["R_pipelineReport"]["time"],
+        mem=cluster["R_pipelineReport"]["mem-per-cpu"]
+    shell:"""
+       R -e "projFolder <- '{params.projFolder}'; \
+             pipelineFolder <- '{params.pipeFolder}'; \
+             refGenome.file <- '{params.refGenome}'; \
+             refAnnot.file <- '{params.refAnnot}'; \
+             pipelineConfig <- '{params.pipeConfig}'; \
+             snakemake <- TRUE;\
+             rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
+    """
