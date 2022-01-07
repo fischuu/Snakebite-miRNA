@@ -8,8 +8,10 @@ rule cutadapt_trimming:
         fastqAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.fastq.gz" % (config["project-folder"]),
         fastq="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]),
         wclin="%s/FASTQ/RAW/{raw_samples}.wcl" % (config["project-folder"]),
+        wcloutAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.wcl" % (config["project-folder"]),
         wclout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcl" % (config["project-folder"]),
         wccin="%s/FASTQ/RAW/{raw_samples}.wcc" % (config["project-folder"]),
+        wccoutAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.wcc" % (config["project-folder"]),
         wccout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcc" % (config["project-folder"])
     log:
         "%s/logs/CUTADAPT/cutadapt.{raw_samples}.log" % (config["project-folder"])
@@ -37,9 +39,11 @@ rule cutadapt_trimming:
                -o {output.fastq} {output.fastqAdapter} 2> {log};
                
       zcat {input} | wc -l > {output.wclin}
+      zcat {output.fastqAdapter} | wc -l > {output.wcloutAdapter}
       zcat {output.fastq} | wc -l > {output.wclout}
       
       zcat {input} | sed -n '2~4p' | wc -c  > {output.wccin}
+      zcat {output.fastqAdapter} | sed -n '2~4p' | wc -c  > {output.wccoutAdapter}
       zcat {output.fastq} | sed -n '2~4p' | wc -c  > {output.wccout}
     """
     

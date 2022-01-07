@@ -7,8 +7,10 @@ rm -rf FASTQ/PhiX/
 rm -rf FASTQ/Reference/
 rm -rf FASTQ/TRIMMED/
 rm -rf FASTQ/tRNA/
+rm -rf FASTA/
 rm -rf QC/
 rm -rf QUANTIFICATION/
 rm -rf STAR_tmp/
 rm -rf STATS/
 rm -rf .snakemake
+rm pipelineReport.html
