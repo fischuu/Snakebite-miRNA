@@ -28,8 +28,9 @@ params:
     threads: 20
   cutadapt:
     minLength: 15
-    threads: 20
     qualtrim: 10
+    fiveprimetrim: 0
+    threeprimetrim: 0
   fastx:
     length: 20
   extractSoftClipped:

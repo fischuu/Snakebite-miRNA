@@ -5,6 +5,7 @@ rule cutadapt_trimming:
     input:
         "%s/FASTQ/RAW/{raw_samples}.fastq.gz" % (config["project-folder"])
     output:
+        fastqAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.fastq.gz" % (config["project-folder"]),
         fastq="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]),
         wclin="%s/FASTQ/RAW/{raw_samples}.wcl" % (config["project-folder"]),
         wclout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcl" % (config["project-folder"]),
@@ -17,7 +18,9 @@ rule cutadapt_trimming:
     params:
         adapter=config["adapter"],
         minLength=config["params"]["cutadapt"]["minLength"],
-        qualtrim=config["params"]["cutadapt"]["qualtrim"]
+        qualtrim=config["params"]["cutadapt"]["qualtrim"],
+        fiveprimetrim=config["params"]["cutadapt"]["fiveprimetrim"],
+        threeprimetrim=config["params"]["cutadapt"]["threeprimetrim"]
     threads: cluster["cutadapt_trimming"]["cpus-per-task"]
     resources:
         time=cluster["cutadapt_trimming"]["time"],
@@ -25,9 +28,13 @@ rule cutadapt_trimming:
     singularity: config["singularity"]["cutadapt"]
     shell:"""
       cutadapt -a file:{params.adapter} \
-               --minimum-length {params.minLength} \
+               -j {threads} \
+               -o {output.fastqAdapter} {input} 2> {log};
+               
+      cutadapt --minimum-length {params.minLength} \
                -j {threads} -q {params.qualtrim} --trim-n \
-               -o {output.fastq} {input} 2> {log};
+               --cut {params.fiveprimetrim} --cut -{params.threeprimetrim} \
+               -o {output.fastq} {output.fastqAdapter} 2> {log};
                
       zcat {input} | wc -l > {output.wclin}
       zcat {output.fastq} | wc -l > {output.wclout}

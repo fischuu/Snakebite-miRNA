@@ -4,6 +4,7 @@
 #####                                                                      #####
 ################################################################################
 
+* 0.3.4: Option to hard-trim 5' and 3' end added
 * 0.3.3: Softclipped reads from STAR alignments are now extracted
 * 0.3.2: Added a species filter for the mature.fa mirbase file
 * 0.3.1: Switched from conda to singularity environment
