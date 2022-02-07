@@ -163,7 +163,7 @@ barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=4)
 ### Trimmed, lane-wise reads
 
 ```{r}
-trimmed.read.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*.wcl")
+trimmed.read.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*trimmed.wcl")
 
 trimmed.reads <- c()
 for(i in 1:length(trimmed.read.files)){
@@ -230,7 +230,7 @@ barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=4)
 ```
 ### Trimmed, lane-wise bases
 ```{r}
-trimmed.bases.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*.wcc")
+trimmed.bases.files <- list.files(file.path(projFolder, "FASTQ", "TRIMMED"), pattern="*trimmed.wcc")
 
 trimmed.bases <- c()
 for(i in 1:length(trimmed.bases.files)){
@@ -377,6 +377,42 @@ barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), 
 legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
 ```
 
+
+### Mature-species
+Then, we align the miRNA against the mirbase species specific miRNA sequences only.
+
+```{r}
+tmp <- getReadCounts("Mature_Species", mode="wcl")
+mature_species.unmapped.reads <- tmp$unmapped
+mature_species.mapped.reads <- tmp$mapped
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(phix.unmapped.reads,mature_species.unmapped.reads, mature_species.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
+        aligned to Mature_Species.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+```
+
+```{r}
+tmp <- getReadCounts("Mature_Species", mode="wcc")
+mature_species.unmapped.bases <- tmp$unmapped
+mature_species.mapped.bases <- tmp$mapped
+```
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(4,5,6))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+```
+Differences between the total Mature.fa and Mature_Species.fa only:
+
+```{r}
+par(mar=c(15,6,2,8), xpd=TRUE)
+barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa", col=c(4))
+```
+
+
 ### Hairpin
 Then, we align the reads that do not align to mature.fa against the hairpin.fa file from mirbase.
 
@@ -400,7 +436,7 @@ hairpin.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="FMature.fa unaligned bases aligned to Hairpin.fa", col=c(4,5,6))
+barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(4,5,6))
 legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
 ```
 
@@ -430,6 +466,7 @@ par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main="Hairpin.fa unaligned bases aligned to reference genome", col=c(4,5,6))
 legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
 ```
+
 
 ## STAR
 We align the data also with STAR, due to its soft-clipping feature
@@ -570,7 +607,13 @@ ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE
 
 # Quantification
 
-## Mature.fa
+## Mirbase
+
+### Mature.fa
+
+### Mature_Species.fa
+
+### Differences Mature.fa and Mature_Species.fa
 
 ## Reference
 First some general stats about the used reference genome annotation
