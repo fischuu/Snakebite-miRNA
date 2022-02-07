@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.4
-version = "0.3.4"
+##### Version: 0.3.5
+version = "0.3.5"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -62,6 +62,8 @@ print("##### --------------------------------")
 print("##### project-folder  : "+config["project-folder"])
 print("##### pipeline-folder : "+config["pipeline-folder"])
 print("##### server-config   : "+config["server-config"])
+print("##### pipeline-config : "+config["pipeline-config"])
+print("##### species-id      : "+config["params"]["species-id"])
 print("#####")
 print("##### Singularity configuration")
 print("##### --------------------------------")

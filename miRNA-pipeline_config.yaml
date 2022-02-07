@@ -4,7 +4,6 @@ pipeline-folder: /scratch/project_2001310/Pipeline-miRNA
 pipeline-config: miRNA-pipeline_config-bovreg_twinbull.yaml
 server-config: /scratch/project_2001310/BovReg_TwinBullSperm-orig/miRNA-pipeline_puhti-config.yaml
 scratch-folder: $LOCAL_SCRATCH
-species-id: bta  # used to filter mature.fa and hairpin.fa, check for required identifier.
 
 # absolute path to sample sheet (list of sample identifiers)
 rawsamples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/rawsamples
@@ -21,6 +20,7 @@ starbase: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/STAR
 
 
 params:
+  species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
   bowtie:
     m: 1
     mMulti: 5

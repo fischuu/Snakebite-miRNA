@@ -48,8 +48,7 @@ rule bash_prepare_mirdb_references:
     """
     input:
         mature=config["matureRef"],
-        hairpin=config["hairpinRef"],
-        species=config["species-id"]
+        hairpin=config["hairpinRef"]
     output:
         mature="%s/References/mature_basesAdjusted.fa" % (config["project-folder"]),
         matureSpecies="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"]),
@@ -63,13 +62,15 @@ rule bash_prepare_mirdb_references:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]
     singularity: config["singularity"]["bowtie"]
+    params:
+        species=config["params"]["species-id"]
     shell:"""
      # Change bases U to T
      sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
      sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
 
      # Filter species
-     grep -A 1 '{input.species}' {output.mature}  > {output.matureSpecies}
+     grep -A 1 '{params.species}' {output.mature}  > {output.matureSpecies}
     """
     
 rule bowtie_createIndex_mature:
