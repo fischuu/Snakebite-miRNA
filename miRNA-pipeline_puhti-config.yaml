@@ -47,6 +47,12 @@ star_createIndex_mature:
     time: 120
     cpus-per-task: 10
     mem-per-cpu: 6000
+    
+star_createIndex_hairpin:
+    job-name: starIndex_hairpin
+    time: 120
+    cpus-per-task: 10
+    mem-per-cpu: 6000
 
 star_createIndex_reference:
     job-name: starIndex_reference
@@ -126,6 +132,12 @@ star_map_clear_reads_reference:
     
 # Module 5 - Quantification
 ################################################################################
+seqkit_quantify_reference_BOWTIE:
+    job-name: seqkit_quantify_maturefa_BOWTIE
+    time: 100
+    cpus-per-task: 16
+    mem-per-cpu: 4000
+
 featureCounts_quantify_reference_BOWTIE:
     job-name: featureCounts_quantify_reference_BOWTIE
     time: 100

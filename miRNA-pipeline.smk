@@ -30,11 +30,12 @@ config["tRNAIndex"] = config["tRNARef"]
 config["phixIndex"] = config["phixRef"]
 config["matureIndex"] =  "%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
 config["matureSpeciesIndex"] =  "%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"])
-config["matureSTARIndex"] = config["starbase"]+"/Mature"
-config["matureSpeciesSTARIndex"] = config["starbase"]+"/MatureSpecies"
-config["referenceSTARIndex"] = config["starbase"]+"/Reference"
 config["hairpinIndex"] =  "%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
 config["referenceIndex"] = config["reference"]
+config["matureSTARIndex"] = config["starbase"]+"/Mature"
+config["hairpinSTARIndex"] = config["starbase"]+"/Hairpin"
+config["matureSpeciesSTARIndex"] = config["starbase"]+"/MatureSpecies"
+config["referenceSTARIndex"] = config["starbase"]+"/Reference"
 config["report-script"] = config["pipeline-folder"]+"/scripts/workflow-report.Rmd"
 
 ##### Singularity container #####
@@ -46,6 +47,7 @@ config["singularity"]["multiqc"] = "docker://fischuu/gbs:0.2"
 config["singularity"]["samtools"] = "docker://fischuu/samtools:1.9-0.2"
 config["singularity"]["star"] = "docker://fischuu/star:2.7.3a-0.2"
 config["singularity"]["subread"] = "docker://fischuu/subread:2.0.1-0.1"
+config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.1"
 
 ##### Input constraints #####
 wildcard_constraints:
@@ -74,6 +76,7 @@ print("##### multiqc         : "+config["singularity"]["multiqc"])
 print("##### samtools        : "+config["singularity"]["samtools"])
 print("##### star            : "+config["singularity"]["star"])
 print("##### subread         : "+config["singularity"]["subread"])
+print("##### seqkit          : "+config["singularity"]["seqkit"])
 print("#################################################################################")
 
 ##### run complete pipeline #####
@@ -103,6 +106,7 @@ rule all:
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
       # REPORTING
         "%s/pipelineReport.html" % (config["project-folder"])
 #      # ANALYSIS - Conservation

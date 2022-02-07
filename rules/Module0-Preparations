@@ -163,7 +163,7 @@ rule bowtie_createIndex_reference:
 
 rule star_createIndex_mature:
     """
-    Create Bowtie Index for mature.fa (STAR).
+    Create STAR Index for mature.fa (STAR).
     """
     input:
         fasta="%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
@@ -187,7 +187,7 @@ rule star_createIndex_mature:
     
 rule star_createIndex_mature_species:
     """
-    Create Bowtie Index for mature_basesAdjusted_species.fa (STAR).
+    Create STAR Index for mature_basesAdjusted_species.fa (STAR).
     """
     input:
         fasta="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"])
@@ -208,6 +208,31 @@ rule star_createIndex_mature_species:
     shell:"""
         STAR --runThreadN {threads} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """ 
+
+rule star_createIndex_hairpin:
+    """
+    Create STAR Index for hairpin.fa (STAR).
+    """
+    input:
+        fasta="%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
+    output:
+        "%s/chrName.txt" % (config["hairpinSTARIndex"])
+    log:
+        "%s/logs/STAR/star_index_hairpin.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_index_hairpin.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["hairpinSTARIndex"]
+    group: "star-index"
+    threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
+    resources:
+        time=cluster["star_createIndex_hairpin"]["time"],
+        mem=cluster["star_createIndex_hairpin"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        STAR --runThreadN {threads} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+    """ 
+
 
 rule star_createIndex_reference:
     """
