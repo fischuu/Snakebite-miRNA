@@ -4,6 +4,7 @@
 #####                                                                      #####
 ################################################################################
 
+* 0.3.6: Improved workflow-report
 * 0.3.5: Bugfix in the species filter
 * 0.3.4: Option to hard-trim 5' and 3' end added
 * 0.3.3: Softclipped reads from STAR alignments are now extracted

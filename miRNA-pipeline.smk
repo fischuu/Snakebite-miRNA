@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.5
-version = "0.3.5"
+##### Version: 0.3.6
+version = "0.3.6"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
