@@ -1,6 +1,6 @@
-rule featureCounts_quantify_mature_BOWTIE:
+rule seqkit_quantify_mature_BOWTIE:
     """
-    Quantify the BOWTIE aligned reads to mature.fa (featureCounts).
+    Quantify the BOWTIE aligned reads to mature.fa (seqkit).
     """
     input:
         bam="%s/BAM/BOWTIE/Mature/{samples}_mature.bam" % (config["project-folder"])

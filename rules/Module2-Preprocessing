@@ -33,7 +33,8 @@ rule cutadapt_trimming:
                -j {threads} \
                -o {output.fastqAdapter} {input} 2> {log};
                
-      cutadapt --minimum-length {params.minLength} \
+      cutadapt -a file:{params.adapter} \
+               --minimum-length {params.minLength} \
                -j {threads} -q {params.qualtrim} --trim-n \
                --cut {params.fiveprimetrim} --cut -{params.threeprimetrim} \
                -o {output.fastq} {output.fastqAdapter} 2> {log};

@@ -124,16 +124,24 @@ star_map_clear_reads_mature:
     cpus-per-task: 20
     mem-per-cpu: 4000
     
+star_map_clear_reads_hairpin:
+    job-name: star_map_clear_reads_hairpin
+    time: 100
+    cpus-per-task: 20
+    mem-per-cpu: 4000
+
 star_map_clear_reads_reference:
     job-name: star_map_clear_reads_reference
     time: 100
     cpus-per-task: 20
     mem-per-cpu: 4000
+
+
     
 # Module 5 - Quantification
 ################################################################################
-seqkit_quantify_reference_BOWTIE:
-    job-name: seqkit_quantify_maturefa_BOWTIE
+seqkit_quantify_maturefa_BOWTIE:
+    job-name: seqkit_quantify_reference_BOWTIE
     time: 100
     cpus-per-task: 16
     mem-per-cpu: 4000
@@ -149,7 +157,7 @@ featureCounts_quantify_reference_STAR:
     time: 100
     cpus-per-task: 16
     mem-per-cpu: 4000
-    
+   
 # Module 6 - Reporting
 ################################################################################
 R_pipelineReport:

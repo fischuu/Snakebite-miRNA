@@ -68,7 +68,7 @@ rule samtools_clear_reads_mature_flagstats:
     
 rule bowtie_map_clear_reads_mature_species:
     """
-    Map non-tRNA and non-phiX samples against the mature.fa reference (bowtie).
+    Map non-tRNA and non-phiX samples against the mature_species.fa reference (bowtie).
     """
     input:
         reads="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"]),
@@ -334,7 +334,11 @@ rule samtools_star_reads_mature_flagstats:
         "%s/BAM/STAR/Mature/{samples}_mature_star.bam" % (config["project-folder"])
     output:
         flagstat="%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
-        stats="%s/STATS/STAR/Mature/{samples}_mature.stats" % (config["project-folder"])
+        stats="%s/STATS/STAR/Mature/{samples}_mature.stats" % (config["project-folder"]),
+        fastqMapped="%s/FASTQ/Mature/mapped_star/{samples}_mature_mapped_star.fastq" % (config["project-folder"]),
+        fastqUnmapped="%s/FASTQ/Mature/unmapped_star/{samples}_mature_unmapped_star.fastq" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_star_mature.{samples}.log" % (config["project-folder"])
     group: "star_stats"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
@@ -342,8 +346,13 @@ rule samtools_star_reads_mature_flagstats:
         mem=cluster["__default__"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
-        samtools flagstat {input} > {output.flagstat};
-        samtools stats {input} > {output.stats};
+        samtools flagstat {input} > {output.flagstat} 2> {log}
+        samtools stats {input} > {output.stats} 2> {log}
+        
+#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
+#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        touch {output.fastqMapped}
+        touch {output.fastqUnmapped}
     """
 
 rule star_map_clear_reads_mature_species:
@@ -382,7 +391,7 @@ rule star_map_clear_reads_mature_species:
         STAR --genomeDir {params.index} \
             --outTmpDir {params.tmpdir} \
             --readFilesIn {input.fastq} \
-            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMismatchNoverLmax 0.05 \
             --outFilterMatchNmin 16 \
             --outFilterScoreMinOverLread 0  \
             --outFilterMatchNminOverLread 0 \
@@ -410,7 +419,11 @@ rule samtools_star_reads_mature_species_flagstats:
         "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"])
     output:
         flagstat="%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
-        stats="%s/STATS/STAR/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"])
+        stats="%s/STATS/STAR/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
+        fastqMapped="%s/FASTQ/Mature_Species/mapped_star/{samples}_mature_species_mapped_star.fastq" % (config["project-folder"]),
+        fastqUnmapped="%s/FASTQ/Mature_Species/unmapped_star/{samples}_mature_species_unmapped_star.fastq" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_star_mature_species.{samples}.log" % (config["project-folder"])
     group: "star_stats"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
@@ -418,8 +431,13 @@ rule samtools_star_reads_mature_species_flagstats:
         mem=cluster["__default__"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
-        samtools flagstat {input} > {output.flagstat};
-        samtools stats {input} > {output.stats};
+        samtools flagstat {input} > {output.flagstat} 2> {log}
+        samtools stats {input} > {output.stats} 2> {log}
+        
+#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
+#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        touch {output.fastqMapped}
+        touch {output.fastqUnmapped}
     """
 
 rule star_map_clear_reads_hairpin:
@@ -458,7 +476,7 @@ rule star_map_clear_reads_hairpin:
         STAR --genomeDir {params.index} \
             --outTmpDir {params.tmpdir} \
             --readFilesIn {input.fastq} \
-            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMismatchNoverLmax 0.05 \
             --outFilterMatchNmin 16 \
             --outFilterScoreMinOverLread 0  \
             --outFilterMatchNminOverLread 0 \
@@ -486,7 +504,11 @@ rule samtools_star_reads_hairpin_flagstats:
         "%s/BAM/STAR/Hairpin/{samples}_hairpin_star.bam" % (config["project-folder"])
     output:
         flagstat="%s/STATS/STAR/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]),
-        stats="%s/STATS/STAR/Hairpin/{samples}_hairpin.stats" % (config["project-folder"])
+        stats="%s/STATS/STAR/Hairpin/{samples}_hairpin.stats" % (config["project-folder"]),
+        fastqMapped="%s/FASTQ/Hairpin/mapped_star/{samples}_hairpin_mapped_star.fastq" % (config["project-folder"]),
+        fastqUnmapped="%s/FASTQ/Hairpin/unmapped_star/{samples}_hairpin_unmapped_star.fastq" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_star_hairpin.{samples}.log" % (config["project-folder"])
     group: "star_stats"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
@@ -494,8 +516,13 @@ rule samtools_star_reads_hairpin_flagstats:
         mem=cluster["__default__"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
-        samtools flagstat {input} > {output.flagstat};
-        samtools stats {input} > {output.stats};
+        samtools flagstat {input} > {output.flagstat} 2> {log}
+        samtools stats {input} > {output.stats} 2> {log}
+        
+#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
+#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        touch {output.fastqMapped}
+        touch {output.fastqUnmapped}
     """
     
 rule star_map_clear_reads_reference:
@@ -534,7 +561,7 @@ rule star_map_clear_reads_reference:
         STAR --genomeDir {params.index} \
             --outTmpDir {params.tmpdir} \
             --readFilesIn {input.fastq} \
-            --outFilterMismatchNoverLmax 0.01 \
+            --outFilterMismatchNoverLmax 0.05 \
             --outFilterMatchNmin 16 \
             --outFilterScoreMinOverLread 0  \
             --outFilterMatchNminOverLread 0 \
@@ -562,7 +589,11 @@ rule samtools_star_reads_reference_flagstats:
         "%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
     output:
         flagstat="%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]),
-        stats="%s/STATS/STAR/Reference/{samples}_reference.stats" % (config["project-folder"])
+        stats="%s/STATS/STAR/Reference/{samples}_reference.stats" % (config["project-folder"]),
+        fastqMapped="%s/FASTQ/Reference/mapped_star/{samples}_reference_mapped_star.fastq" % (config["project-folder"]),
+        fastqUnmapped="%s/FASTQ/Reference/unmapped_star/{samples}_reference_unmapped_star.fastq" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_star_reference.{samples}.log" % (config["project-folder"])
     group: "star_stats"   
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
@@ -570,8 +601,13 @@ rule samtools_star_reads_reference_flagstats:
         mem=cluster["__default__"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
-        samtools flagstat {input} > {output.flagstat};
-        samtools stats {input} > {output.stats};
+        samtools flagstat {input} > {output.flagstat} 2> {log}
+        samtools stats {input} > {output.stats} 2> {log}
+        
+#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
+#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        touch {output.fastqMapped}
+        touch {output.fastqUnmapped}
     """
 
 rule bash_get_softclipped_fasta:
