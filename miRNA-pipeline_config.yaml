@@ -9,7 +9,6 @@ scratch-folder: $LOCAL_SCRATCH
 rawsamples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/rawsamples
 samples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samples
 
-adapter: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/Adapter.fa
 tRNARef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/tRNA/bosTau8-tRNAs.fa
 phixRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/phix/phix174.fa
 matureRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/mature.fa
@@ -18,8 +17,8 @@ reference: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/B
 refAnnot: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf
 starbase: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/STAR
 
-
 params:
+  protocol: "qiagen" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
   species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
   bowtie:
     m: 1
@@ -27,8 +26,9 @@ params:
     k: 1
     threads: 20
   cutadapt:
-    minLength: 15
-    qualtrim: 10
+    adapter: "AACTGTAGGCACCATCAAT"
+    minLength: 16
+    qualtrim: 30
     fiveprimetrim: 0
     threeprimetrim: 0
   fastx:

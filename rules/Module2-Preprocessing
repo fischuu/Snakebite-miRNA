@@ -18,7 +18,7 @@ rule cutadapt_trimming:
     benchmark:
         "%s/benchmark/CUTADAPT/cutadapt.{raw_samples}.benchmark.tsv" % (config["project-folder"])
     params:
-        adapter=config["adapter"],
+        adapter=config["params"]["cutadapt"]["adapter"],
         minLength=config["params"]["cutadapt"]["minLength"],
         qualtrim=config["params"]["cutadapt"]["qualtrim"],
         fiveprimetrim=config["params"]["cutadapt"]["fiveprimetrim"],
@@ -29,12 +29,14 @@ rule cutadapt_trimming:
         mem=cluster["cutadapt_trimming"]["mem-per-cpu"]
     singularity: config["singularity"]["cutadapt"]
     shell:"""
-      cutadapt -a file:{params.adapter} \
+      #cutadapt -a file:{params.adapter} \
+      #         -j {threads} \
+      #         -o {output.fastqAdapter} {input} 2> {log};
+      cutadapt -a {params.adapter} \
                -j {threads} \
                -o {output.fastqAdapter} {input} 2> {log};
                
-      cutadapt -a file:{params.adapter} \
-               --minimum-length {params.minLength} \
+      cutadapt --minimum-length {params.minLength} \
                -j {threads} -q {params.qualtrim} --trim-n \
                --cut {params.fiveprimetrim} --cut -{params.threeprimetrim} \
                -o {output.fastq} {output.fastqAdapter} 2> {log};

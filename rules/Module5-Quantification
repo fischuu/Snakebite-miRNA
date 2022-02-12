@@ -16,7 +16,7 @@ rule seqkit_quantify_mature_BOWTIE:
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
-        seqkit bam -C mybam.bam > {output} 2> {log}
+        seqkit bam -C {input.bam} > {output} 2> {log}
     """
 
 rule featureCounts_quantify_reference_BOWTIE:

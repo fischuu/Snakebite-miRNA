@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.6
-version = "0.3.6"
+##### Version: 0.3.9
+version = "0.3.9"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -49,6 +49,20 @@ config["singularity"]["star"] = "docker://fischuu/star:2.7.3a-0.2"
 config["singularity"]["subread"] = "docker://fischuu/subread:2.0.1-0.1"
 config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.1"
 
+##### Apply pre-configuration settings #####
+if config["params"]["protocol"] == 'illumina':
+    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["fiveprimetrim"] = 0 
+    config["params"]["cutadapt"]["threeprimetrim"] = 0
+elif config["params"]["protocol"] == 'nextflex':
+    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["fiveprimetrim"] = 4
+    config["params"]["cutadapt"]["threeprimetrim"] = 4
+elif config["params"]["protocol"] == 'qiagen':
+    config["params"]["cutadapt"]["adapter"] = "AACTGTAGGCACCATCAAT"
+    config["params"]["cutadapt"]["fiveprimetrim"] = 0
+    config["params"]["cutadapt"]["threeprimetrim"] = 0
+
 ##### Input constraints #####
 wildcard_constraints:
     rawsamples="|".join(rawsamples),
@@ -66,6 +80,13 @@ print("##### pipeline-folder : "+config["pipeline-folder"])
 print("##### server-config   : "+config["server-config"])
 print("##### pipeline-config : "+config["pipeline-config"])
 print("##### species-id      : "+config["params"]["species-id"])
+print("##### protocol        : "+config["params"]["protocol"])
+print("#####")
+print("##### Trimming configuration")
+print("##### --------------------------------")
+print("##### adapter         : "+ config["params"]["cutadapt"]["adapter"])
+print("##### 5'-trim bases   : "+ str(config["params"]["cutadapt"]["fiveprimetrim"]))
+print("##### 3'-trim bases   : "+ str(config["params"]["cutadapt"]["threeprimetrim"]))
 print("#####")
 print("##### Singularity configuration")
 print("##### --------------------------------")
