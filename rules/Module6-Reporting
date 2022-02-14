@@ -11,7 +11,13 @@ rule R_pipelineReport:
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/Mature/mapped/{samples}_mature_mapped.wcl" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.wcl" % (config["project-folder"]), samples=samples),
-        expand("%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]), samples=samples)
+        expand("%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/BOWTIE/Mature_Species/{samples}_bowtie_mature_species_seqkit.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/BOWTIE/Hairpin/{samples}_bowtie_hairpin_seqkit.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature_species.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]), samples=samples)
     output:
         "%s/pipelineReport.html" % (config["project-folder"])
     log:

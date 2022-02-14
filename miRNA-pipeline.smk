@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.9
-version = "0.3.9"
+##### Version: 0.3.12
+version = "0.3.12"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -35,6 +35,7 @@ config["referenceIndex"] = config["reference"]
 config["matureSTARIndex"] = config["starbase"]+"/Mature"
 config["hairpinSTARIndex"] = config["starbase"]+"/Hairpin"
 config["matureSpeciesSTARIndex"] = config["starbase"]+"/MatureSpecies"
+config["hairpinSpeciesSTARIndex"] = config["starbase"]+"/HairpinSpecies"
 config["referenceSTARIndex"] = config["starbase"]+"/Reference"
 config["report-script"] = config["pipeline-folder"]+"/scripts/workflow-report.Rmd"
 
@@ -71,7 +72,7 @@ wildcard_constraints:
 ##### Print the welcome screen #####
 print("#################################################################################")
 print("##### Welcome to the Snakemake miRNA pipeline")
-print("##### version: "+version)
+print("##### Version: "+version)
 print("#####")
 print("##### Pipeline configuration")
 print("##### --------------------------------")

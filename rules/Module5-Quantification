@@ -6,17 +6,53 @@ rule seqkit_quantify_mature_BOWTIE:
         bam="%s/BAM/BOWTIE/Mature/{samples}_mature.bam" % (config["project-folder"])
     output:
         "%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"])
-    log:
-        "%s/logs/seqkit/seqkit_bowtie_reference.{samples}.log" % (config["project-folder"])
     benchmark:
-        "%s/benchmark/seqkit/seqkit_bowtie_reference.{samples}.benchmark.tsv" % (config["project-folder"])
+        "%s/benchmark/seqkit/seqkit_bowtie_maturefa.{samples}.benchmark.tsv" % (config["project-folder"])
     threads: cluster["seqkit_quantify_maturefa_BOWTIE"]["cpus-per-task"]
     resources:
         time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
-        seqkit bam -C {input.bam} > {output} 2> {log}
+        seqkit bam -C {input.bam} 2> {output}
+    """
+    
+rule seqkit_quantify_mature_species_BOWTIE:
+    """
+    Quantify the BOWTIE aligned reads to mature_species.fa (seqkit).
+    """
+    input:
+        bam="%s/BAM/BOWTIE/Mature_Species/{samples}_mature_species.bam" % (config["project-folder"])
+    output:
+        "%s/QUANTIFICATION/BOWTIE/Mature_Species/{samples}_bowtie_mature_species_seqkit.txt" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/seqkit/seqkit_bowtie_maturespeciesfa.{samples}.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["seqkit_quantify_maturefa_BOWTIE"]["cpus-per-task"]
+    resources:
+        time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
+        mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+    singularity: config["singularity"]["seqkit"]
+    shell:"""
+        seqkit bam -C {input.bam} 2> {output}
+    """
+    
+rule seqkit_quantify_hairpin_BOWTIE:
+    """
+    Quantify the BOWTIE aligned reads to mature_species.fa (seqkit).
+    """
+    input:
+        bam="%s/BAM/BOWTIE/Hairpin/{samples}_hairpin.bam" % (config["project-folder"])
+    output:
+        "%s/QUANTIFICATION/BOWTIE/Hairpin/{samples}_bowtie_hairpin_seqkit.txt" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/seqkit/seqkit_bowtie_hairpin.{samples}.benchmark.tsv" % (config["project-folder"])
+    threads: cluster["seqkit_quantify_maturefa_BOWTIE"]["cpus-per-task"]
+    resources:
+        time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
+        mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+    singularity: config["singularity"]["seqkit"]
+    shell:"""
+        seqkit bam -C {input.bam} 2> {output}
     """
 
 rule featureCounts_quantify_reference_BOWTIE:
@@ -78,3 +114,35 @@ rule featureCounts_quantify_reference_STAR:
                       -o {output.file} \
                       {input.bam} 2> {log}
     """
+    
+rule bash_quantify_mirbase_STAR:
+    """
+    Quantify the STAR primary alignments to mirbase (samtools).
+    """
+    input:
+        mature="%s/BAM/STAR/Mature/{samples}_mature_star.bam" % (config["project-folder"]),
+        maturespecies="%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"]),
+        hairpin="%s/BAM/STAR/Hairpin/{samples}_hairpin_star.bam" % (config["project-folder"]),
+        hairpinspecies="%s/BAM/STAR/Hairpin_Species/{samples}_hairpin_species_star.bam" % (config["project-folder"])
+    output:
+        mature="%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature.txt" % (config["project-folder"]),
+        maturespecies="%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature_species.txt" % (config["project-folder"]),
+        hairpin="%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]),
+        hairpinspecies="%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin_species.txt" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_quantify_star_mirbase.{samples}.log" % (config["project-folder"])
+    params: tmpdir=config["scratch-folder"]
+    threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
+    resources:
+        time=cluster["featureCounts_quantify_reference_STAR"]["time"],
+        mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        mkdir -p $TMPDIR >> {log} 2>&1
+        
+        samtools view -F 256 {input.mature} | cut -f3 | sort | uniq -c > {output.mature} 
+        samtools view -F 256 {input.maturespecies} | cut -f3 | sort | uniq -c > {output.maturespecies}
+        samtools view -F 256 {input.hairpin} | cut -f3 | sort | uniq -c > {output.hairpin}
+        samtools view -F 256 {input.hairpinspecies} | cut -f3 | sort | uniq -c > {output.hairpinspecies}
+    """
+

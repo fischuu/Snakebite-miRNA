@@ -354,8 +354,8 @@ rule samtools_star_reads_mature_flagstats:
         samtools stats {input} > {output.stats} 2> {log}
         samtools index {input}
         
-#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
-#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        samtools bam2fq -F 4 {input} > {output.fastqMapped} 2> {log}
+        samtools bam2fq -f 4 {input} > {output.fastqUnmapped} 2> {log}
         touch {output.fastqMapped}
         touch {output.fastqUnmapped}
     """
@@ -440,8 +440,8 @@ rule samtools_star_reads_mature_species_flagstats:
         samtools stats {input} > {output.stats} 2> {log}
         samtools index {input}
         
-#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
-#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        samtools bam2fq -F 4 {input} > {output.fastqMapped} 2> {log}
+        samtools bam2fq -f 4 {input} > {output.fastqUnmapped} 2> {log}
         touch {output.fastqMapped}
         touch {output.fastqUnmapped}
     """
@@ -526,19 +526,106 @@ rule samtools_star_reads_hairpin_flagstats:
         samtools stats {input} > {output.stats} 2> {log}
         samtools index {input}
         
-#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
-#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        samtools bam2fq -F 4 {input} > {output.fastqMapped} 2> {log}
+        samtools bam2fq -f 4 {input} > {output.fastqUnmapped} 2> {log}
         touch {output.fastqMapped}
         touch {output.fastqUnmapped}
     """
     
-rule star_map_clear_reads_reference:
+rule star_map_clear_reads_hairpin_species:
+    """
+    Map non-tRNA, non-phiX and non-maturespeciesfa samples against the hairpinspecies.fa (STAR).
+    """
+    input:
+        "%s/chrName.txt" % (config["hairpinSpeciesSTARIndex"]),
+        fastq="%s/FASTQ/Mature_Species/unmapped_star/{samples}_mature_species_unmapped_star.fastq" % (config["project-folder"])
+    output:
+        file="%s/BAM/STAR/Hairpin_Species/{samples}_hairpin_species_star.bam" % (config["project-folder"]),
+        dir=directory("%s/BAM/STAR/Hairpin_Species/{samples}" % (config["project-folder"]))
+    log:
+        "%s/logs/STAR/star_hairpin_species.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_hairpin_species.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        index=config["hairpinSpeciesSTARIndex"],
+        tmpdirTop="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"]),
+        tmpdir="%s/STAR_tmp/HairpinSpecies/{samples}" % (config["project-folder"])
+    group: "star_alignments"
+    threads: cluster["star_map_clear_reads_hairpin"]["cpus-per-task"]
+    resources:
+        time=cluster["star_map_clear_reads_hairpin"]["time"],
+        mem=cluster["star_map_clear_reads_hairpin"]["mem-per-cpu"]
+    singularity: config["singularity"]["star"]
+    shell:"""
+        mkdir -p {output.dir};
+        mkdir -p {params.tmpdirTop};
+
+        printf \"%s\t%s\t%s\t%s\t%s\n\" {params.index} {input.fastq} {output} {log} {threads}
+      	[ ! -d \"{output.dir}\" ] && mkdir {output.dir}
+        
+        cd {params.tmpdirTop}
+        
+        STAR --genomeDir {params.index} \
+            --outTmpDir {params.tmpdir} \
+            --readFilesIn {input.fastq} \
+            --outFilterMismatchNoverLmax 0.05 \
+            --outFilterMatchNmin 16 \
+            --outFilterScoreMinOverLread 0  \
+            --outFilterMatchNminOverLread 0 \
+            --outFilterMultimapNmax 50 \
+            --chimSegmentMin 20 \
+            --chimOutType WithinBAM \
+            --alignIntronMax 1 \
+            --outSAMtype BAM SortedByCoordinate \
+            --outSAMunmapped Within \
+            --outMultimapperOrder Random \
+            --runThreadN {threads} \
+            --outFileNamePrefix {wildcards.samples}_ 2> {log};
+            
+        cd {params.tmpdirTop};
+            
+        mv {wildcards.samples}_Aligned.sortedByCoord.out.bam {output.file}
+        mv {wildcards.samples}_Log.final.out {wildcards.samples}_Log.progress.out {wildcards.samples}_Log.out {wildcards.samples}_SJ.out.tab {output.dir}
+    """
+
+rule samtools_star_reads_hairpin_species_flagstats:
+    """
+    Get mapping stats (samtools).
+    """
+    input:
+        "%s/BAM/STAR/Hairpin_Species/{samples}_hairpin_species_star.bam" % (config["project-folder"])
+    output:
+        flagstat="%s/STATS/STAR/Hairpin_Species/{samples}_hairpin_species.flagstat" % (config["project-folder"]),
+        stats="%s/STATS/STAR/Hairpin_Species/{samples}_hairpin_species.stats" % (config["project-folder"]),
+        fastqMapped="%s/FASTQ/Hairpin_Species/mapped_star/{samples}_hairpin_species_mapped_star.fastq" % (config["project-folder"]),
+        fastqUnmapped="%s/FASTQ/Hairpin_Species/unmapped_star/{samples}_hairpin_species_unmapped_star.fastq" % (config["project-folder"])
+    log:
+        "%s/logs/samtools/samtools_star_hairpin_species.{samples}.log" % (config["project-folder"])
+    group: "star_stats"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools flagstat {input} > {output.flagstat} 2> {log}
+        samtools stats {input} > {output.stats} 2> {log}
+        samtools index {input}
+        
+        samtools bam2fq -F 4 {input} > {output.fastqMapped} 2> {log}
+        samtools bam2fq -f 4 {input} > {output.fastqUnmapped} 2> {log}
+        touch {output.fastqMapped}
+        touch {output.fastqUnmapped}
+    """
+
+
+rule star_map_unmapped_mirbase_reads_reference:
     """
     Map non-tRNA and non-phiX samples against the host reference (STAR).
     """
     input:
         "%s/chrName.txt" % (config["referenceSTARIndex"]),
-        fastq="%s/FASTQ/PhiX/unmapped/{samples}_PhiX_unmapped.fastq" % (config["project-folder"])
+        fastq="%s/FASTQ/Hairpin_Species/unmapped_star/{samples}_hairpin_species_unmapped_star.fastq" % (config["project-folder"])
     output:
         file="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
         dir=directory("%s/BAM/STAR/Reference/{samples}" % (config["project-folder"]))
@@ -612,8 +699,8 @@ rule samtools_star_reads_reference_flagstats:
         samtools stats {input} > {output.stats} 2> {log}
         samtools index {input}
         
-#        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
-#        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
+        samtools bam2fq -F 4 {input} > {output.fastqMapped} 2> {log}
+        samtools bam2fq -f 4 {input} > {output.fastqUnmapped} 2> {log}
         touch {output.fastqMapped}
         touch {output.fastqUnmapped}
     """

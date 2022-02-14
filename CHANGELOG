@@ -4,6 +4,9 @@
 #####                                                                      #####
 ################################################################################
 
+* 0.3.12: STAR alignment now also against hairpin_species.fa
+* 0.3.11: STAR mirbase quantification added
+* 0.3.10: seqkit bowtie quantification fixed
 * 0.3.9: Remove adapter file in favour of a single adapter
 * 0.3.8: mapped and unmapped reads from STAR alignments are reported
 * 0.3.7: Changed the setting outFilterMismatchNoverLmax from 0.01 to 0.05
