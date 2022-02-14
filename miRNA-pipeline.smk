@@ -47,7 +47,7 @@ config["singularity"]["multiqc"] = "docker://fischuu/gbs:0.2"
 config["singularity"]["samtools"] = "docker://fischuu/samtools:1.9-0.2"
 config["singularity"]["star"] = "docker://fischuu/star:2.7.3a-0.2"
 config["singularity"]["subread"] = "docker://fischuu/subread:2.0.1-0.1"
-config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.1"
+config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.2"
 
 ##### Apply pre-configuration settings #####
 if config["params"]["protocol"] == 'illumina':

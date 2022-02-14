@@ -33,7 +33,7 @@ rule bowtie_map_clear_reads_mature:
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
         
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
@@ -64,6 +64,7 @@ rule samtools_clear_reads_mature_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat};
         samtools stats {input} > {output.stats};
+        samtools index {input}
     """
     
 rule bowtie_map_clear_reads_mature_species:
@@ -101,7 +102,7 @@ rule bowtie_map_clear_reads_mature_species:
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
         
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
@@ -132,6 +133,7 @@ rule samtools_clear_reads_mature_species_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat};
         samtools stats {input} > {output.stats};
+        samtools index {input}
     """
 
 rule bowtie_map_nonmature_reads_hairpin:
@@ -169,7 +171,7 @@ rule bowtie_map_nonmature_reads_hairpin:
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS | samtools sort - > {output.file} 2> {log};
 
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
@@ -200,6 +202,7 @@ rule samtools_nonmature_reads_hairpin_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat};
         samtools stats {input} > {output.stats};
+        samtools index {input}
     """
 
 rule bowtie_map_clear_reads_reference:
@@ -237,7 +240,7 @@ rule bowtie_map_clear_reads_reference:
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS | samtools sort - > {output.file} 2> {log};
 
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
@@ -268,6 +271,7 @@ rule samtools_clear_reads_reference_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat};
         samtools stats {input} > {output.stats};
+        samtools index {input}
     """
 
 rule star_map_clear_reads_mature:
@@ -348,6 +352,7 @@ rule samtools_star_reads_mature_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
         samtools stats {input} > {output.stats} 2> {log}
+        samtools index {input}
         
 #        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
 #        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
@@ -433,6 +438,7 @@ rule samtools_star_reads_mature_species_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
         samtools stats {input} > {output.stats} 2> {log}
+        samtools index {input}
         
 #        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
 #        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
@@ -518,6 +524,7 @@ rule samtools_star_reads_hairpin_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
         samtools stats {input} > {output.stats} 2> {log}
+        samtools index {input}
         
 #        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
 #        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
@@ -603,6 +610,7 @@ rule samtools_star_reads_reference_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
         samtools stats {input} > {output.stats} 2> {log}
+        samtools index {input}
         
 #        samtools view -b -F 4 {input} | samtools fastq > {output.fastqMapped} 2> {log}
 #        samtools view -b -f 4 {input} | samtools fastq > {output.fastqUnmapped} 2> {log}
