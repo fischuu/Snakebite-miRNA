@@ -199,7 +199,8 @@ rule star_createIndex_mature:
         "%s/benchmark/STAR/star_index_mature.benchmark.tsv" % (config["project-folder"])
     params:
         index=config["matureSTARIndex"],
-        tmpdir="%s/STAR_tmp/Mature" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Mature" % (config["project-folder"]),
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
     group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
@@ -207,7 +208,7 @@ rule star_createIndex_mature:
         mem=cluster["star_createIndex_mature"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
-        mkdir -p {params.tmpdir}
+        mkdir -p {params.tmpdirTop}
 
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """ 
@@ -226,7 +227,8 @@ rule star_createIndex_mature_species:
         "%s/benchmark/STAR/star_index_mature_species.benchmark.tsv" % (config["project-folder"])
     params:
         index=config["matureSpeciesSTARIndex"],
-        tmpdir="%s/STAR_tmp/MatureSpecies" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/MatureSpecies" % (config["project-folder"]),
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
     group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
@@ -234,7 +236,7 @@ rule star_createIndex_mature_species:
         mem=cluster["star_createIndex_mature"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
-        mkdir -p {params.tmpdir}
+        mkdir -p {params.tmpdirTop}
      
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """ 
@@ -253,7 +255,8 @@ rule star_createIndex_hairpin:
         "%s/benchmark/STAR/star_index_hairpin.benchmark.tsv" % (config["project-folder"])
     params:
         index=config["hairpinSTARIndex"],
-        tmpdir="%s/STAR_tmp/Hairpin" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Hairpin" % (config["project-folder"]),
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
     group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
@@ -261,7 +264,7 @@ rule star_createIndex_hairpin:
         mem=cluster["star_createIndex_hairpin"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
-        mkdir -p {params.tmpdir}
+        mkdir -p {params.tmpdirTop}
     
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """ 
@@ -280,7 +283,8 @@ rule star_createIndex_hairpin_species:
         "%s/benchmark/STAR/star_index_hairpin_species.benchmark.tsv" % (config["project-folder"])
     params:
         index=config["hairpinSpeciesSTARIndex"],
-        tmpdir="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"]),
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
     group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
@@ -288,7 +292,7 @@ rule star_createIndex_hairpin_species:
         mem=cluster["star_createIndex_hairpin"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
-        mkdir -p {params.tmpdir}
+        mkdir -p {params.tmpdirTop}
         
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """ 
@@ -307,7 +311,8 @@ rule star_createIndex_reference:
         "%s/benchmark/STAR/star_index_reference.benchmark.tsv" % (config["project-folder"])
     params:
         index=config["referenceSTARIndex"],
-        tmpdir="%s/STAR_tmp/Reference" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Reference" % (config["project-folder"]),
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
     group: "star-index"
     threads: cluster["star_createIndex_reference"]["cpus-per-task"]
     resources:
@@ -315,7 +320,7 @@ rule star_createIndex_reference:
         mem=cluster["star_createIndex_reference"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
-        mkdir -p {params.tmpdir}
+        mkdir -p {params.tmpdirTop}
         
         STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """    
