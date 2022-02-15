@@ -24,6 +24,7 @@ library("viridis")  # Needed for the colouring of the plots
 library("rjson")    # Needed for multiqc dgsb etail data
 library("DT")
 library("kableExtra")
+library("edgeR")
 options(scipen=999,
         stringsAsFactors=FALSE)
 knitr::opts_chunk$set(echo = FALSE,
@@ -35,12 +36,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/BovReg_TwinBullSperm"
+  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/ExosomeMirna-pipeline_config-bovreg_twinbull.yaml"
-  serverConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/ExosomeMirna-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
+  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
+  serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
+  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
@@ -93,7 +94,15 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 
 ```{r get pipeline version}
 pipeSMK <- readLines(file.path(pipelineFolder,"miRNA-pipeline.smk"))
-pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])
+pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
+if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
+    sampleInfo <- read.table(file.path(projFolder, "sampleInfo.txt"), header=TRUE)
+    sampleInfo.avail <- TRUE
+} else {
+  sampleInfo <- data.frame(var=0, None=0)
+    sampleInfo.avail <- FALSE
+}
+
 ```
 
 ```{r import barcodesID, results="asis"}
@@ -105,12 +114,16 @@ out <- data.frame(c("Project folder",
                     "Number of samples (after concatenating)",
                     "Used reference genome",
                     "Used annotation file",
+                    "No. of grouping information",
+                    "Grouping names",
                     "Pipeline version"),
                   c(projFolder,
                     length(rawsamples),
                     length(samples),
                     basename(refGenome.file),
                     basename(refAnnot.file),
+                    ncol(sampleInfo)-1,
+                    paste(colnames(sampleInfo)[-1],collapse=", "),
                     pipeVersion))
 
 out_html <- knitr::kable(out, col.names = NULL, "html")
@@ -409,7 +422,7 @@ Differences between the total Mature.fa and Mature_Species.fa only:
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa", col=c(4))
+barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(4))
 ```
 
 
@@ -607,11 +620,124 @@ ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE
 
 # Quantification
 
-## Mirbase
+## Mirbase - Mature.fa
 
-### Mature.fa
+### Bowtie
 
-### Mature_Species.fa
+### STAR
+
+```{r}
+star.mature.files <- list.files(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase"), pattern="*mature.txt")
+
+star.mature <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.mature.files[1]), skip=1)
+colnames(star.mature) <- c(star.mature.files[1], "miRNA")
+
+for(i in 2:length(star.mature.files)){
+    tmp.star.mature <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.mature.files[i]), skip=1)
+    colnames(tmp.star.mature) <- c(star.mature.files[i], "miRNA")
+    
+    star.mature <- merge(star.mature, tmp.star.mature, by="miRNA")
+}
+
+star.mature[is.na(star.mature)] <- 0
+
+scale.factors <- calcNormFactors(star.mature[,-1],lib.size=conc.reads, method = "TMM")
+star.mature.tmm <- t(t(star.mature[,-1])/(scale.factors*conc.reads))
+
+```
+
+```{r}
+barplot(apply(star.mature[,-1],2,sum), las=2)
+```
+
+## Mirbase - Mature_Species.fa
+
+### Bowtie
+
+### STAR
+
+```{r}
+star.mature_species.files <- list.files(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase"), pattern="*mature_species.txt")
+
+star.mature_species <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.mature_species.files[1]), skip=1)
+colnames(star.mature_species) <- c(star.mature_species.files[1], "miRNA")
+
+for(i in 2:length(star.mature_species.files)){
+    tmp.star.mature_species <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.mature_species.files[i]), skip=1)
+    colnames(tmp.star.mature_species) <- c(star.mature_species.files[i], "miRNA")
+    
+    star.mature_species <- merge(star.mature_species, tmp.star.mature_species, by="miRNA", all=TRUE)
+}
+star.mature_species[is.na(star.mature_species)] <- 0
+
+scale.factors <- calcNormFactors(star.mature_species[,-1],lib.size=conc.reads, method = "TMM")
+star.mature_species.tmm <- t(t(star.mature_species[,-1])/(scale.factors*conc.reads))
+
+```
+
+
+```{r}
+barplot(apply(star.mature_species[,-1], 2, sum), las=2)
+```
+
+## Mirbase - Hairpin.fa
+
+### Bowtie
+
+### STAR
+
+```{r}
+star.hairpin.files <- list.files(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase"), pattern="*hairpin.txt")
+
+star.hairpin <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin.files[1]), skip=1)
+colnames(star.hairpin) <- c(star.hairpin.files[1], "miRNA")
+
+for(i in 2:length(star.hairpin.files)){
+    tmp.star.hairpin <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin.files[i]), skip=1)
+    colnames(tmp.star.hairpin) <- c(star.hairpin.files[i], "miRNA")
+    
+    star.hairpin <- merge(star.hairpin, tmp.star.hairpin, by="miRNA")
+}
+
+star.hairpin[is.na(star.hairpin)] <- 0
+
+scale.factors <- calcNormFactors(star.hairpin[,-1],lib.size=conc.reads, method = "TMM")
+star.hairpin.tmm <- t(t(star.hairpin[,-1])/(scale.factors*conc.reads))
+
+```
+
+```{r}
+barplot(apply(star.hairpin[,-1],2,sum), las=2)
+```
+
+
+## Mirbase - Hairpin_Species.fa
+
+### Bowtie
+
+### STAR
+```{r}
+star.hairpin_species.files <- list.files(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase"), pattern="*hairpin_species.txt")
+
+star.hairpin_species <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin_species.files[1]), skip=1)
+colnames(star.hairpin_species) <- c(star.hairpin_species.files[1], "miRNA")
+
+for(i in 2:length(star.hairpin_species.files)){
+    tmp.star.hairpin_species <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin_species.files[i]), skip=1)
+    colnames(tmp.star.hairpin_species) <- c(star.hairpin_species.files[i], "miRNA")
+    
+    star.hairpin_species <- merge(star.hairpin_species, tmp.star.hairpin_species, by="miRNA", all=TRUE)
+}
+star.hairpin_species[is.na(star.hairpin_species)] <- 0
+
+scale.factors <- calcNormFactors(star.hairpin_species[,-1],lib.size=conc.reads, method = "TMM")
+star.hairpin_species.tmm <- t(t(star.hairpin_species[,-1])/(scale.factors*conc.reads))
+```
+
+
+```{r}
+barplot(apply(star.hairpin_species[,-1], 2, sum), las=2)
+```
 
 ### Differences Mature.fa and Mature_Species.fa
 
@@ -689,6 +815,10 @@ for(i in 3:length(fc.files)){
 }
 colnames(fc.expr.star) <- sub(".*?Reference.", "",colnames(fc.expr.star))
 colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
+
+scale.factors <- calcNormFactors(fc.expr.star[,-1],lib.size=conc.reads, method = "TMM")
+fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
+rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
 ```
 
 Now get the counts per biotype
@@ -718,6 +848,74 @@ kable_styling(out_html, "striped", position = "left")
 
 
 ADD STILL THE FEATURE COUNTS STATS ANALYSIS HERE!!!
+
+# Analyses
+
+## Clustering
+
+```{r}
+star.mature_species.tmm.dist <- as.dist(1-cor(as.matrix(star.mature_species.tmm[,-1])))
+hc <- hclust(star.mature_species.tmm.dist)           
+plot(hc)  
+```
+
+## Top-expressed per biotype and sample
+
+## Dimension reduction
+
+### PCA - Mature_Species.fa (STAR)
+
+```{r performPCA}
+expr.PCA <- prcomp(t(star.mature_species.tmm[,-1]))
+```
+
+This is just the plain PCA, without using any colouring schemes.
+
+```{r}
+palette("default")
+pairs(expr.PCA$x[,1:3])
+```
+
+```{r}
+names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+    for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(expr.PCA$x[,1:3], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+    }
+  }  
+}
+
+```
+
+```{r}
+cols <- min(ncol(expr.PCA$x),10)
+pairs(expr.PCA$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  pairs(expr.PCA$x[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+}
+```
+
 
 # Runtime checks
 Add here:
