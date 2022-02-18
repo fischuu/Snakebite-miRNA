@@ -25,7 +25,7 @@ rule R_pipelineReport:
     benchmark:
         "%s/benchmark/R/pipelineReport.benchmark.tsv" % (config["project-folder"])
     singularity:
-        "docker://fischuu/r-gbs:4.1.2-0.1"
+        "docker://fischuu/r-gbs:4.1.2-0.2"
     params:
        script=config["report-script"],
        projFolder=config["project-folder"],

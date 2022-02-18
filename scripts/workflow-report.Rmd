@@ -24,7 +24,12 @@ library("viridis")  # Needed for the colouring of the plots
 library("rjson")    # Needed for multiqc dgsb etail data
 library("DT")
 library("kableExtra")
-library("edgeR")
+#library("edgeR")
+library("ICS")
+library("tsne")
+library("lle")
+library("kernlab")
+library("destiny")  
 options(scipen=999,
         stringsAsFactors=FALSE)
 knitr::opts_chunk$set(echo = FALSE,
@@ -641,8 +646,8 @@ for(i in 2:length(star.mature.files)){
 
 star.mature[is.na(star.mature)] <- 0
 
-scale.factors <- calcNormFactors(star.mature[,-1],lib.size=conc.reads, method = "TMM")
-star.mature.tmm <- t(t(star.mature[,-1])/(scale.factors*conc.reads))
+#scale.factors <- calcNormFactors(star.mature[,-1],lib.size=conc.reads, method = "TMM")
+#star.mature.tmm <- t(t(star.mature[,-1])/(scale.factors*conc.reads))
 
 ```
 
@@ -670,9 +675,13 @@ for(i in 2:length(star.mature_species.files)){
 }
 star.mature_species[is.na(star.mature_species)] <- 0
 
-scale.factors <- calcNormFactors(star.mature_species[,-1],lib.size=conc.reads, method = "TMM")
-star.mature_species.tmm <- t(t(star.mature_species[,-1])/(scale.factors*conc.reads))
+#scale.factors <- calcNormFactors(star.mature_species[,-1],lib.size=conc.reads, method = "TMM")
+#star.mature_species.tmm <- t(t(star.mature_species[,-1])/(scale.factors*conc.reads))
 
+mirbase.mature_species.miomapped <- apply(star.mature_species[,-1],2,sum)/1000000
+
+star.mature_species.rpkm <- t(t(star.mature_species[,-1])/mirbase.mature_species.miomapped)
+rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 ```
 
 
@@ -701,8 +710,8 @@ for(i in 2:length(star.hairpin.files)){
 
 star.hairpin[is.na(star.hairpin)] <- 0
 
-scale.factors <- calcNormFactors(star.hairpin[,-1],lib.size=conc.reads, method = "TMM")
-star.hairpin.tmm <- t(t(star.hairpin[,-1])/(scale.factors*conc.reads))
+#scale.factors <- calcNormFactors(star.hairpin[,-1],lib.size=conc.reads, method = "TMM")
+#star.hairpin.tmm <- t(t(star.hairpin[,-1])/(scale.factors*conc.reads))
 
 ```
 
@@ -730,8 +739,8 @@ for(i in 2:length(star.hairpin_species.files)){
 }
 star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
-scale.factors <- calcNormFactors(star.hairpin_species[,-1],lib.size=conc.reads, method = "TMM")
-star.hairpin_species.tmm <- t(t(star.hairpin_species[,-1])/(scale.factors*conc.reads))
+#scale.factors <- calcNormFactors(star.hairpin_species[,-1],lib.size=conc.reads, method = "TMM")
+#star.hairpin_species.tmm <- t(t(star.hairpin_species[,-1])/(scale.factors*conc.reads))
 ```
 
 
@@ -816,9 +825,23 @@ for(i in 3:length(fc.files)){
 colnames(fc.expr.star) <- sub(".*?Reference.", "",colnames(fc.expr.star))
 colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 
-scale.factors <- calcNormFactors(fc.expr.star[,-1],lib.size=conc.reads, method = "TMM")
-fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
-rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
+#scale.factors <- calcNormFactors(fc.expr.star[,-1],lib.size=conc.reads, method = "TMM")
+#fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
+#rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
+
+# Do the RPKM normalisation
+alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))
+alignmentStats <- alignmentStats[,-2]
+star.reads.mapped <- apply(alignmentStats,2,sum)
+tmp <- fc.expr.star
+tmp <- merge(tmp, annotation, by.x="Geneid", by.y="gene_id")
+gene.length <- abs(tmp$V5 - tmp$V4)/1000
+mio.reads.mapped <- star.reads.mapped/1000000
+
+fc.expr.star.rpkm <- tmp[,2:(length(mio.reads.mapped)+1)]
+fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/gene.length)
+fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/mio.reads.mapped)
+rownames(fc.expr.star.rpkm) <- tmp[,1]
 ```
 
 Now get the counts per biotype
@@ -833,21 +856,36 @@ colnames(counts_per_biotype) <- colnames(fc.expr.star)[-1]
 dir.create(file.path(projFolder, "RESULTS"), showWarnings=FALSE)
 dir.create(file.path(projFolder, "RESULTS", "Biotype-expressions"), showWarnings=FALSE)
 
+star.protein_coding.rpkm <- NULL
+
 for(i in 1:length(biotypes)){
   biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
   tmp <- fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),]
+  if(length(biotype.genes)==1){
+    tmp.rpkm <- t(as.matrix(fc.expr.star.rpkm[is.element(rownames(fc.expr.star.rpkm), biotype.genes),]))
+    rownames(tmp.rpkm) <- biotype.genes
+  } else {
+     tmp.rpkm <- fc.expr.star.rpkm[is.element(rownames(fc.expr.star.rpkm), biotype.genes),]
+  }
+  
+  if(biotypes[i]=="protein_coding"){
+    star.protein_coding.rpkm <- fc.expr.star.rpkm[is.element(rownames(fc.expr.star.rpkm), biotype.genes),]
+  }
+  
   rownames(tmp) <- tmp[,1]
   tmp <- tmp[,-1]
   tmp.expression <- sort(apply(tmp,1,sum), decreasing = TRUE)
+  tmp.rpkm.expression <- sort(apply(tmp.rpkm,1,sum), decreasing = TRUE)
   
-  if(sum(tmp.expression)>0){
+  
+  if(sum(tmp.rpkm.expression)>0){
     png(file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("Expression_histogram_", biotypes[i],".png")), width=1000, height=800)
-    boxplot(log(tmp.expression), main=paste("Biotype", biotypes[i]))
+    boxplot(log(tmp.rpkm.expression), main=paste("Biotype", biotypes[i]))
     dev.off()
   }
   toplist <- data.frame(gene_id=names(tmp.expression),
-                        total.expression=tmp.expression,
-                        avg.expression=tmp.expression/ncol(tmp))
+                        total.expression.rpkm=tmp.rpkm.expression,
+                        avg.expression.rpkm=tmp.rpkm.expression/ncol(tmp))
   
   report_toplist <- merge(annotation, toplist, by="gene_id")
 
@@ -954,7 +992,7 @@ The visualisation of the biotypes
   legend.label <- plot_counts_per_biotype[is.element(plot_counts_per_biotype[,1], topBiotypes[,1]),1]
   legend.color <- plot_counts_per_biotype[is.element(plot_counts_per_biotype[,1], topBiotypes[,1]),2]
   
-  legend("topleft",bty='n', xpd=NA, inset=c(0,-0.1),
+  legend("topleft",bty='n', xpd=NA, inset=c(0,0),
        rev(legend.label), lty=1, cex=0.5, col=rev(legend.color), lwd=4)
 ```
 
@@ -966,8 +1004,8 @@ ADD STILL THE FEATURE COUNTS STATS ANALYSIS HERE!!!
 ## Clustering
 
 ```{r}
-star.mature_species.tmm.dist <- as.dist(1-cor(as.matrix(star.mature_species.tmm[,-1])))
-hc <- hclust(star.mature_species.tmm.dist)           
+star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(star.mature_species.rpkm)))
+hc <- hclust(star.mature_species.rpkm.dist)           
 plot(hc)  
 ```
 
@@ -976,7 +1014,8 @@ plot(hc)
 ### PCA - Mature_Species.fa (STAR)
 
 ```{r performPCA}
-expr.PCA <- prcomp(t(star.mature_species.tmm[,-1]))
+expr.PCA <- prcomp(t(star.mature_species.rpkm))
+expr.PCA.mature_species <- expr.PCA
 ```
 
 This is just the plain PCA, without using any colouring schemes.
@@ -1004,7 +1043,6 @@ if(sampleInfo.avail){
     }
   }  
 }
-
 ```
 
 ```{r}
@@ -1026,6 +1064,374 @@ for(i in 2:ncol(sampleInfo)){
 }
 ```
 
+
+### PCA - Reference-protein_coding (STAR)
+
+```{r performPCA_protein_coding}
+expr.PCA <- prcomp(t(star.protein_coding.rpkm))
+expr.PCA.protein_coding <- expr.PCA
+```
+
+This is just the plain PCA, without using any colouring schemes.
+
+```{r}
+palette("default")
+pairs(expr.PCA$x[,1:3])
+```
+
+```{r}
+names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+    for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(expr.PCA$x[,1:3], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+    }
+  }  
+}
+```
+
+```{r}
+cols <- min(ncol(expr.PCA$x),10)
+pairs(expr.PCA$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  pairs(expr.PCA$x[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+}
+```
+
+### ICS - Mature_Species.fa (STAR)
+```{r, results="asis"}
+cols <- min(ncol(expr.PCA.mature_species$x),10)
+FOBI <- ics(expr.PCA.mature_species$x[,1:cols])
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  plot(FOBI, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}  
+} else {
+   plot(FOBI, pch=20)
+}
+```
+
+### ICS - Reference.protein_coding (STAR)
+```{r, results="asis"}
+cols <- min(ncol(expr.PCA$x),10)
+FOBI <- ics(expr.PCA$x[,1:cols])
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  plot(FOBI, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}  
+} else {
+   plot(FOBI, pch=20)
+}
+```
+
+### t-SNE - Mature_species.fa (STAR)
+
+First, the PCA based t-SNE run (using the PCA-based reduced data as input)
+
+```{r, results="asis"}
+cols <- min(ncol(expr.PCA.mature_species$x),10)
+TSNEout <- tsne(expr.PCA.mature_species$x[,1:cols], k=5)
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+  cat(sprintf(tmpTitle))
+  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+} else {
+   plot(TSNEout, pch=20)
+}
+```
+
+And then the run for the original data
+
+```{r, results="asis"}
+cols <- min(ncol(expr.PCA.mature_species$x),10)
+TSNEout <- tsne(star.mature_species.rpkm, k=5)
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
+  cat(sprintf(tmpTitle))
+  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+} else {
+   plot(TSNEout, pch=20)
+}
+```
+
+### t-SNE - Reference-protein_coding (STAR)
+First for the PCA reduced input data
+```{r, results="asis"}
+cols <- min(ncol(expr.PCA.protein_coding$x),10)
+TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+  cat(sprintf(tmpTitle))
+  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+} else {
+   plot(TSNEout, pch=20)
+}
+```
+
+And then for the original data as well
+
+```{r, eval=FALSE, results="asis"}
+cols <- min(ncol(expr.PCA.protein_coding$x),10)
+TSNEout <- tsne(star.protein_coding.rpkm, k=5)
+if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
+  cat(sprintf(tmpTitle))
+  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+} else {
+   plot(TSNEout, pch=20)
+}
+```
+### Kernel PCA - Mature_species.fa (STAR)
+PCA-based data
+```{r}
+# Kernel PCA
+cols <- min(min(dim(expr.PCA.mature_species$x)),10)-1
+KPCAres <- kpca(expr.PCA.mature_species$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   ndim <- min(ncol(rotated(KPCAres)), 10)
+   plot(rotated(KPCAres)[,1:ndim], pch=20)
+}
+```
+Original data
+```{r, eval=FALSE}
+# Kernel PCA
+cols <- min(min(dim(expr.PCA.mature_species$x)),10)-1
+KPCAres <- kpca(star.mature_species.rpkm)
+```
+
+```{r, eval=FALSE, results="asis"}
+if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   ndim <- min(ncol(rotated(KPCAres)), 10)
+   plot(rotated(KPCAres)[,1:ndim], pch=20)
+}
+```
+### Kernel PCA - Reference-protein_coding (STAR)
+PCA-based data
+```{r}
+# Kernel PCA
+cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
+KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA based data)\n")
+      cat(sprintf(tmpTitle))
+      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   ndim <- min(ncol(rotated(KPCAres)), 10)
+   plot(rotated(KPCAres)[,1:ndim], pch=20)
+}
+```
+
+
+original data
+```{r, eval=FALSE}
+# Kernel PCA
+cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
+KPCAres <- kpca(star.protein_coding.rpkm)
+```
+
+```{r, eval=FALSE, results="asis"}
+if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.based data)\n")
+      cat(sprintf(tmpTitle))
+      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   ndim <- min(ncol(rotated(KPCAres)), 10)
+   plot(rotated(KPCAres)[,1:ndim], pch=20)
+}
+```
+
+### Locally linear embedding (LLE) - Mature_species.fa (STAR)
+PCA based data
+```{r}
+# LLE
+cols <- min(ncol(expr.PCA.mature_species$x),10)
+lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
+```
+
+```{r, results="asis"}
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   plot(lleres$Y[,1:5], pch=20)
+}
+```
+
+Orig-based data
+
+```{r, eval=FALSE}
+# LLE
+cols <- min(ncol(expr.PCA.mature_species$x),10)
+lleres <- lle(star.mature_species.rpkm, m=7, k=17, v=0.99)
+```
+
+```{r, eval=FALSE, results="asis"}
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   plot(lleres$Y[,1:5], pch=20)
+}
+```
+
+
+
+### Locally linear embedding (LLE) - Reference-protein_coding (STAR)
+
+PCA based data
+```{r}
+# LLE
+cols <- min(ncol(expr.PCA.protein_coding$x),10)
+lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
+```
+
+```{r, results="asis"}
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   plot(lleres$Y[,1:5], pch=20)
+}
+```
+
+
+Original based data
+```{r, eval=FALSE}
+# LLE
+cols <- min(ncol(expr.PCA.protein_coding$x),10)
+lleres <- lle(star.protein_coding.rpkm, m=7, k=17, v=0.99)
+```
+
+```{r, eval=FALSE, results="asis"}
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+  }
+} else {
+   plot(lleres$Y[,1:5], pch=20)
+}
+```
 
 # Runtime checks
 Add here:
