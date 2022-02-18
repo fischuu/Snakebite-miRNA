@@ -29,7 +29,8 @@ library("ICS")
 library("tsne")
 library("lle")
 library("kernlab")
-library("destiny")  
+library("destiny") 
+#library("plotly")   # This is for looping over ggplots and print them
 options(scipen=999,
         stringsAsFactors=FALSE)
 knitr::opts_chunk$set(echo = FALSE,
@@ -50,6 +51,12 @@ if(!is.element("snakemake",ls())){
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
+```
+
+```{r, include=FALSE}
+# Init Step to make sure that the dependencies are loaded
+htmltools::tagList(datatable(cars))
+#htmltools::tagList(ggplotly(ggplot()))
 ```
 
 ```{r helpFunctions, include=FALSE}
@@ -652,7 +659,7 @@ star.mature[is.na(star.mature)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.mature[,-1],2,sum), las=2)
+barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa")
 ```
 
 ## Mirbase - Mature_Species.fa
@@ -686,7 +693,7 @@ rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 
 
 ```{r}
-barplot(apply(star.mature_species[,-1], 2, sum), las=2)
+barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa")
 ```
 
 ## Mirbase - Hairpin.fa
@@ -716,7 +723,7 @@ star.hairpin[is.na(star.hairpin)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.hairpin[,-1],2,sum), las=2)
+barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa")
 ```
 
 
@@ -745,7 +752,7 @@ star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
 
 ```{r}
-barplot(apply(star.hairpin_species[,-1], 2, sum), las=2)
+barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa")
 ```
 
 ### Differences Mature.fa and Mature_Species.fa
@@ -846,7 +853,7 @@ rownames(fc.expr.star.rpkm) <- tmp[,1]
 
 Now get the counts per biotype
 
-```{r}
+```{r, results="asis"}
 biotypes <- names(table(annotation$gene_biotype))
 
 counts_per_biotype <- matrix(0, ncol=ncol(fc.expr.star)-1, nrow=length(biotypes))
@@ -880,7 +887,7 @@ for(i in 1:length(biotypes)){
   
   if(sum(tmp.rpkm.expression)>0){
     png(file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("Expression_histogram_", biotypes[i],".png")), width=1000, height=800)
-    boxplot(log(tmp.rpkm.expression), main=paste("Biotype", biotypes[i]))
+      boxplot(log(tmp.rpkm.expression), main=paste("Biotype", biotypes[i]))
     dev.off()
   }
   toplist <- data.frame(gene_id=names(tmp.expression),
@@ -891,10 +898,12 @@ for(i in 1:length(biotypes)){
 
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-", biotypes[i],".csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
   
-  out_html <- knitr::kable(report_toplist, "html")
-  print(kable_styling(out_html, "striped", position = "left"))
-    
-  topgenes_per_biotype <- 
+  #out_html <- knitr::kable(report_toplist, "html")
+  #print(kable_styling(out_html, "striped", position = "left"))
+   
+  cat("### ", biotypes[i], "\n")
+  print(htmltools::tagList(datatable(report_toplist)))
+   
   counts_per_biotype[i,] <- apply(fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),-1],2,sum)
 }
 
@@ -915,7 +924,8 @@ rownames(counts_per_biotype)[1:2] <- c("Mirbase_hairpin_species", "Mirbase_mirna
   report_toplist <- data.frame(hairpin = names(tmp),
                                avg.expression = tmp/(ncol(star.hairpin_species)-1))
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-Mirbase_hairpin_species.csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
-
+  cat("### Hairpin_Species.fa \n")
+  print(htmltools::tagList(datatable(report_toplist)))
   
 ## mature_species
   tmp.expression <- apply(star.mature_species[,-1],1,sum)
@@ -927,6 +937,8 @@ rownames(counts_per_biotype)[1:2] <- c("Mirbase_hairpin_species", "Mirbase_mirna
   report_toplist <- data.frame(mature = names(tmp),
                                avg.expression = tmp/(ncol(star.mature_species)-1))
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-Mirbase_mature_species.csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
+  cat("### Mature_species.fa \n")
+  print(htmltools::tagList(datatable(report_toplist)))
   
 ```
 
@@ -1180,7 +1192,7 @@ for(i in 2:ncol(sampleInfo)){
 
 And then the run for the original data
 
-```{r, results="asis"}
+```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(star.mature_species.rpkm, k=5)
 if(ncol(sampleInfo)>1){
