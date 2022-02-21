@@ -42,12 +42,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
+  projFolder <- "/scratch/project_2001310/BovReg_TwinBullSperm/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
+  pipelineConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/miRNA-pipeline_config-bovreg.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
+  refGenome.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
@@ -70,6 +70,7 @@ getReadCounts <- function(folder, mode){
 
   unmapped <- c()
   mapped <- c()
+  
 
   for(i in 1:length(unmapped.files)){
     unmapped[i] <- read.table(file.path(projFolder, "FASTQ", folder, "unmapped", unmapped.files[i]))[1,1]
@@ -288,6 +289,15 @@ par(mar=c(15,5,2,8), xpd=TRUE)
 barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(4,7))
 legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
 ```
+
+```{r}
+par(mar=c(15,5,2,8), xpd=TRUE)
+plotThis <- rbind(raw.bases/raw.reads,
+                  trimmed.bases/trimmed.reads)
+barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(4,7))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+```
+
 ### Concatenated bases
 
 ```{r}
@@ -481,20 +491,35 @@ if(bowtieRefAlignment){
 ```
 
 ```{r}
+if(bowtieRefAlignment){
+  useTitle <- "Hairpin.fa unaligned reads aligned to reference genome"
+} else {
+  useTitle <- "Bowtie alignment against Reference genome was not executed" 
+}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main="Hairpin.fa unaligned reads aligned to reference genome", col=c(4,5,6))
+barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
 legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
 ```
 
 ```{r}
-tmp <- getReadCounts("Reference", mode="wcc")
-reference.bowtie.unmapped.bases <- tmp$unmapped
-reference.bowtie.mapped.bases <- tmp$mapped
+if(bowtieRefAlignment){
+  tmp <- getReadCounts("Reference", mode="wcc")
+  reference.bowtie.unmapped.bases <- tmp$unmapped
+  reference.bowtie.mapped.bases <- tmp$mapped
+} else {
+  reference.bowtie.unmapped.bases <- rep(0,length(samples))
+  reference.bowtie.mapped.bases <- rep(0,length(samples))
+}
 ```
 
 ```{r}
+if(bowtieRefAlignment){
+  useTitle <- "Hairpin.fa unaligned bases aligned to reference genome"
+} else {
+  useTitle <- "Bowtie alignment against Reference genome was not executed" 
+}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main="Hairpin.fa unaligned bases aligned to reference genome", col=c(4,5,6))
+barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
 legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
 ```
 
@@ -779,44 +804,52 @@ kable_styling(out_html, "striped", position = "left")
 
 ### Bowtie
 ```{r}
-fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference"), pattern="*.txt$")
-fc.in <- list()
-for(i in 1:length(fc.files)){
-  fc.in[[i]] <- importFeatureCounts(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference", fc.files[i]))
+if(bowtieRefAlignment){
+  fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference"), pattern="*.txt$")
+  fc.in <- list()
+  for(i in 1:length(fc.files)){
+    fc.in[[i]] <- importFeatureCounts(file.path(projFolder, "QUANTIFICATION", "BOWTIE", "Reference", fc.files[i]))
+  }
+  
+  fc.expr.bowtie <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
+  
+  for(i in 3:length(fc.files)){
+    fc.expr.bowtie <- merge(fc.expr.bowtie, fc.in[[i]]$expValues, by="Geneid")
+  }
+  colnames(fc.expr.bowtie) <- sub(".*?Reference.", "",colnames(fc.expr.bowtie))
+  colnames(fc.expr.bowtie) <- sub("_reference_star.bam", "",colnames(fc.expr.bowtie))
 }
-
-fc.expr.bowtie <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
-
-for(i in 3:length(fc.files)){
-  fc.expr.bowtie <- merge(fc.expr.bowtie, fc.in[[i]]$expValues, by="Geneid")
-}
-colnames(fc.expr.bowtie) <- sub(".*?Reference.", "",colnames(fc.expr.bowtie))
-colnames(fc.expr.bowtie) <- sub("_reference_star.bam", "",colnames(fc.expr.bowtie))
 ```
 
 Now get the counts per biotype
 
 ```{r}
-biotypes <- names(table(annotation$gene_biotype))
-
-counts_per_biotype.bowtie <- matrix(0, ncol=ncol(fc.expr.bowtie)-1, nrow=length(biotypes))
-rownames(counts_per_biotype.bowtie) <- biotypes
-colnames(counts_per_biotype.bowtie) <- colnames(fc.expr.bowtie)[-1]
-
-for(i in 1:length(biotypes)){
-  biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
-  counts_per_biotype.bowtie[i,] <- apply(fc.expr.bowtie[is.element(fc.expr.bowtie$Geneid, biotype.genes),-1],2,sum)
+if(bowtieRefAlignment){
+  biotypes <- names(table(annotation$gene_biotype))
+  
+  counts_per_biotype.bowtie <- matrix(0, ncol=ncol(fc.expr.bowtie)-1, nrow=length(biotypes))
+  rownames(counts_per_biotype.bowtie) <- biotypes
+  colnames(counts_per_biotype.bowtie) <- colnames(fc.expr.bowtie)[-1]
+  
+  for(i in 1:length(biotypes)){
+    biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
+    counts_per_biotype.bowtie[i,] <- apply(fc.expr.bowtie[is.element(fc.expr.bowtie$Geneid, biotype.genes),-1],2,sum)
+  }
 }
 ```
 
 ```{r}
-out_html <- knitr::kable(counts_per_biotype.bowtie, "html")
-kable_styling(out_html, "striped", position = "left")
+if(bowtieRefAlignment){
+  out_html <- knitr::kable(counts_per_biotype.bowtie, "html")
+  kable_styling(out_html, "striped", position = "left")
+}
 ```
 
 ```{r}
-out_html <- knitr::kable(round(t(t(counts_per_biotype.bowtie)/apply(counts_per_biotype.bowtie,2,sum))*100,2), "html")
-kable_styling(out_html, "striped", position = "left")
+if(bowtieRefAlignment){
+  out_html <- knitr::kable(round(t(t(counts_per_biotype.bowtie)/apply(counts_per_biotype.bowtie,2,sum))*100,2), "html")
+  kable_styling(out_html, "striped", position = "left")
+}
 ```
 
 
@@ -855,6 +888,16 @@ fc.expr.star.rpkm <- tmp[,2:(length(mio.reads.mapped)+1)]
 fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/gene.length)
 fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/mio.reads.mapped)
 rownames(fc.expr.star.rpkm) <- tmp[,1]
+```
+
+```{r}
+# Lets extract the featureCounts statistics
+
+fc.expr.stats <- merge(fc.in[[1]]$summary, fc.in[[2]]$summary, by="Status")
+
+for(i in 3:length(fc.files)){
+  fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status")
+}
 ```
 
 Now get the counts per biotype
@@ -901,6 +944,7 @@ for(i in 1:length(biotypes)){
                         avg.expression.rpkm=tmp.rpkm.expression/ncol(tmp))
   
   report_toplist <- merge(annotation, toplist, by="gene_id")
+  report_toplist <- report_toplist[order(report_toplist$avg.expression, decreasing = TRUE),]
 
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-", biotypes[i],".csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
   
@@ -929,6 +973,7 @@ rownames(counts_per_biotype)[1:2] <- c("Mirbase_hairpin_species", "Mirbase_mirna
   tmp <- sort(tmp.expression, decreasing=TRUE)[1:20]
   report_toplist <- data.frame(hairpin = names(tmp),
                                avg.expression = tmp/(ncol(star.hairpin_species)-1))
+  report_toplist <- report_toplist[order(report_toplist$avg.expression, decreasing = TRUE),]
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-Mirbase_hairpin_species.csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
   cat("### Hairpin_Species.fa \n")
   print(htmltools::tagList(datatable(report_toplist)))
@@ -942,6 +987,7 @@ rownames(counts_per_biotype)[1:2] <- c("Mirbase_hairpin_species", "Mirbase_mirna
   tmp <- sort(tmp.expression, decreasing=TRUE)[1:20]
   report_toplist <- data.frame(mature = names(tmp),
                                avg.expression = tmp/(ncol(star.mature_species)-1))
+  report_toplist <- report_toplist[order(report_toplist$avg.expression, decreasing = TRUE),]
   write.table(report_toplist, file.path(projFolder,"RESULTS", "Biotype-expressions", paste0("top20_expressed-Mirbase_mature_species.csv")), col.names = TRUE, row.names = FALSE, quote=FALSE, sep="\t")
   cat("### Mature_species.fa \n")
   print(htmltools::tagList(datatable(report_toplist)))
@@ -953,8 +999,17 @@ out_html <- knitr::kable(counts_per_biotype, "html")
 kable_styling(out_html, "striped", position = "left")
 ```
 
+Percentages with reference to assigned (NOT! aligned) reads
+
 ```{r}
 out_html <- knitr::kable(round(t(t(counts_per_biotype)/apply(counts_per_biotype,2,sum))*100,2), "html")
+kable_styling(out_html, "striped", position = "left")
+```
+
+Percentages with reference to total number of qc-passed reads:
+
+```{r}
+out_html <- knitr::kable(round(t(t(counts_per_biotype)/conc.reads)*100,2), "html")
 kable_styling(out_html, "striped", position = "left")
 ```
 
@@ -1015,8 +1070,136 @@ The visualisation of the biotypes
 ```
 
 
-ADD STILL THE FEATURE COUNTS STATS ANALYSIS HERE!!!
+# Overall statistic
 
+How are the reads distributed across contaminations, biotypes and features.
+
+```{r}
+rawReads_perSample <- c()
+for(i in 1:length(samples)){
+  rawReads_perSample[i] <- sum(raw.reads[grep(samples[i], names(raw.reads))])
+}
+
+qcRemovedReads_perSample <- c()
+for(i in 1:length(samples)){
+  qcRemovedReads_perSample[i] <- rawReads_perSample[i]-sum(trimmed.reads[grep(samples[i], names(raw.reads))])
+}
+
+refAssignedReads_perSample <- c() 
+for(i in 1:length(samples)){
+  refAssignedReads_perSample[i] <- fc.expr.stats[1,(i+1)]
+}
+
+refUnassigned_AmbiguityReads_perSample <- c() 
+for(i in 1:length(samples)){
+  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,(i+1)]
+}
+
+refUnassigned_NoFeatureReads_perSample <- c() 
+for(i in 1:length(samples)){
+  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,(i+1)]
+}
+
+refUnassigned_UnmappedReads_perSample <- c() 
+for(i in 1:length(samples)){
+  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,(i+1)]
+}
+
+mirbaseAssigned_MatureReads_perSample <- c()
+for(i in 1:length(samples)){
+  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,(i+1)])
+}
+
+mirbaseAssigned_HairpinReads_perSample <- c()
+for(i in 1:length(samples)){
+  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,(i+1)])
+}
+
+contamination_trnaReads_perSample <- c()
+for(i in 1:length(samples)){
+  contamination_trnaReads_perSample[i] <- trna.mapped.reads[i]
+}
+
+contamination_phixReads_perSample <- c()
+for(i in 1:length(samples)){
+  contamination_phixReads_perSample[i] <- phix.mapped.reads[i]
+}
+
+reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
+
+overall_stats <- rbind(qcRemovedReads_perSample,
+                       contamination_trnaReads_perSample,
+                       contamination_phixReads_perSample,
+                       mirbaseAssigned_MatureReads_perSample,
+                       mirbaseAssigned_HairpinReads_perSample,
+                       refUnassigned_AmbiguityReads_perSample,
+                       refUnassigned_NoFeatureReads_perSample,
+                       reference_CountsPerBiotype_perSample,
+                       refUnassigned_UnmappedReads_perSample
+                       )
+
+colnames(overall_stats) <- samples
+
+#for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
+```
+
+## Absolute numbers
+
+```{r}
+  out_html <- knitr::kable(overall_stats, "html")
+  kable_styling(out_html, "striped", position = "left")
+```
+  
+```{r}
+set.seed(123)
+colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+
+colorCode <- data.frame(class=rownames(overall_stats),
+                         sample(colors, nrow(overall_stats)))
+revVec <- function(x) x[(length(x):1)]
+par(mar=c(15,5,2,22), xpd=TRUE)
+barplot(overall_stats, col = colorCode[,2], las=2)
+# Take the tenth largest value and only use biotypes that belong to this group and more reads
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
+legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+```
+  
+## Percentages
+
+```{r}
+  out_html <- knitr::kable(round(t(t(overall_stats)/apply(overall_stats,2,sum))*100,2) , "html")
+  kable_styling(out_html, "striped", position = "left")
+```
+
+```{r}
+set.seed(123)
+colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+
+colorCode <- data.frame(class=rownames(overall_stats),
+                         sample(colors, nrow(overall_stats)))
+revVec <- function(x) x[(length(x):1)]
+par(mar=c(15,5,2,22), xpd=TRUE)
+
+barplot(t(t(overall_stats)/apply(overall_stats,2,sum)), col = colorCode[,2], las=2)
+# Take the tenth largest value and only use biotypes that belong to this group and more reads
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
+legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+```
+
+### Unconsidered reads
+
+In above statistics, what is the ratio of reads that is not considered compared to the raw data/trimmed data. Negative values mean that the reads have been counted repeated times. 
+
+```{r}
+# DO THIS WIUTH THE MATRIX FROM ABOVE!!!!
+
+unconsideredReads <- rawReads_perSample - apply(overall_stats,2,sum)
+#for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
+
+barplot(unconsideredReads, las=2)
+```
 # Analyses
 
 ## Clustering
@@ -1156,7 +1339,7 @@ for(i in 2:ncol(sampleInfo)){
 ```
 
 ### ICS - Reference.protein_coding (STAR)
-```{r, results="asis"}
+```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA$x),10)
 FOBI <- ics(expr.PCA$x[,1:cols])
 if(ncol(sampleInfo)>1){
