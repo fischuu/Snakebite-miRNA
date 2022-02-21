@@ -29,7 +29,7 @@ library("ICS")
 library("tsne")
 library("lle")
 library("kernlab")
-library("destiny") 
+#library("destiny")  # This is needed for diffusion maps. 
 #library("plotly")   # This is for looping over ggplots and print them
 options(scipen=999,
         stringsAsFactors=FALSE)
@@ -51,6 +51,7 @@ if(!is.element("snakemake",ls())){
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
+bowtieRefAlignment <- FALSE
 ```
 
 ```{r, include=FALSE}
@@ -469,9 +470,14 @@ legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa 
 The remaining reads we align then against the reference genome
 
 ```{r}
-tmp <- getReadCounts("Reference", mode="wcl")
-reference.bowtie.unmapped.reads <- tmp$unmapped
-reference.bowtie.mapped.reads <- tmp$mapped
+if(bowtieRefAlignment){
+  tmp <- getReadCounts("Reference", mode="wcl")
+  reference.bowtie.unmapped.reads <- tmp$unmapped
+  reference.bowtie.mapped.reads <- tmp$mapped
+} else {
+  reference.bowtie.unmapped.reads <- rep(0,length(samples))
+  reference.bowtie.mapped.reads <-  rep(0,length(samples))
+  }
 ```
 
 ```{r}

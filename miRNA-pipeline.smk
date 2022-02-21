@@ -49,7 +49,7 @@ config["singularity"]["samtools"] = "docker://fischuu/samtools:1.9-0.2"
 config["singularity"]["star"] = "docker://fischuu/star:2.7.3a-0.2"
 config["singularity"]["subread"] = "docker://fischuu/subread:2.0.1-0.1"
 config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.2"
-config["singularity"]["reporting"] = "docker://fischuu/r-gbs:4.1.2-0.2"
+config["singularity"]["reporting"] = "docker://fischuu/r-gbs:4.1.2-0.4"
 
 ##### Apply pre-configuration settings #####
 if config["params"]["protocol"] == 'illumina':
@@ -128,7 +128,7 @@ rule all:
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
       # QUANTIFICATION
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
-        expand("%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"]), samples=samples),
+      #  expand("%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
       # REPORTING
