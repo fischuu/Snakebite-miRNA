@@ -692,6 +692,24 @@ star.mature[is.na(star.mature)] <- 0
 ```{r}
 barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa")
 ```
+RPKM quantification of mirbase mature.fa miRNAs.
+
+```{r}
+# Get the quantification
+mirbase_mature_quant.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase"), pattern="*mature.txt")
+mirbase_mature_quant <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_quant.files[1]), skip=1)
+colnames(mirbase_mature_quant) <- c(gsub("_star_mature.txt", "", mirbase_mature_quant.files[1]), "miRNA")
+for(i in 2:length(mirbase_mature_quant.files)){
+  tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_quant.files[i]), skip=1)
+  colnames(tmp) <- c(gsub("_star_mature.txt", "", mirbase_mature_quant.files[i]), "miRNA")
+  mirbase_mature_quant <- merge(mirbase_mature_quant, tmp, by="miRNA")
+}
+mirbase_mature_quant.miomapped <- apply(mirbase_mature_quant[,-1],2,sum)/1000000
+mirbase_mature_quant.rpkm <- t(t(mirbase_mature_quant[,-1])/mirbase_mature_quant.miomapped)
+rownames(mirbase_mature_quant.rpkm) <- mirbase_mature_quant[,1]
+
+datatable(mirbase_mature_quant.rpkm)
+```
 
 ## Mirbase - Mature_Species.fa
 
@@ -727,6 +745,23 @@ rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa")
 ```
 
+```{r}
+# Get the quantification
+mirbase_mature_species_quant.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase"), pattern="*mature_species.txt")
+mirbase_mature_species_quant <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_species_quant.files[1]), skip=1)
+colnames(mirbase_mature_species_quant) <- c(gsub("_star_mature_species.txt", "", mirbase_mature_species_quant.files[1]), "miRNA")
+for(i in 2:length(mirbase_mature_species_quant.files)){
+  tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_species_quant.files[i]), skip=1)
+  colnames(tmp) <- c(gsub("_star_mature_species.txt", "", mirbase_mature_species_quant.files[i]), "miRNA")
+  mirbase_mature_species_quant <- merge(mirbase_mature_species_quant, tmp, by="miRNA")
+}
+mirbase_mature_species_quant.miomapped <- apply(mirbase_mature_species_quant[,-1],2,sum)/1000000
+mirbase_mature_species_quant.rpkm <- t(t(mirbase_mature_species_quant[,-1])/mirbase_mature_species_quant.miomapped)
+rownames(mirbase_mature_species_quant.rpkm) <- mirbase_mature_species_quant[,1]
+
+datatable(mirbase_mature_species_quant.rpkm)
+```
+
 ## Mirbase - Hairpin.fa
 
 ### Bowtie
@@ -757,6 +792,22 @@ star.hairpin[is.na(star.hairpin)] <- 0
 barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa")
 ```
 
+```{r}
+# Get the quantification
+mirbase_hairpin_quant.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase"), pattern="*hairpin.txt")
+mirbase_hairpin_quant <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_quant.files[1]), skip=1)
+colnames(mirbase_hairpin_quant) <- c(gsub("_star_hairpin.txt", "", mirbase_hairpin_quant.files[1]), "miRNA")
+for(i in 2:length(mirbase_hairpin_quant.files)){
+  tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_quant.files[i]), skip=1)
+  colnames(tmp) <- c(gsub("_star_hairpin.txt", "", mirbase_hairpin_quant.files[i]), "miRNA")
+  mirbase_hairpin_quant <- merge(mirbase_hairpin_quant, tmp, by="miRNA")
+}
+mirbase_hairpin_quant.miomapped <- apply(mirbase_hairpin_quant[,-1],2,sum)/1000000
+mirbase_hairpin_quant.rpkm <- t(t(mirbase_hairpin_quant[,-1])/mirbase_hairpin_quant.miomapped)
+rownames(mirbase_hairpin_quant.rpkm) <- mirbase_hairpin_quant[,1]
+
+datatable(mirbase_hairpin_quant.rpkm)
+```
 
 ## Mirbase - Hairpin_Species.fa
 
@@ -784,6 +835,23 @@ star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
 ```{r}
 barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa")
+```
+```{r}
+# Get the quantification
+mirbase_hairpin_species_quant.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase"), pattern="*hairpin_species.txt")
+mirbase_hairpin_species_quant <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_species_quant.files[1]), skip=1)
+colnames(mirbase_hairpin_species_quant) <- c(gsub("_star_hairpin_species.txt", "", mirbase_hairpin_species_quant.files[1]), "miRNA")
+for(i in 2:length(mirbase_hairpin_species_quant.files)){
+  tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_species_quant.files[i]), skip=1)
+  colnames(tmp) <- c(gsub("_star_hairpin_species.txt", "", mirbase_hairpin_species_quant.files[i]), "miRNA")
+  mirbase_hairpin_species_quant <- merge(mirbase_hairpin_species_quant, tmp, by="miRNA")
+}
+mirbase_hairpin_species_quant.miomapped <- apply(mirbase_hairpin_species_quant[,-1],2,sum)/1000000
+mirbase_hairpin_species_quant.rpkm <- t(t(mirbase_hairpin_species_quant[,-1])/mirbase_hairpin_species_quant.miomapped)
+rownames(mirbase_hairpin_species_quant.rpkm) <- mirbase_hairpin_species_quant[,1]
+
+datatable(mirbase_hairpin_species_quant)
+datatable(mirbase_hairpin_species_quant.rpkm)
 ```
 
 ### Differences Mature.fa and Mature_Species.fa
@@ -1188,7 +1256,7 @@ colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
 
-### Unconsidered reads
+## Unconsidered reads
 
 In above statistics, what is the ratio of reads that is not considered compared to the raw data/trimmed data. Negative values mean that the reads have been counted repeated times. 
 
@@ -1200,6 +1268,7 @@ unconsideredReads <- rawReads_perSample - apply(overall_stats,2,sum)
 
 barplot(unconsideredReads, las=2)
 ```
+
 # Analyses
 
 ## Clustering
