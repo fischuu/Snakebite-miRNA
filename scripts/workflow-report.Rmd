@@ -1282,14 +1282,25 @@ barplot(unconsideredReads, las=2)
 
 # Analyses
 
-## Clustering
+## Clustering - star.mature_species.rpkm
 
 ```{r}
-star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(star.mature_species.rpkm)))
+cluster.data <- star.mature_species.rpkm
+colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
 hc <- hclust(star.mature_species.rpkm.dist)           
 plot(hc)  
 ```
 
+## Clustering - star.protein_coding.rpkm
+
+```{r}
+cluster.data <- star.protein_coding.rpkm
+colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+hc <- hclust(star.mature_species.rpkm.dist)           
+plot(hc)  
+```
 ## Dimension reduction
 
 ### PCA - Mature_Species.fa (STAR)
