@@ -458,6 +458,16 @@ barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.base
 legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
 ```
 
+### Hairpin-species
+Then, we align the miRNA against the mirbase species specific Hairpin sequences only.
+
+```{r, eval=FALSE}
+tmp <- getReadCounts("Hairpin_Species", mode="wcl")
+hairpin_species.unmapped.reads <- tmp$unmapped
+hairpin_species.mapped.reads <- tmp$mapped
+```
+
+
 ### Reference
 The remaining reads we align then against the reference genome
 
@@ -617,8 +627,9 @@ legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs
 
 Unmapped 'Others' is currently not imported from the STAR-logs functions, hence some reads do not add up to 100% here, per sample this is:
 
+Actually, I use here the starlog.totalReads and not the hairpin_species. THIS NEEDS TO BE ADJUSTED!!!
 ```{r}
-barplot(phix.unmapped.reads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
 ```
 
 ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE SOFT-CLIPPED AGAIN, HOW FAR ARE THE ALIGNED SOFT-CLIPPED PARTS AWAY FROM THEIR 'PARTNER'?
