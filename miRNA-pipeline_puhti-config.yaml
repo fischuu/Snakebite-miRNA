@@ -165,3 +165,4 @@ R_pipelineReport:
     time: 300
     cpus-per-task: 1
     mem-per-cpu: 64000
+    

@@ -42,12 +42,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/BovReg_TwinBullSperm/"
+  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/BovReg_TwinBullSperm/miRNA-pipeline_config-bovreg.yaml"
+  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/BovReg_TwinBullSperm/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
+  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
