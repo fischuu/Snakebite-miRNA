@@ -108,7 +108,7 @@ bowtie_map_clear_reads_mature:
 
 bowtie_map_clear_reads_reference:
     job-name: bowtie_map_clear_reads_reference
-    time: 100
+    time: 200
     cpus-per-task: 20
     mem-per-cpu: 4000
 
@@ -162,6 +162,6 @@ featureCounts_quantify_reference_STAR:
 ################################################################################
 R_pipelineReport:
     job-name: R_pipelineReport
-    time: 30
+    time: 300
     cpus-per-task: 1
-    mem-per-cpu: 4000
+    mem-per-cpu: 64000

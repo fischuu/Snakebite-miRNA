@@ -7,11 +7,11 @@ rule R_pipelineReport:
         expand("%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]), samples=samples),
-        expand("%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
+      #  expand("%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/Mature/mapped/{samples}_mature_mapped.wcl" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/Hairpin/mapped/{samples}_hairpin_mapped.wcl" % (config["project-folder"]), samples=samples),
-        expand("%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]), samples=samples),
+      #  expand("%s/FASTQ/Reference/mapped/{samples}_reference_mapped.wcl" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature_Species/{samples}_bowtie_mature_species_seqkit.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Hairpin/{samples}_bowtie_hairpin_seqkit.txt" % (config["project-folder"]), samples=samples),
@@ -24,8 +24,7 @@ rule R_pipelineReport:
         "%s/logs/R/pipelineReport.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/R/pipelineReport.benchmark.tsv" % (config["project-folder"])
-    singularity:
-        "docker://fischuu/r-gbs:4.1.2-0.2"
+    singularity: config["singularity"]["reporting"]
     params:
        script=config["report-script"],
        projFolder=config["project-folder"],
@@ -43,6 +42,6 @@ rule R_pipelineReport:
              refGenome.file <- '{params.refGenome}'; \
              refAnnot.file <- '{params.refAnnot}'; \
              pipelineConfig <- '{params.pipeConfig}'; \
-             snakemake <- TRUE;\
+             snakemake <- TRUE; \
              rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
     """
