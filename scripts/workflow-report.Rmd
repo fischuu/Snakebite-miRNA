@@ -42,12 +42,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
+  projFolder <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
+  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/miRNA-pipeline_config-gladiator.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
+  refGenome.file <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
@@ -143,6 +143,8 @@ out <- data.frame(c("Project folder",
 out_html <- knitr::kable(out, col.names = NULL, "html")
 kable_styling(out_html, "striped", position = "left")
 ```
+
+# Quality checks
 
 ## Concatenating stats
 As the concatenating is a crucial step in this pipeline, it is important to make this correct. As a double check that things went right, we check how
@@ -755,7 +757,7 @@ rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 ```{r}
 barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa")
 ```
-
+The raw counts per mature mirna per sample
 ```{r}
 # Get the quantification
 mirbase_mature_species_quant.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase"), pattern="*mature_species.txt")
@@ -770,6 +772,12 @@ mirbase_mature_species_quant.miomapped <- apply(mirbase_mature_species_quant[,-1
 mirbase_mature_species_quant.rpkm <- t(t(mirbase_mature_species_quant[,-1])/mirbase_mature_species_quant.miomapped)
 rownames(mirbase_mature_species_quant.rpkm) <- mirbase_mature_species_quant[,1]
 
+datatable(mirbase_mature_species_quant)
+```
+
+And the RPKM normalised values
+
+```{r}
 datatable(mirbase_mature_species_quant.rpkm)
 ```
 
@@ -1154,57 +1162,65 @@ The visualisation of the biotypes
 How are the reads distributed across contaminations, biotypes and features.
 
 ```{r}
+samples.adj <- gsub("-",".", samples)
+
 rawReads_perSample <- c()
 for(i in 1:length(samples)){
   rawReads_perSample[i] <- sum(raw.reads[grep(samples[i], names(raw.reads))])
 }
+names(rawReads_perSample) <- samples
 
 qcRemovedReads_perSample <- c()
 for(i in 1:length(samples)){
-  qcRemovedReads_perSample[i] <- rawReads_perSample[i]-sum(trimmed.reads[grep(samples[i], names(raw.reads))])
+  qcRemovedReads_perSample[i] <- rawReads_perSample[grep(samples[i], names(rawReads_perSample))]-sum(trimmed.reads[grep(samples[i], names(trimmed.reads))])
 }
 
 refAssignedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refAssignedReads_perSample[i] <- fc.expr.stats[1,(i+1)]
+  refAssignedReads_perSample[i] <- fc.expr.stats[1,grep(samples.adj[1], colnames(fc.expr.stats))]
 }
 
 refUnassigned_AmbiguityReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,(i+1)]
+  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,grep(samples.adj[i], colnames(fc.expr.stats))]
 }
 
 refUnassigned_NoFeatureReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,(i+1)]
+  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,grep(samples.adj[i], colnames(fc.expr.stats))]
 }
 
 refUnassigned_UnmappedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,(i+1)]
+  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(samples.adj[i], colnames(fc.expr.stats))]
 }
 
 mirbaseAssigned_MatureReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,(i+1)])
+  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,grep(samples[i], colnames(star.mature_species))])
 }
 
 mirbaseAssigned_HairpinReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,(i+1)])
+  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(samples[i], colnames(star.hairpin_species))])
 }
 
 contamination_trnaReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_trnaReads_perSample[i] <- trna.mapped.reads[i]
+  contamination_trnaReads_perSample[i] <- trna.mapped.reads[grep(samples[i], names(trna.mapped.reads))]
 }
 
 contamination_phixReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_phixReads_perSample[i] <- phix.mapped.reads[i]
+  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(samples[i], names(phix.mapped.reads))]
 }
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
+
+for(i in 1:length(samples)){
+  reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(samples[i], colnames(counts_per_biotype))]
+}
+
 
 overall_stats <- rbind(qcRemovedReads_perSample,
                        contamination_trnaReads_perSample,
