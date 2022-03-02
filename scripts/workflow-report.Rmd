@@ -42,12 +42,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/"
+  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/miRNA-pipeline_config-gladiator.yaml"
+  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_GLADIATOR/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
+  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
@@ -1376,7 +1376,7 @@ if(sampleInfo.avail){
       cat(sprintf(tmpTitle))
       pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+      legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
     }
@@ -1450,7 +1450,7 @@ for(i in 2:ncol(sampleInfo)){
   cat(sprintf(tmpTitle))
   pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+  legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
