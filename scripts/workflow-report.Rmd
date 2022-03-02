@@ -1100,6 +1100,10 @@ out_html <- knitr::kable(round(t(t(counts_per_biotype)/conc.reads)*100,2), "html
 kable_styling(out_html, "striped", position = "left")
 ```
 
+# Overall statistic
+
+How are the reads distributed across contaminations, biotypes and features.
+
 ## Top-expressed per biotype and sample
 
 The visualisation of the biotypes
@@ -1156,10 +1160,6 @@ The visualisation of the biotypes
        rev(legend.label), lty=1, cex=0.5, col=rev(legend.color), lwd=4)
 ```
 
-
-# Overall statistic
-
-How are the reads distributed across contaminations, biotypes and features.
 
 ```{r}
 samples.adj <- gsub("-",".", samples)
@@ -1238,7 +1238,9 @@ colnames(overall_stats) <- samples
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 ```
 
-## Absolute numbers
+## Origin of reads
+
+### Absolute numbers
 
 ```{r}
   out_html <- knitr::kable(overall_stats, "html")
@@ -1260,7 +1262,7 @@ colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
   
-## Percentages
+### Percentages
 
 ```{r}
   out_html <- knitr::kable(round(t(t(overall_stats)/apply(overall_stats,2,sum))*100,2) , "html")
@@ -1283,7 +1285,7 @@ colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
 
-## Unconsidered reads
+### Unconsidered reads
 
 In above statistics, what is the ratio of reads that is not considered compared to the raw data/trimmed data. Negative values mean that the reads have been counted repeated times. 
 
@@ -1298,7 +1300,9 @@ barplot(unconsideredReads, las=2)
 
 # Analyses
 
-## Clustering - star.mature_species.rpkm
+## Clustering
+
+### hclust based on star.mature_species.rpkm
 
 ```{r}
 cluster.data <- star.mature_species.rpkm
@@ -1308,7 +1312,7 @@ hc <- hclust(star.mature_species.rpkm.dist)
 plot(hc)  
 ```
 
-## Clustering - star.protein_coding.rpkm
+### hclust based on  star.protein_coding.rpkm
 
 ```{r}
 cluster.data <- star.protein_coding.rpkm
