@@ -1322,8 +1322,39 @@ plot(hc)
 ### PCA - Mature_Species.fa (STAR)
 
 ```{r performPCA}
+# This is just quick and dirty, find later a nice palette to chose from...
+color <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+color.pre <- c('#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#a9a9a9', '#ffffff', '#000000')
+
 expr.PCA <- prcomp(t(star.mature_species.rpkm))
 expr.PCA.mature_species <- expr.PCA
+pca.colours <- sampleInfo
+for(i in 1:nrow(pca.colours)){
+  pca.colours[grep(sampleInfo$sampleID[i], colnames(star.mature_species.rpkm)),] <- sampleInfo[i,]
+}
+
+pca.legend <- list()
+
+if(ncol(pca.colours)>1){
+ for(i in 2:ncol(pca.colours)){
+   group_table <- table(pca.colours[,i])
+   n_groups <- length(group_table)
+   set.seed(453)
+   getPalette <- colorRampPalette(sample(color, n_groups,replace=F))
+   groupPalette <- getPalette(n_groups)
+   if(n_groups<20){
+     groupPalette <- color.pre[1:n_groups]
+   }
+   
+   names(groupPalette) <- names(group_table)
+   pca.legend[[i-1]] <- groupPalette
+   for(j in 1:length(groupPalette)){
+      pca.colours[pca.colours[,i]==names(groupPalette)[j],i] <- groupPalette[j]
+   }
+ }  
+}
+
+
 ```
 
 This is just the plain PCA, without using any colouring schemes.
@@ -1343,9 +1374,9 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
     }
@@ -1363,9 +1394,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
-  pairs(expr.PCA$x[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1397,9 +1428,9 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
     }
@@ -1417,9 +1448,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
-  pairs(expr.PCA$x[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1434,9 +1465,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
-  plot(FOBI, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(FOBI,col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }  
@@ -1444,6 +1475,8 @@ for(i in 2:ncol(sampleInfo)){
    plot(FOBI, pch=20)
 }
 ```
+
+
 
 ### ICS - Reference.protein_coding (STAR)
 ```{r, eval=FALSE, results="asis"}
@@ -1453,15 +1486,17 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
-  plot(FOBI, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(FOBI, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }  
 } else {
    plot(FOBI, pch=20)
 }
+
+
 ```
 
 ### t-SNE - Mature_species.fa (STAR)
@@ -1475,9 +1510,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
   cat(sprintf(tmpTitle))
-  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1495,9 +1530,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
   cat(sprintf(tmpTitle))
-  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1515,9 +1550,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
   cat(sprintf(tmpTitle))
-  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1535,9 +1570,9 @@ if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
   cat(sprintf(tmpTitle))
-  plot(TSNEout, col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
-  legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }
@@ -1558,9 +1593,9 @@ if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1581,9 +1616,9 @@ if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1605,9 +1640,9 @@ if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA based data)\n")
       cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1630,9 +1665,9 @@ if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.based data)\n")
       cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1655,9 +1690,9 @@ lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1679,9 +1714,9 @@ lleres <- lle(star.mature_species.rpkm, m=7, k=17, v=0.99)
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1706,9 +1741,9 @@ lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
@@ -1730,9 +1765,9 @@ lleres <- lle(star.protein_coding.rpkm, m=7, k=17, v=0.99)
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(lleres$Y[,1:5], col=as.numeric(as.factor(sampleInfo[,i])), pch=20, oma=c(3,3,3,15))
+      pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
-      legend("bottomright", fill=as.factor(levels(as.factor(sampleInfo[,i]))), legend=levels(as.factor(sampleInfo[,i])))
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }

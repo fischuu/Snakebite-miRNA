@@ -4,7 +4,8 @@
 #####                                                                      #####
 ################################################################################
 
-* 0.3.21: Bugfix in workfloReport.Rmd: Overall statistics were not assembling the counts correctly
+* 0.3.22: Improved colours for PCA plots and bugfix. It could happen that colours were not assigned correctly
+* 0.3.21: Bugfix in workflowReport.Rmd: Overall statistics were not assembling the counts correctly
 * 0.3.20: Bugfix unconsidered reads in STAR barplot
 * 0.3.19: Quantification tables for mirbase fasta added to final report
 * 0.3.18: FinalReport.Rmd updated and overall statistics added
