@@ -166,3 +166,16 @@ R_pipelineReport:
     cpus-per-task: 1
     mem-per-cpu: 64000
     
+# Module 7 - Novel miRNA
+################################################################################
+AssembleTranscripts:
+    job-name: Assemble_transcripts
+    time: 300
+    cpus-per-task: 20
+    mem-per-cpu: 10000
+    
+stringtie_merge:
+    job-name: stringtie_merge
+    time: 300
+    cpus-per-task: 20
+    mem-per-cpu: 10000

@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.23
-version = "0.3.23"
+##### Version: 0.3.24
+version = "0.3.24"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -50,6 +50,7 @@ config["singularity"]["star"] = "docker://fischuu/star:2.7.3a-0.2"
 config["singularity"]["subread"] = "docker://fischuu/subread:2.0.1-0.1"
 config["singularity"]["seqkit"] = "docker://fischuu/seqkit:2.1.0-0.2"
 config["singularity"]["reporting"] = "docker://fischuu/r-gbs:4.1.2-0.4"
+config["singularity"]["stringtie"] = "docker://fischuu/stringtie:2.2.1-0.1"
 
 ##### Apply pre-configuration settings #####
 if config["params"]["protocol"] == 'illumina':
@@ -100,6 +101,7 @@ print("##### samtools        : "+config["singularity"]["samtools"])
 print("##### star            : "+config["singularity"]["star"])
 print("##### subread         : "+config["singularity"]["subread"])
 print("##### seqkit          : "+config["singularity"]["seqkit"])
+print("##### stringtie       : "+config["singularity"]["stringtie"])
 print("##### reporting       : "+config["singularity"]["reporting"])
 print("#################################################################################")
 
@@ -131,6 +133,7 @@ rule all:
       #  expand("%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/STAR/Reference_novel/{samples}_star_reference_novel_fc.txt" % (config["project-folder"]), samples=samples),
       # REPORTING
         "%s/pipelineReport.html" % (config["project-folder"])
 #      # ANALYSIS - Conservation
@@ -163,6 +166,7 @@ include: "rules/Module3-ContaminationRemoval"
 include: "rules/Module4-Alignments"
 include: "rules/Module5-Quantification"
 include: "rules/Module6-Reporting"
+include: "rules/Module7-NovelMirna"
 #include: "rules/bedtools_extract_miRNA_fasta_ars.smk"
 #include: "rules/bedtools_extract_miRNA_fasta_hg38.smk"
 #include: "rules/bowtie_map_ars_mirna_vs_hg38.smk"
