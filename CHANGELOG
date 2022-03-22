@@ -4,7 +4,19 @@
 #####                                                                      #####
 ################################################################################
 
-* 0.3.24: Novel genes are now predicted via Stringtie from the STAR alignments
+Planned additions for future releases:
+
+* Comparison reference annotation / novel gene model, how many reads are aligned to novel predicted genes/miRNA
+* Metagenomic characterisation of unmapped reads
+* Remove the Stringtie part again, it does not work for miRNA!!! Switch to something better...
+
+################################################################################
+######                                                                     #####
+######                          Previous releases                          #####
+######                                                                     #####
+################################################################################
+
+* 0.3.24: Novel miRNAs are now predicted via Stringtie from the STAR alignments
 * 0.3.23: Restructured pipeline report
 * 0.3.22: Improved colours for PCA plots and bugfix. It could happen that colours were not assigned correctly
 * 0.3.21: Bugfix in workflowReport.Rmd: Overall statistics were not assembling the counts correctly
