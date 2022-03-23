@@ -1,95 +1,74 @@
-rule AssembleTranscripts:
+rule SortedBamToMpileup:
     """
-    Transcript assembly (StringTie).
+    Get Mpileup for Reference Genome.
     """
     input:
-       bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
-       annotation="%s" % (config["refAnnot"])
+        bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
+        reference="%s" % (config["reference"])
     output:
-       "%s/Stringtie/{samples}.stringtie.gtf" % (config["project-folder"])
+        mpileup="%s/MPILEUP/mpileup_reference/{samples}.mpileup" % (config["project-folder"]),
+        unique="%s/MPILEUP/mpileup_reference/{samples}.mpileup.unique" % (config["project-folder"]),
+        bed="%s/MPILEUP/mpileup_reference/{samples}.bed" % (config["project-folder"])
     log:
-       "%s/logs/Stringtie/stringtie.{samples}.log" % (config["project-folder"])
+        "%s/logs/Samtools/SortedBamToMpileup.{samples}.log" % (config["project-folder"])
     benchmark:
-       "%s/benchmark/stringtie.{samples}.benchmark.tsv" % (config["project-folder"])
-    singularity: config["singularity"]["stringtie"]
-    threads: cluster["AssembleTranscripts"]["cpus-per-task"]
+        "%s/benchmark/Samtools/RefGenome_SortedBamToMpileup.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        pipe=config["pipeline-folder"]
+    singularity: config["singularity"]["samtools"]
+    threads: cluster["SortedBamToMpileup"]["cpus-per-task"]
     resources:
-        time=cluster["AssembleTranscripts"]["time"],
-        mem=cluster["AssembleTranscripts"]["mem-per-cpu"]
+        time=cluster["SortedBamToMpileup"]["time"],
+        mem=cluster["SortedBamToMpileup"]["mem-per-cpu"]
     shell:"""
-        stringtie {input.bam} -p {threads} -G {input.annotation} -v -o {output} 2> {log};
-  	"""
-
-
-rule compose_merge:
+        samtools mpileup -d 100 -B -C 50 -f {input.reference} {input.bam} > {output.mpileup}
+        {params.pipe}/scripts/uniqueMpileup.sh {output.mpileup} > {output.unique}
+        {params.pipe}/scripts/mpileupToBed.sh {output.unique} 10 > {output.bed} 2> {log}
     """
-    collect gtf files of all samples in one text file
+
+rule getJoinedLoci:
+    """
+    Merge the Loci
     """
     input:
-       files=expand("%s/Stringtie/{sample}.stringtie.gtf" % (config["project-folder"]), sample=samples)
+        bed=expand("%s/MPILEUP/mpileup_reference/{samples}.bed" % (config["project-folder"]), samples=samples)
     output:
-       txt="%s/Stringtie/stringtie_gtfs.txt" % (config["project-folder"])
+        merged="%s/MPILEUP/mpileup_reference/merged.bed" % (config["project-folder"]),
+        joined="%s/MPILEUP/mpileup_reference/joinedLoci.bed" % (config["project-folder"])
     params:
-       folder="%s/Stringtie/" % (config["project-folder"]),
-       pipefolder=config["pipeline-folder"]
+        pipe=config["pipeline-folder"]
+    singularity: config["singularity"]["bedtools"]
+    group: "Novel_mirna"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]
     shell:"""
-       bash {params.pipefolder}/scripts/composeMerge.sh {params.folder} {output.txt}
+         multiIntersectBed -i {input} > {output.merged}
+         {params.pipe}/scripts/getJoinedLoci.sh {output.merged} 10 | bedtools sort | bedtools merge | awk "{{if(\$3-\$2 > 15) print}}" > {output.joined}
     """
-        
-rule stringtie_merge:
+
+
+rule intersectWithAnnotation:
     """
-    Merge the gtf files (stringtie merge).
+    Remove annotated regions from novel prediction loci
     """
     input:
-        gtfs="%s/Stringtie/stringtie_gtfs.txt" % (config["project-folder"]),
-        annotation="%s" % (config["refAnnot"])
+        joined="%s/MPILEUP/mpileup_reference/joinedLoci.bed" % (config["project-folder"]),
+        annot=config["refAnnot"]
     output:
-        "%s/Stringtie/merged_STRG.gtf" % (config["project-folder"])
+        merged="%s/Reference/novelLoci.bed" % (config["project-folder"]),
+        tmp=temp("%s/Reference/novelLoci_unfiltered.bed" % (config["project-folder"]))
+    singularity: config["singularity"]["bedtools"]
+    group: "Novel_mirna"
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
     params:
-        tpm=config["params"]["stringtie"]["tpm"]
-    log:
-        "%s/logs/stringtiemerge.log" % (config["project-folder"])
-    benchmark:
-        "%s/benchmark/stringtiemerge.benchmark.tsv" % (config["project-folder"])
-    threads: 20
-    singularity: config["singularity"]["stringtie"]
-    threads: cluster["stringtie_merge"]["cpus-per-task"]
-    resources:
-        time=cluster["stringtie_merge"]["time"],
-        mem=cluster["stringtie_merge"]["mem-per-cpu"]
+        pipe=config["pipeline-folder"]
     shell:"""
-        stringtie --merge -F 0 -T {params.tpm} -G {input.annotation} -o {output} {input.gtfs} 2> {log};
+        bedtools intersect -v -a {input.joined} -b {input.annot} > {output.tmp}
+        {params.pipe}/scripts/filterNovelMirna.sh {output.tmp} 16 > {output.merged}
     """
-    
-rule featureCounts_quantify_novelMirna_STAR:
-    """
-    Quantify the STAR aligned reads to stringetie novel (featureCounts).
-    """
-    input:
-        bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
-        annot="%s/Stringtie/merged_STRG.gtf" % (config["project-folder"])
-    output:
-        file="%s/QUANTIFICATION/STAR/Reference_novel/{samples}_star_reference_novel_fc.txt" % (config["project-folder"])
-    log:
-        "%s/logs/FC/featureCounts_star_reference_novel.{samples}.log" % (config["project-folder"])
-    benchmark:
-        "%s/benchmark/FC/featureCounts_star_reference_novel.{samples}.benchmark.tsv" % (config["project-folder"])
-    params: tmpdir=config["scratch-folder"]
-    threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
-    resources:
-        time=cluster["featureCounts_quantify_reference_STAR"]["time"],
-        mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
-    singularity: config["singularity"]["subread"]
-    shell:"""
-        featureCounts --primary -M \
-                      -T {threads} \
-                      -a {input.annot} \
-                      -t transcript \
-                      -g gene_id \
-                      -o {output.file} \
-                      {input.bam} 2> {log}
-    """
+

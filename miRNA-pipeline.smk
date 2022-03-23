@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.24
-version = "0.3.24"
+##### Version: 0.3.25
+version = "0.3.25"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -41,6 +41,7 @@ config["report-script"] = config["pipeline-folder"]+"/scripts/workflow-report.Rm
 
 ##### Singularity container #####
 config["singularity"] = {}
+config["singularity"]["bedtools"] = "docker://fischuu/bedtools:2.30-0.1"
 config["singularity"]["bowtie"] = "docker://fischuu/bowtie:1.2.2-0.3"
 config["singularity"]["cutadapt"] = "docker://fischuu/cutadapt:2.8-0.3"
 config["singularity"]["fastqc"] = "docker://fischuu/gbs:0.2"
@@ -93,6 +94,7 @@ print("##### 3'-trim bases   : "+ str(config["params"]["cutadapt"]["threeprimetr
 print("#####")
 print("##### Singularity configuration")
 print("##### --------------------------------")
+print("##### bedtools        : "+config["singularity"]["bedtools"])
 print("##### bowtie          : "+config["singularity"]["bowtie"])
 print("##### cutadapt        : "+config["singularity"]["cutadapt"])
 print("##### fastqc          : "+config["singularity"]["fastqc"])
@@ -125,15 +127,14 @@ rule all:
         expand("%s/STATS/BOWTIE/PhiX/{samples}_PhiX.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]), samples=samples),
-      #  expand("%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
       # QUANTIFICATION
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
-      #  expand("%s/QUANTIFICATION/BOWTIE/Reference/{samples}_bowtie_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
-        expand("%s/QUANTIFICATION/STAR/Reference_novel/{samples}_star_reference_novel_fc.txt" % (config["project-folder"]), samples=samples),
+      # NOVEL MIRNA
+        expand("%s/QUANTIFICATION/STAR/Novel_genes/{samples}_star_novelMirna_bedtools.txt" % (config["project-folder"]), samples=samples),
       # REPORTING
         "%s/pipelineReport.html" % (config["project-folder"])
 #      # ANALYSIS - Conservation

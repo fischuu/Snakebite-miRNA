@@ -1,0 +1,95 @@
+rule AssembleTranscripts:
+    """
+    Transcript assembly (StringTie).
+    """
+    input:
+       bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
+       annotation="%s" % (config["refAnnot"])
+    output:
+       "%s/Stringtie/{samples}.stringtie.gtf" % (config["project-folder"])
+    log:
+       "%s/logs/Stringtie/stringtie.{samples}.log" % (config["project-folder"])
+    benchmark:
+       "%s/benchmark/stringtie.{samples}.benchmark.tsv" % (config["project-folder"])
+    singularity: config["singularity"]["stringtie"]
+    threads: cluster["AssembleTranscripts"]["cpus-per-task"]
+    resources:
+        time=cluster["AssembleTranscripts"]["time"],
+        mem=cluster["AssembleTranscripts"]["mem-per-cpu"]
+    shell:"""
+        stringtie {input.bam} -p {threads} -G {input.annotation} -v -o {output} 2> {log};
+  	"""
+
+
+rule compose_merge:
+    """
+    collect gtf files of all samples in one text file
+    """
+    input:
+       files=expand("%s/Stringtie/{sample}.stringtie.gtf" % (config["project-folder"]), sample=samples)
+    output:
+       txt="%s/Stringtie/stringtie_gtfs.txt" % (config["project-folder"])
+    params:
+       folder="%s/Stringtie/" % (config["project-folder"]),
+       pipefolder=config["pipeline-folder"]
+    threads: cluster["__default__"]["cpus-per-task"]
+    resources:
+        time=cluster["__default__"]["time"],
+        mem=cluster["__default__"]["mem-per-cpu"]
+    shell:"""
+       bash {params.pipefolder}/scripts/composeMerge.sh {params.folder} {output.txt}
+    """
+        
+rule stringtie_merge:
+    """
+    Merge the gtf files (stringtie merge).
+    """
+    input:
+        gtfs="%s/Stringtie/stringtie_gtfs.txt" % (config["project-folder"]),
+        annotation="%s" % (config["refAnnot"])
+    output:
+        "%s/Stringtie/merged_STRG.gtf" % (config["project-folder"])
+    params:
+        tpm=config["params"]["stringtie"]["tpm"]
+    log:
+        "%s/logs/stringtiemerge.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/stringtiemerge.benchmark.tsv" % (config["project-folder"])
+    threads: 20
+    singularity: config["singularity"]["stringtie"]
+    threads: cluster["stringtie_merge"]["cpus-per-task"]
+    resources:
+        time=cluster["stringtie_merge"]["time"],
+        mem=cluster["stringtie_merge"]["mem-per-cpu"]
+    shell:"""
+        stringtie --merge -F 0 -T {params.tpm} -G {input.annotation} -o {output} {input.gtfs} 2> {log};
+    """
+    
+rule featureCounts_quantify_novelMirna_STAR:
+    """
+    Quantify the STAR aligned reads to stringetie novel (featureCounts).
+    """
+    input:
+        bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"]),
+        annot="%s/Stringtie/merged_STRG.gtf" % (config["project-folder"])
+    output:
+        file="%s/QUANTIFICATION/STAR/Reference_novel/{samples}_star_reference_novel_fc.txt" % (config["project-folder"])
+    log:
+        "%s/logs/FC/featureCounts_star_reference_novel.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/FC/featureCounts_star_reference_novel.{samples}.benchmark.tsv" % (config["project-folder"])
+    params: tmpdir=config["scratch-folder"]
+    threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
+    resources:
+        time=cluster["featureCounts_quantify_reference_STAR"]["time"],
+        mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    singularity: config["singularity"]["subread"]
+    shell:"""
+        featureCounts --primary -M \
+                      -T {threads} \
+                      -a {input.annot} \
+                      -t transcript \
+                      -g gene_id \
+                      -o {output.file} \
+                      {input.bam} 2> {log}
+    """

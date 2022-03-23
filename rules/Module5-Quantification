@@ -146,3 +146,27 @@ rule bash_quantify_mirbase_STAR:
         samtools view -F 256 {input.hairpinspecies} | cut -f3 | sort | uniq -c > {output.hairpinspecies}
     """
 
+rule bedtools_quantify_novelMirna:
+    """
+    Quantify the STAR aligned reads to reference for novelMirna (bedtools).
+    """
+    input:
+        bam="%s/BAM/STAR/Reference/{samples}_reference_star_primary.bam" % (config["project-folder"]),
+        bed="%s/Reference/novelLoci.bed" % (config["project-folder"])
+    output:
+        "%s/QUANTIFICATION/STAR/Novel_genes/{samples}_star_novelMirna_bedtools.txt" % (config["project-folder"])
+    log:
+        "%s/logs/Bedtools/bedtools_star_novelMirna.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/Bedtools/bedtools_star_novelMirna.{samples}.benchmark.tsv" % (config["project-folder"])
+    params:
+        annot=config["refAnnot"]
+    params: tmpdir=config["scratch-folder"]
+    threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
+    resources:
+        time=cluster["featureCounts_quantify_reference_STAR"]["time"],
+        mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    singularity: config["singularity"]["bedtools"]
+    shell:"""
+        bedtools multicov -bams {input.bam} -bed {input.bed} > {output}        
+    """

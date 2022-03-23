@@ -675,6 +675,29 @@ rule star_map_unmapped_mirbase_reads_reference:
         mv {wildcards.samples}_Log.final.out {wildcards.samples}_Log.progress.out {wildcards.samples}_Log.out {wildcards.samples}_SJ.out.tab {output.dir}
     """
 
+rule samtools_remove_secondary_alignments:
+    """
+    Remove secondary alignments (SAMTOOLS).
+    """
+    input:
+        "%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
+    output:
+        "%s/BAM/STAR/Reference/{samples}_reference_star_primary.bam" % (config["project-folder"])
+    log:
+        "%s/logs/STAR/star_reference_primary.{samples}.log" % (config["project-folder"])
+    benchmark:
+        "%s/benchmark/STAR/star_reference_primary.{samples}.benchmark.tsv" % (config["project-folder"])
+    group: "star_alignments"
+    threads: cluster["star_map_clear_reads_reference"]["cpus-per-task"]
+    resources:
+        time=cluster["star_map_clear_reads_reference"]["time"],
+        mem=cluster["star_map_clear_reads_reference"]["mem-per-cpu"]
+    singularity: config["singularity"]["samtools"]
+    shell:"""
+        samtools view -bq 1 {input} > {output}
+        samtools index {output}
+    """
+
 rule samtools_star_reads_reference_flagstats:
     """
     Get mapping stats (samtools).
