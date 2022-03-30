@@ -92,7 +92,8 @@ rule featureCounts_quantify_reference_STAR:
     input:
         bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
     output:
-        file="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"])
+        file="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]),
+        exon="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_exon_fc.txt" % (config["project-folder"])
     log:
         "%s/logs/FC/featureCounts_star_reference.{samples}.log" % (config["project-folder"])
     benchmark:
@@ -113,6 +114,15 @@ rule featureCounts_quantify_reference_STAR:
                       -g gene_id \
                       -o {output.file} \
                       {input.bam} 2> {log}
+                      
+        featureCounts --primary -M \
+                      -T {threads} \
+                      -a {params.annot} \
+                      -t exon \
+                      -g gene_id \
+                      -o {output.exon} \
+                      {input.bam} 2> {log}
+
     """
     
 rule bash_quantify_mirbase_STAR:
