@@ -133,6 +133,7 @@ rule all:
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
+        expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_exon_fc.txt" % (config["project-folder"]), samples=samples),
       # NOVEL MIRNA
         expand("%s/QUANTIFICATION/STAR/Novel_genes/{samples}_star_novelMirna_bedtools.txt" % (config["project-folder"]), samples=samples),
       # REPORTING
