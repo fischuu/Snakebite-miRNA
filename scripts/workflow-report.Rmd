@@ -42,12 +42,12 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/NanoBioFun_MindGAP/"
+  projFolder <- "/scratch/project_2001310/MaitoInno_Feeding/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
-  pipelineConfig <- "/scratch/project_2001310/NanoBioFun_MindGAP/miRNA-pipeline_config-mindgap.yaml"
+  pipelineConfig <- "/scratch/project_2001310/MaitoInno_Feeding/miRNA-pipeline_config-feeding.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
-  refGenome.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
-  refAnnot.file <- "/scratch/project_2001310/NanoBioFun_MindGAP/References/GRCh38/Homo_sapiens.GRCh38.95.gtf"
+  refGenome.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  refAnnot.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.95.gtf"
 }
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
@@ -944,7 +944,7 @@ if(bowtieRefAlignment){
 The quantification of the multimapping reads is as follows. With featureCounts, we only count the primary alignment, all secondary alignments we ignore. However, while aligning the data, we assign the primary alignment for multi-mapped reads randomly!!!
 
 ```{r}
-fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Reference"), pattern="*.txt$")
+fc.files <- list.files(file.path(projFolder, "QUANTIFICATION", "STAR", "Reference"), pattern="*reference_fc.txt$")
 fc.in <- list()
 for(i in 1:length(fc.files)){
   fc.in[[i]] <- importFeatureCounts(file.path(projFolder, "QUANTIFICATION", "STAR", "Reference", fc.files[i]))
@@ -1332,13 +1332,19 @@ color.pre <- c('#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4',
 
 expr.PCA <- prcomp(t(star.mature_species.rpkm))
 expr.PCA.mature_species <- expr.PCA
-pca.colours <- sampleInfo
-for(i in 1:nrow(pca.colours)){
-  pca.colours[grep(sampleInfo$sampleID[i], colnames(star.mature_species.rpkm)),] <- sampleInfo[i,]
+if(sampleInfo.avail){
+  pca.colours <- sampleInfo
+  for(i in 1:nrow(pca.colours)){
+    pca.colours[grep(sampleInfo$sampleID[i], colnames(star.mature_species.rpkm)),] <- sampleInfo[i,]
+  }
+} else {
+  pca.colours <- "black"
 }
-
+  
+  
 pca.legend <- list()
 
+if(sampleInfo.avail){
 if(ncol(pca.colours)>1){
  for(i in 2:ncol(pca.colours)){
    group_table <- table(pca.colours[,i])
@@ -1356,6 +1362,8 @@ if(ncol(pca.colours)>1){
       pca.colours[pca.colours[,i]==names(groupPalette)[j],i] <- groupPalette[j]
    }
  }  
+}
+  
 }
 
 
@@ -1394,16 +1402,18 @@ pairs(expr.PCA$x[,1:cols])
 ```
 
 ```{r, results="asis"}
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
-  cat(sprintf(tmpTitle))
-  pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
-}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+    tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+    cat(sprintf(tmpTitle))
+    pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+    par(xpd=TRUE)
+    legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+    par(xpd=FALSE)
+    cat(sprintf("\n\n"))
+  }
+  }
 }
 ```
 
@@ -1448,7 +1458,8 @@ pairs(expr.PCA$x[,1:cols])
 ```
 
 ```{r, results="asis"}
-if(ncol(sampleInfo)>1){
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
@@ -1459,12 +1470,14 @@ for(i in 2:ncol(sampleInfo)){
   cat(sprintf("\n\n"))
 }
 }
+}
 ```
 
 ### ICS - Mature_Species.fa (STAR)
 ```{r, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 FOBI <- ics(expr.PCA.mature_species$x[,1:cols])
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1475,7 +1488,7 @@ for(i in 2:ncol(sampleInfo)){
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
 }  
-} else {
+}} else {
    plot(FOBI, pch=20)
 }
 ```
@@ -1486,17 +1499,19 @@ for(i in 2:ncol(sampleInfo)){
 ```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA$x),10)
 FOBI <- ics(expr.PCA$x[,1:cols])
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
-  cat(sprintf(tmpTitle))
-  plot(FOBI, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
-}  
-} else {
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+    cat(sprintf(tmpTitle))
+    plot(FOBI, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+    par(xpd=TRUE)
+    legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+    par(xpd=FALSE)
+    cat(sprintf("\n\n"))
+  }  
+}
+  }else {
    plot(FOBI, pch=20)
 }
 
@@ -1510,8 +1525,9 @@ First, the PCA based t-SNE run (using the PCA-based reduced data as input)
 ```{r, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(expr.PCA.mature_species$x[,1:cols], k=5)
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
   cat(sprintf(tmpTitle))
   plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
@@ -1519,8 +1535,9 @@ for(i in 2:ncol(sampleInfo)){
   legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
+  }
 }
-} else {
+  }else {
    plot(TSNEout, pch=20)
 }
 ```
@@ -1530,17 +1547,19 @@ And then the run for the original data
 ```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(star.mature_species.rpkm, k=5)
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
-  cat(sprintf(tmpTitle))
-  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
+    cat(sprintf(tmpTitle))
+    plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+    par(xpd=TRUE)
+    legend("bottomright",fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+    par(xpd=FALSE)
+    cat(sprintf("\n\n"))
+  }
 }
-} else {
+  }else {
    plot(TSNEout, pch=20)
 }
 ```
@@ -1550,17 +1569,19 @@ First for the PCA reduced input data
 ```{r, results="asis"}
 cols <- min(ncol(expr.PCA.protein_coding$x),10)
 TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
-  cat(sprintf(tmpTitle))
-  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+    cat(sprintf(tmpTitle))
+    plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+    par(xpd=TRUE)
+    legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+    par(xpd=FALSE)
+    cat(sprintf("\n\n"))
+  }
 }
-} else {
+  }else {
    plot(TSNEout, pch=20)
 }
 ```
@@ -1570,6 +1591,7 @@ And then for the original data as well
 ```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA.protein_coding$x),10)
 TSNEout <- tsne(star.protein_coding.rpkm, k=5)
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
   tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
@@ -1579,6 +1601,7 @@ for(i in 2:ncol(sampleInfo)){
   legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
   par(xpd=FALSE)
   cat(sprintf("\n\n"))
+}
 }
 } else {
    plot(TSNEout, pch=20)
@@ -1593,6 +1616,7 @@ KPCAres <- kpca(expr.PCA.mature_species$x[,1:cols])
 ```
 
 ```{r, results="asis"}
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1603,7 +1627,8 @@ if(ncol(sampleInfo)>1){
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
-} else {
+} 
+  }else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
 }
@@ -1616,6 +1641,7 @@ KPCAres <- kpca(star.mature_species.rpkm)
 ```
 
 ```{r, eval=FALSE, results="asis"}
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1626,6 +1652,7 @@ if(ncol(sampleInfo)>1){
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
+}
 } else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
@@ -1640,6 +1667,7 @@ KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
 ```
 
 ```{r, results="asis"}
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA based data)\n")
@@ -1650,6 +1678,7 @@ if(ncol(sampleInfo)>1){
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
+}
 } else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
@@ -1665,6 +1694,7 @@ KPCAres <- kpca(star.protein_coding.rpkm)
 ```
 
 ```{r, eval=FALSE, results="asis"}
+if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.based data)\n")
@@ -1675,6 +1705,7 @@ if(ncol(sampleInfo)>1){
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
   }
+}
 } else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
@@ -1690,6 +1721,7 @@ lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
 ```{r, results="asis"}
+if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1699,6 +1731,7 @@ lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
+  }
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)
@@ -1714,6 +1747,7 @@ lleres <- lle(star.mature_species.rpkm, m=7, k=17, v=0.99)
 ```
 
 ```{r, eval=FALSE, results="asis"}
+if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1723,6 +1757,7 @@ lleres <- lle(star.mature_species.rpkm, m=7, k=17, v=0.99)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
+  }
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)
@@ -1741,6 +1776,7 @@ lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
 ```{r, results="asis"}
+if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1750,6 +1786,7 @@ lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
+  }
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)
@@ -1765,6 +1802,7 @@ lleres <- lle(star.protein_coding.rpkm, m=7, k=17, v=0.99)
 ```
 
 ```{r, eval=FALSE, results="asis"}
+if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
@@ -1774,6 +1812,7 @@ lleres <- lle(star.protein_coding.rpkm, m=7, k=17, v=0.99)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
       cat(sprintf("\n\n"))
+  }
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)

@@ -114,7 +114,7 @@ rule featureCounts_quantify_reference_STAR:
                       -g gene_id \
                       -o {output.file} \
                       {input.bam} 2> {log}
-                      
+
         featureCounts --primary -M \
                       -T {threads} \
                       -a {params.annot} \
