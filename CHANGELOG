@@ -8,6 +8,7 @@ Planned additions for future releases:
 
 * Comparison reference annotation / novel gene model, how many reads are aligned to novel predicted genes/miRNA
 * Metagenomic characterisation of unmapped reads
+* Quantification of the tRNA aligned reads
 
 ################################################################################
 ######                                                                     #####
