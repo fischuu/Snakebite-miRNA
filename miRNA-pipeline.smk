@@ -6,16 +6,11 @@ import re
 import os, sys
 import yaml
 
-cluster=dict()
-if os.path.exists(config["server-config"]):
-    with open(config["server-config"]) as yml:
-        cluster = yaml.load(yml, Loader=yaml.FullLoader)
-
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.27
-version = "0.3.27"
+##### Version: 0.3.29
+version = "0.3.29"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -24,6 +19,25 @@ min_version("6.0")
 
 rawsamples = pd.read_table(config["rawsamples"], header=None)[0].tolist()
 samples = pd.read_table(config["samples"], header=None)[0].tolist()
+
+#### CONTINUE FROM HERE TO ADD PIPE CONFIG ONTO THE FILE
+#if '--configfile' in sys.argv:
+#    i = sys.argv.index('--configfile')
+#    config["pipeline-config"] = sys.argv[i + 1]
+#else:
+#    config["pipeline-config"] = ""
+#    
+#if '--cluster-config' in sys.argv:
+#    i = sys.argv.index('--cluster-config')
+#    config["server-config"] = sys.argv[i + 1]
+#else:
+#    config["server-config"] = ""
+
+##### Extract the cluster resource requests from the server config #####
+cluster=dict()
+if os.path.exists(config["server-config"]):
+    with open(config["server-config"]) as yml:
+        cluster = yaml.load(yml, Loader=yaml.FullLoader)
 
 ##### Complete the input configuration
 config["tRNAIndex"] = config["tRNARef"]

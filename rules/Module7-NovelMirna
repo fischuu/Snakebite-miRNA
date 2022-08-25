@@ -55,10 +55,14 @@ rule intersectWithAnnotation:
     """
     input:
         joined="%s/MPILEUP/mpileup_reference/joinedLoci.bed" % (config["project-folder"]),
-        annot=config["refAnnot"]
+        annot=config["refAnnot"],
+        fa=config["reference"]
     output:
         merged="%s/Reference/novelLoci.bed" % (config["project-folder"]),
+        fa="%s/Reference/novelLoci.fa" % (config["project-folder"]),
         tmp=temp("%s/Reference/novelLoci_unfiltered.bed" % (config["project-folder"]))
+    log:
+        "%s/logs/Bedtools/IntersectWithAnnotation.log" % (config["project-folder"])
     singularity: config["singularity"]["bedtools"]
     group: "Novel_mirna"
     threads: cluster["__default__"]["cpus-per-task"]
@@ -68,7 +72,8 @@ rule intersectWithAnnotation:
     params:
         pipe=config["pipeline-folder"]
     shell:"""
-        bedtools intersect -v -a {input.joined} -b {input.annot} > {output.tmp}
-        {params.pipe}/scripts/filterNovelMirna.sh {output.tmp} 16 > {output.merged}
+        bedtools intersect -v -a {input.joined} -b {input.annot} > {output.tmp} 2>>{log}
+        {params.pipe}/scripts/filterNovelMirna.sh {output.tmp} 16 > {output.merged} 2>>{log}
+        bedtools getfasta -fi {input.fa} -bed {output.merged} > {output.fa} 2>>{log}
     """
 

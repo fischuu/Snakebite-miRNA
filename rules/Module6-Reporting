@@ -17,7 +17,8 @@ rule R_pipelineReport:
         expand("%s/QUANTIFICATION/BOWTIE/Hairpin/{samples}_bowtie_hairpin_seqkit.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature_species.txt" % (config["project-folder"]), samples=samples),
-        expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]), samples=samples)
+        expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]), samples=samples),
+        "%s/Reference/novelLoci.bed" % (config["project-folder"])
     output:
         "%s/pipelineReport.html" % (config["project-folder"])
     log:

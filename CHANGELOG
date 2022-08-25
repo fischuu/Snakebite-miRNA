@@ -16,6 +16,8 @@ Planned additions for future releases:
 ######                                                                     #####
 ################################################################################
 
+* 0.3.29: Added the novel mirna visualisation and quantification as well as hclust and PCA parts for it
+REVERSED!!! * 0.3.28: pipeline and server config files are now extracted from system call
 * 0.3.27: Lexogen added to the presetting for adapter trimming
 * 0.3.26: Exception handlers added to the workflow report and some bugfix for the absence of sampleInfo.txt file
 * 0.3.25: Complete rewritten donvo miRNA identification based on bedtools and coverage
