@@ -14,8 +14,8 @@ if os.path.exists(config["server-config"]):
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.3.26
-version = "0.3.26"
+##### Version: 0.3.27
+version = "0.3.27"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -66,7 +66,11 @@ elif config["params"]["protocol"] == 'qiagen':
     config["params"]["cutadapt"]["adapter"] = "AACTGTAGGCACCATCAAT"
     config["params"]["cutadapt"]["fiveprimetrim"] = 0
     config["params"]["cutadapt"]["threeprimetrim"] = 0
-
+elif config["params"]["protocol"] == 'lexogen':
+    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC"
+    config["params"]["cutadapt"]["fiveprimetrim"] = 0
+    config["params"]["cutadapt"]["threeprimetrim"] = 0
+    
 ##### Input constraints #####
 wildcard_constraints:
     rawsamples="|".join(rawsamples),
