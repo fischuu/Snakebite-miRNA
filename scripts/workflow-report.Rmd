@@ -1209,7 +1209,13 @@ for(i in 1:nrow(novelMirna.high)){
 ```{r}
  datatable(novel.quant)
 ```
+### Annotation of the novel genes
 
+These are the sequences of the predicted genes
+
+```{r}
+novel.fa <- importFA(file.path(projFolder, "Reference", "novelLoci.fa"))
+```
 
 
 # Overall statistic
