@@ -7,7 +7,7 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
-1:
+1: tRNA reads are now sorted, indexed and the idxstats are calculated (effectively tRNAs are quantified now)
 
 Previous updates
 --------------------------------------------------------------------------------

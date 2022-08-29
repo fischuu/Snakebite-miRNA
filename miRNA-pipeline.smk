@@ -9,8 +9,8 @@ import yaml
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.4
-version = "0.4"
+##### Version: 0.5.1
+version = "0.5.1"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -147,6 +147,8 @@ rule all:
         expand("%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
+      # ALIGNMENTS
+        expand("%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam.bai" % (config["project-folder"]),samples=samples),
       # QUANTIFICATION
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),

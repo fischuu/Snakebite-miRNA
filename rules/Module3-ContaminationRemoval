@@ -56,7 +56,10 @@ rule samtools_concatenated_reads_tRNA_flagstats:
         "%s/BAM/BOWTIE/tRNA/{samples}_tRNA.bam" % (config["project-folder"])
     output:
         flagstat="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.flagstat" % (config["project-folder"]),
-        stats="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.stats" % (config["project-folder"])
+        stats="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.stats" % (config["project-folder"]),
+        sorted="%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam" % (config["project-folder"]),
+        index="%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam.bai" % (config["project-folder"]),
+        idxstats="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.idxstats" % (config["project-folder"])
     group: "bowtie_map_concatenated_reads_tRNA"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
@@ -66,6 +69,11 @@ rule samtools_concatenated_reads_tRNA_flagstats:
     shell:"""
         samtools flagstat {input} > {output.flagstat}
         samtools stats {input} > {output.stats};
+        
+        samtools sort {input} > {output.sorted}
+        samtools index {output.sorted}
+        samtools idxstats {output.sorted} > {output.idxstats} 
+        
     """
 
 
