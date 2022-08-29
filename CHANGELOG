@@ -4,18 +4,7 @@
 #####                                                                      #####
 ################################################################################
 
-Planned additions for future releases:
-
-* Comparison reference annotation / novel gene model, how many reads are aligned to novel predicted genes/miRNA
-* Metagenomic characterisation of unmapped reads
-* Quantification of the tRNA aligned reads
-
-################################################################################
-######                                                                     #####
-######                          Previous releases                          #####
-######                                                                     #####
-################################################################################
-
+* 0.4: Release version
 * 0.3.29: Added the novel mirna visualisation and quantification as well as hclust and PCA parts for it
 REVERSED!!! * 0.3.28: pipeline and server config files are now extracted from system call
 * 0.3.27: Lexogen added to the presetting for adapter trimming
