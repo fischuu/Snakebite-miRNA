@@ -4,6 +4,14 @@
 #####                                                                      #####
 ################################################################################
 
+
+0.5.* UPDATES
+--------------------------------------------------------------------------------
+1:
+
+Previous updates
+--------------------------------------------------------------------------------
+
 * 0.4: Release version
 * 0.3.29: Added the novel mirna visualisation and quantification as well as hclust and PCA parts for it
 REVERSED!!! * 0.3.28: pipeline and server config files are now extracted from system call
