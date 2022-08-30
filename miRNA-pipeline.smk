@@ -9,8 +9,8 @@ import yaml
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.5.1
-version = "0.5.1"
+##### Version: 0.5.2
+version = "0.5.2"
 
 ##### set minimum snakemake version #####
 min_version("6.0")

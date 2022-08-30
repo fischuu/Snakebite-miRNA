@@ -53,6 +53,7 @@ refGenome.fullPath <- refGenome.file
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
 bowtieRefAlignment <- FALSE
+reportColours <- c("#FF8200", "#00B5E2", "#78BE20", "#7F3F98", "#E13C98", "#0033A0", "#54585A")
 ```
 
 ```{r, include=FALSE}
@@ -166,7 +167,7 @@ for(i in 2:length(conc.reports.files)){
 ```{r visualize concatenation reports}
 par(oma=c(6,5,0,0))
 labels <- gsub(".fastq.gz.report","",conc.reports.files)
-barplot(sapply(conc.reports,nrow), ylab="Concatenated files", names=labels, las=2)
+barplot(sapply(conc.reports,nrow), ylab="Concatenated files", names=labels, las=2, col=reportColours[3])
 ```
 
 ## Sequencing depth
@@ -187,7 +188,7 @@ raw.reads <- raw.reads / 4
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=4)
+barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=reportColours[1])
 ```
 
 ### Trimmed, lane-wise reads
@@ -206,15 +207,15 @@ trimmed.reads <- trimmed.reads / 4
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=7)
+barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=reportColours[2])
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(reportColours[1], reportColours[2]))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1],reportColours[2]))
 ```
 
 ### Concatenated reads
@@ -233,7 +234,7 @@ conc.reads <- conc.reads / 4
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.reads, las=2, main="Concatenated reads", col=4)
+barplot(conc.reads, las=2, main="Concatenated reads", col=reportColours[3])
 ```
 
 
@@ -252,11 +253,11 @@ names(raw.bases) <- raw.bases.files
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=4)
+barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=reportColours[3])
 ```
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=4)
+barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=reportColours[3])
 ```
 ### Trimmed, lane-wise bases
 ```{r}
@@ -272,33 +273,33 @@ names(trimmed.bases) <- trimmed.bases.files
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=4)
+barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=reportColours[3])
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=4)
+barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=reportColours[3])
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=4)
+barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=reportColours[3])
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(reportColours[1], reportColours[2]))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
 plotThis <- rbind(raw.bases/raw.reads,
                   trimmed.bases/trimmed.reads)
-barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(reportColours[1], reportColours[2]))
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
 ### Concatenated bases
@@ -316,7 +317,7 @@ names(conc.bases) <- conc.bases.files
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.bases, las=2, main="Concatenated Bases", col=4)
+barplot(conc.bases, las=2, main="Concatenated Bases", col=reportColours[3])
 ```
 
 # Contamination removal
@@ -334,8 +335,8 @@ trna.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1],reportColours[2],reportColours[3]))
 ```
 
 ### Bases
@@ -347,8 +348,8 @@ trna.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -366,8 +367,8 @@ phix.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ### Bases
@@ -379,8 +380,8 @@ phix.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -400,8 +401,8 @@ mature.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature.unmapped.reads, mature.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+        aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -412,8 +413,8 @@ mature.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -429,8 +430,8 @@ mature_species.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature_species.unmapped.reads, mature_species.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature_Species.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+        aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -441,14 +442,14 @@ mature_species.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 Differences between the total Mature.fa and Mature_Species.fa only:
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(4))
+barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(reportColours[3]))
 ```
 
 
@@ -463,8 +464,8 @@ hairpin.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -475,8 +476,8 @@ hairpin.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ### Hairpin-species
@@ -510,8 +511,8 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -532,8 +533,8 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]))
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -670,7 +671,7 @@ Unmapped 'Others' is currently not imported from the STAR-logs functions, hence 
 
 Actually, I use here the starlog.totalReads and not the hairpin_species. THIS NEEDS TO BE ADJUSTED!!!
 ```{r}
-barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot", col=reportColours[1])
 ```
 
 ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE SOFT-CLIPPED AGAIN, HOW FAR ARE THE ALIGNED SOFT-CLIPPED PARTS AWAY FROM THEIR 'PARTNER'?
@@ -704,7 +705,7 @@ star.mature[is.na(star.mature)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa")
+barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa", col=reportColours[1])
 ```
 RPKM quantification of mirbase mature.fa miRNAs.
 
@@ -756,7 +757,7 @@ rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 
 
 ```{r}
-barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa")
+barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa", col=reportColours[1])
 ```
 The raw counts per mature mirna per sample
 ```{r}
@@ -809,7 +810,7 @@ star.hairpin[is.na(star.hairpin)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa")
+barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa", col=reportColours[1])
 ```
 
 ```{r}
@@ -854,7 +855,7 @@ star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
 
 ```{r}
-barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa")
+barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa", col=reportColours[1])
 ```
 ```{r}
 # Get the quantification
@@ -1413,14 +1414,16 @@ In above statistics, what is the ratio of reads that is not considered compared 
 unconsideredReads <- rawReads_perSample - apply(overall_stats,2,sum)
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 
-barplot(unconsideredReads, las=2)
+barplot(unconsideredReads, las=2, col=reportColours[1])
 ```
 
 # Analyses
 
 ## Clustering
 
-### hclust based on star.mature_species.rpkm
+### Hierarchical clustering for Mature_species (STAR)
+
+Here we use this object: star.mature_species.rpkm
 
 ```{r}
 cluster.data <- star.mature_species.rpkm
@@ -1430,7 +1433,9 @@ hc <- hclust(star.mature_species.rpkm.dist)
 plot(hc)  
 ```
 
-### hclust based on  star.protein_coding.rpkm
+### Hierarchical clustering for protein coding genes (STAR)
+
+Here we use this object: star.protein_coding.rpkm
 
 ```{r}
 cluster.data <- star.protein_coding.rpkm
@@ -1439,8 +1444,10 @@ star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
 hc <- hclust(star.mature_species.rpkm.dist)           
 plot(hc)  
 ```
+### Hierarchical clustering for Novel predictions (STAR)
 
-### hclust based on novel.rpkm
+Here we use this object: novel.rpkm
+
 
 ```{r}
 cluster.data <- novel.rpkm
@@ -2002,6 +2009,9 @@ if(sampleInfo.avail){
    plot(lleres$Y[,1:5], pch=20)
 }
 ```
+
+# Benchmarks
+Do here the analysis of the snakemake benchmark output to optimise resource allocation
 
 # Runtime checks
 Add here:
