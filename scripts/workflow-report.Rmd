@@ -678,6 +678,34 @@ ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE
 
 # Quantification
 
+## tRNA
+Despite the filtering against the tRNA database, we also quantify the different tRNAs and base further downstream analyses on the quantifications.
+
+```{r}
+trna.files <- list.files(file.path(projFolder,"STATS", "BOWTIE", "tRNA"), pattern="*idxstats")
+trna.samples <- gsub("_tRNA.idxstats", "", trna.files)
+trna.quant <- read.table(file.path(projFolder,"STATS", "BOWTIE", "tRNA", trna.files[1]))[,1:3]
+colnames(trna.quant) <- c("tRNA", "Length", trna.samples[1])
+
+for(i in 2:length(trna.files)){
+tmp <- read.table(file.path(projFolder,"STATS", "BOWTIE", "tRNA", trna.files[i]))[,c(1,3)]
+colnames(tmp) <- c("tRNA", trna.samples[i])
+
+trna.quant <- merge(trna.quant, tmp, by="tRNA")
+}
+
+trna.quant <- trna.quant[- which(trna.quant$tRNA=="*"),]
+
+trna.quant.rpkm <- t(t(trna.quant[,-c(1:2)])/(apply(trna.quant[,-c(1:2)],2,sum)/10^6) )
+
+trna.quant.rpkm <- trna.quant.rpkm/(trna.quant$Length/10^3)
+rownames(trna.quant.rpkm) <- trna.quant$tRNA
+```
+
+```{r}
+datatable(trna.quant.rpkm)
+```
+
 ## Mirbase - Mature.fa
 
 ### Bowtie
@@ -707,6 +735,7 @@ star.mature[is.na(star.mature)] <- 0
 ```{r}
 barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa", col=reportColours[1])
 ```
+
 RPKM quantification of mirbase mature.fa miRNAs.
 
 ```{r}
@@ -1421,6 +1450,19 @@ barplot(unconsideredReads, las=2, col=reportColours[1])
 
 ## Clustering
 
+### Hierarchical clustering for tRNA (BOWTIE)
+
+Here we use this object: star.mature_species.rpkm
+
+```{r}
+cluster.data <- trna.quant.rpkm
+#colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+hc <- hclust(trna.quant.rpkm.dist)           
+plot(hc)  
+```
+
+
 ### Hierarchical clustering for Mature_species (STAR)
 
 Here we use this object: star.mature_species.rpkm
@@ -1457,6 +1499,61 @@ plot(hc)
 ```
 
 ## Dimension reduction
+
+### PCA - tRNAS (BOWTIE)
+
+```{r performPCA_trna}
+expr.PCA <- prcomp(t(trna.quant.rpkm))
+expr.PCA.novel <- expr.PCA
+```
+
+This is just the plain PCA, without using any colouring schemes.
+
+```{r}
+palette("default")
+pairs(expr.PCA$x[,1:3])
+```
+
+```{r}
+names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+    for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+    }
+  }  
+}
+```
+
+```{r}
+cols <- min(ncol(expr.PCA$x),10)
+pairs(expr.PCA$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+}
+}
+```
 
 ### PCA - Mature_Species.fa (STAR)
 
