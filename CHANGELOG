@@ -7,7 +7,7 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
-3. tRNA quantification, clustering and PCA were added to the final report
+3: tRNA quantification, clustering and PCA were added to the final report
 2: Colours in the report are adjusted to new colouring scheme
 1: tRNA reads are now sorted, indexed and the idxstats are calculated (effectively tRNAs are quantified now)
 
