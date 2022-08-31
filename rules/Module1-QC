@@ -5,7 +5,7 @@ rule fastqc_quality_control_raw_data:
     input:
         get_raw_input_read1
     output:
-        "%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"])
+        "%s/QC/RAW/{rawsamples}_R1_001_fastqc.zip" % (config["project-folder"])
     log:
         "%s/logs/FASTQC/fastqc_raw.{rawsamples}.log" % (config["project-folder"])
     benchmark:
