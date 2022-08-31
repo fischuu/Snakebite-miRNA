@@ -27,7 +27,7 @@ rule multiqc_quality_control_raw_data:
     Quality control of fastq files in lr1(MULTIQC).
     """
     input:
-        expand("%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"]), rawsamples=rawsamples)
+        expand("%s/QC/RAW/{rawsamples}_R1_001_fastqc.zip" % (config["project-folder"]), rawsamples=rawsamples)
     output:
         folder=directory("%s/QC/RAW/multiqc/" % (config["project-folder"])),
         file="%s/QC/RAW/multiqc/multiqc_rawreport.html" % (config["project-folder"])
@@ -49,13 +49,13 @@ rule fastqc_quality_control_trimmedData:
     Quality control of fastq files (FASTQC).
     """
     input:
-        "%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"])
+        "%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"])
     output:
-        "%s/QC/TRIMMED/{raw_samples}_trimmed_fastqc.zip" % (config["project-folder"])
+        "%s/QC/TRIMMED/{rawsamples}_trimmed_fastqc.zip" % (config["project-folder"])
     log:
-        "%s/logs/FASTQC/fastqc_trimmed.{raw_samples}.log" % (config["project-folder"])
+        "%s/logs/FASTQC/fastqc_trimmed.{rawsamples}.log" % (config["project-folder"])
     benchmark:
-        "%s/benchmark/FASTQC/fastqc_trimmed.{raw_samples}.benchmark.tsv" % (config["project-folder"])
+        "%s/benchmark/FASTQC/fastqc_trimmed.{rawsamples}.benchmark.tsv" % (config["project-folder"])
     params:
         outfolder="%s/QC/TRIMMED/" % (config["project-folder"])
     threads: cluster["fastqc"]["cpus-per-task"]
