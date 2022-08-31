@@ -9,16 +9,64 @@ import yaml
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.5.4
-version = "0.5.4"
+##### Version: 0.5.5
+version = "0.5.5"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
 
+##### Sample sheets #####
+
 ##### load config and sample sheets #####
 
-rawsamples = pd.read_table(config["rawsamples"], header=None)[0].tolist()
-samples = pd.read_table(config["samples"], header=None)[0].tolist()
+samplesheet = pd.read_table(config["samplesheet-file"]).set_index("rawsample", drop=False)
+rawsamples=list(samplesheet.rawsample)
+samples=list(set(list(samplesheet.sample_name)))
+lane=list(samplesheet.lane)
+
+wildcard_constraints:
+    rawsamples="|".join(rawsamples),
+    samples="|".join(samples)
+    
+    ##### input function definitions ######
+
+def get_lane(wildcards):
+    output = samplesheet.loc[wildcards.rawsamples][["lane"]]
+    return output.tolist()
+
+def get_sample(wildcards):
+    output = samplesheet.loc[wildcards.rawsamples][["sample_name"]]
+    return output.tolist()
+
+def get_raw_input_fastqs(wildcards):
+    reads = samplesheet.loc[wildcards.rawsamples][["read1", "read2"]]
+    path = config["rawdata-folder"]
+    output = [path + x for x in reads]
+    return output
+
+def get_raw_input_read1(wildcards):
+    reads = samplesheet.loc[wildcards.rawsamples][["read1"]]
+    path = config["rawdata-folder"]
+    output = [path + "/" + x for x in reads]
+    return output
+
+def get_raw_input_read2(wildcards):
+    reads = samplesheet.loc[wildcards.rawsamples][["read2"]]
+    path = config["rawdata-folder"]
+    output = [path + "/" + x for x in reads]
+    return output
+    
+def get_fastq_for_concatenating_read1(wildcards):
+    r1 = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["read1"]
+    path = config["rawdata-folder"] + "/"
+    output = [path + x for x in r1]
+    return output   
+
+def get_fastq_for_concatenating_read2(wildcards):
+    r1 = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["read2"]
+    path = config["rawdata-folder"] + "/"
+    output = [path + x for x in r1]
+    return output   
 
 #### CONTINUE FROM HERE TO ADD PIPE CONFIG ONTO THE FILE
 #if '--configfile' in sys.argv:

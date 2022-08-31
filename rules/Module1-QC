@@ -3,7 +3,7 @@ rule fastqc_quality_control_raw_data:
     Quality control of fastq files (FASTQC).
     """
     input:
-        "%s/FASTQ/RAW/{rawsamples}.fastq.gz" % (config["project-folder"])
+        get_raw_input_read1
     output:
         "%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"])
     log:

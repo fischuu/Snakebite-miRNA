@@ -3,20 +3,20 @@ rule cutadapt_trimming:
     Trimming adapter sequences (CUTADAPT).
     """
     input:
-        "%s/FASTQ/RAW/{raw_samples}.fastq.gz" % (config["project-folder"])
+        get_raw_input_read1
     output:
-        fastqAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.fastq.gz" % (config["project-folder"]),
-        fastq="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]),
-        wclin="%s/FASTQ/RAW/{raw_samples}.wcl" % (config["project-folder"]),
-        wcloutAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.wcl" % (config["project-folder"]),
-        wclout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcl" % (config["project-folder"]),
-        wccin="%s/FASTQ/RAW/{raw_samples}.wcc" % (config["project-folder"]),
-        wccoutAdapter="%s/FASTQ/TRIMMED/{raw_samples}_trimmed_onlyAdapter.wcc" % (config["project-folder"]),
-        wccout="%s/FASTQ/TRIMMED/{raw_samples}_trimmed.wcc" % (config["project-folder"])
+        fastqAdapter="%s/FASTQ/TRIMMED/{rawsamples}_trimmed_onlyAdapter.fastq.gz" % (config["project-folder"]),
+        fastq="%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"]),
+        wclin="%s/FASTQ/RAW/{rawsamples}.wcl" % (config["project-folder"]),
+        wcloutAdapter="%s/FASTQ/TRIMMED/{rawsamples}_trimmed_onlyAdapter.wcl" % (config["project-folder"]),
+        wclout="%s/FASTQ/TRIMMED/{rawsamples}_trimmed.wcl" % (config["project-folder"]),
+        wccin="%s/FASTQ/RAW/{rawsamples}.wcc" % (config["project-folder"]),
+        wccoutAdapter="%s/FASTQ/TRIMMED/{rawsamples}_trimmed_onlyAdapter.wcc" % (config["project-folder"]),
+        wccout="%s/FASTQ/TRIMMED/{rawsamples}_trimmed.wcc" % (config["project-folder"])
     log:
-        "%s/logs/CUTADAPT/cutadapt.{raw_samples}.log" % (config["project-folder"])
+        "%s/logs/CUTADAPT/cutadapt.{rawsamples}.log" % (config["project-folder"])
     benchmark:
-        "%s/benchmark/CUTADAPT/cutadapt.{raw_samples}.benchmark.tsv" % (config["project-folder"])
+        "%s/benchmark/CUTADAPT/cutadapt.{rawsamples}.benchmark.tsv" % (config["project-folder"])
     params:
         adapter=config["params"]["cutadapt"]["adapter"],
         minLength=config["params"]["cutadapt"]["minLength"],
@@ -55,7 +55,7 @@ rule bash_catFastq:
     Concatenate the different lanes into single files (BASH).
     """
     input:
-        expand("%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"]), raw_samples=rawsamples)
+        get_fastq_for_concatenating_read1
     output:
         fastq="%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz" % (config["project-folder"]),
         report="%s/FASTQ/CONCATENATED/{samples}_R1.fastq.gz.report" % (config["project-folder"]),
@@ -74,8 +74,8 @@ rule bash_catFastq:
         mem=cluster["__default__"]["mem-per-cpu"]
     shell:"""
         mkdir -p {params.outfolder}
-        cat {params.infolder}/{wildcards.samples}*_R1_001_trimmed.fastq.gz > {output.fastq} 2> {log}
-        ls {params.infolder}/{wildcards.samples}*_R1_001_trimmed.fastq.gz > {output.report} 2> {log}
+        cat {input} > {output.fastq} 2> {log}
+        ls {input} > {output.report} 2> {log}
         zcat {output.fastq} | wc -l > {output.wclout}
         zcat {output.fastq} | sed -n '2~4p' | wc -c  > {output.wccout}
     """
