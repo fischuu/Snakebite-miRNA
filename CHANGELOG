@@ -7,6 +7,8 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
+7: Bug in the concatenation file selection fixed
+6: Concatenating figure displays now only integers on the y-axis
 5: Changed input to a single samplesheet format allowing flexible file names
 4: Moved graphs into subparagraphs for better report readability
 3: tRNA quantification, clustering and PCA were added to the final report

@@ -9,8 +9,8 @@ import yaml
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.5.5
-version = "0.5.5"
+##### Version: 0.5.7
+version = "0.5.7"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -50,22 +50,10 @@ def get_raw_input_read1(wildcards):
     output = [path + "/" + x for x in reads]
     return output
 
-def get_raw_input_read2(wildcards):
-    reads = samplesheet.loc[wildcards.rawsamples][["read2"]]
-    path = config["rawdata-folder"]
-    output = [path + "/" + x for x in reads]
-    return output
-    
 def get_fastq_for_concatenating_read1(wildcards):
-    r1 = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["read1"]
-    path = config["rawdata-folder"] + "/"
-    output = [path + x for x in r1]
-    return output   
-
-def get_fastq_for_concatenating_read2(wildcards):
-    r1 = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["read2"]
-    path = config["rawdata-folder"] + "/"
-    output = [path + x for x in r1]
+    rs = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["rawsample"]
+    path = config["project-folder"] + "/FASTQ/TRIMMED/"
+    output = [path + x for x in rs + "_trimmed.fastq.gz"]
     return output   
 
 #### CONTINUE FROM HERE TO ADD PIPE CONFIG ONTO THE FILE
@@ -222,7 +210,10 @@ rule all:
 #        "%s/References/gtf_merged_star.gtf" % (config["project-folder"])
 ##      #  "%s/PRODIGAL/ars_unmapped/final.contigs.prodigal.gtf" % (config["project-folder"]),
 ##      #  "%s/kraken_ars_unmapped/ars_unmapped_taxonomy.report" % (config["project-folder"])
-#
+rule decontamination:
+    input:
+        expand("%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"]), samples=samples),
+        expand("%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"]), samples=samples)
 #### setup report #####
 #
 #report: "report/workflow.rst"

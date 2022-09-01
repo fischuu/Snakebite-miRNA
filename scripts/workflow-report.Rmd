@@ -42,12 +42,13 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/MaitoInno_Feeding/"
+  projFolder <- "/scratch/project_2005619/bovreg_full/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
   pipelineConfig <- "/scratch/project_2001310/MaitoInno_Feeding/miRNA-pipeline_config-feeding.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
   refGenome.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
   refAnnot.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.95.gtf"
+  samplesheet.file <- ""
 }
 refGenome.fullPath <- refGenome.file
 refGenome.file <- basename(refGenome.file)
@@ -122,8 +123,10 @@ if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
 ```
 
 ```{r import barcodesID, results="asis"}
-rawsamples <- as.vector(as.matrix(read.table(file.path(projFolder, "rawsamples"))))
-samples <- as.vector(as.matrix(read.table(file.path(projFolder, "samples"), header=FALSE)))
+samplesheet <- read.table(samplesheet.file, header=TRUE)
+
+rawsamples <- unique(samplesheet$rawsample)
+samples <- unique(samplesheet$sample_name)
 
 out <- data.frame(c("Project folder",
                     "Number of raw-samples",
@@ -162,12 +165,16 @@ conc.reports[[1]] <- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", c
 for(i in 2:length(conc.reports.files)){
   conc.reports[[i]]<- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.reports.files[i]))
 }
+
+
 ```
 
 ```{r visualize concatenation reports}
 par(oma=c(6,5,0,0))
-labels <- gsub(".fastq.gz.report","",conc.reports.files)
-barplot(sapply(conc.reports,nrow), ylab="Concatenated files", names=labels, las=2, col=reportColours[3])
+labels <- gsub("_R1.fastq.gz.report","",conc.reports.files)
+plotThis <- sapply(conc.reports,nrow)
+barplot(plotThis, ylab="Concatenated files", las=2, names=labels, col=reportColours[3], yaxt="n")
+axis(2, at=seq(0,max(plotThis)), las=2)
 ```
 
 ## Sequencing depth
@@ -183,6 +190,7 @@ for(i in 1:length(raw.read.files)){
 }
 
 names(raw.reads) <- raw.read.files
+names(raw.reads) <- gsub(".wcl", "", names(raw.reads))
 raw.reads <- raw.reads / 4
 ```
 
@@ -202,6 +210,7 @@ for(i in 1:length(trimmed.read.files)){
 }
 
 names(trimmed.reads) <- trimmed.read.files
+names(trimmed.reads) <- gsub("_trimmed.wcl", "", names(trimmed.reads))
 trimmed.reads <- trimmed.reads / 4
 ```
 
@@ -229,6 +238,7 @@ for(i in 1:length(conc.read.files)){
 }
 
 names(conc.reads) <- conc.read.files
+names(conc.reads) <- gsub("_R1.wcl", "", names(conc.reads))
 conc.reads <- conc.reads / 4
 ```
 
@@ -249,6 +259,7 @@ for(i in 1:length(raw.bases.files)){
 }
 
 names(raw.bases) <- raw.bases.files
+names(raw.bases) <- gsub(".wcc", "", names(raw.bases))
 ```
 
 ```{r}
@@ -269,6 +280,7 @@ for(i in 1:length(trimmed.bases.files)){
 }
 
 names(trimmed.bases) <- trimmed.bases.files
+names(trimmed.bases) <- gsub("_trimmed.wcc", "", names(trimmed.bases))
 ```
 
 ```{r}
@@ -313,6 +325,7 @@ for(i in 1:length(conc.bases.files)){
 }
 
 names(conc.bases) <- conc.bases.files
+names(conc.bases) <- gsub("_R1.wcc", "", names(conc.bases))
 ```
 
 ```{r}

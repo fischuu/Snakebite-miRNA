@@ -32,7 +32,8 @@ rule R_pipelineReport:
        pipeFolder=config["pipeline-folder"],
        pipeConfig=config["pipeline-config"],
        refGenome=config["reference"],
-       refAnnot=config["refAnnot"]
+       refAnnot=config["refAnnot"],
+       samplesheet=config["samplesheet-file"]
     threads: cluster["R_pipelineReport"]["cpus-per-task"]
     resources:
         time=cluster["R_pipelineReport"]["time"],
@@ -43,6 +44,7 @@ rule R_pipelineReport:
              refGenome.file <- '{params.refGenome}'; \
              refAnnot.file <- '{params.refAnnot}'; \
              pipelineConfig <- '{params.pipeConfig}'; \
+             samplesheet.file <- '{params.samplesheet}'; \
              snakemake <- TRUE; \
              rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
     """

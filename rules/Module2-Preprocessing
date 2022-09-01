@@ -73,6 +73,9 @@ rule bash_catFastq:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]
     shell:"""
+    
+        echo "Concatentate following files: " {input}
+    
         mkdir -p {params.outfolder}
         cat {input} > {output.fastq} 2> {log}
         ls {input} > {output.report} 2> {log}
