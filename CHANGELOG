@@ -7,6 +7,12 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
+13: STAR indices are not created in groups anymore
+12: Quantification is now also grouped
+11: Preprocessing is done in a single group now
+10: QC rules are combined into two groups, fastqc and multiqc 
+9: The alignment module has now only two groups, bowtie_alignment and star_alignment
+8: All rules in the decontamination module are now grouped together
 7: Bug in the concatenation file selection fixed
 6: Concatenating figure displays now only integers on the y-axis
 5: Changed input to a single samplesheet format allowing flexible file names

@@ -3,6 +3,7 @@ projectFolder="/scratch/project_2001310/TestProject"
 
 # This conda module is just to make snakemake available
 module load bioconda/3
+source activate Snakemake
 
 export SINGULARITY_TMPDIR="/scratch/project_2001310/tmp"
 export SINGULARITY_CACHEDIR="/scratch/project_2001310/tmp"

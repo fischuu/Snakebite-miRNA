@@ -20,6 +20,7 @@ rule SortedBamToMpileup:
     resources:
         time=cluster["SortedBamToMpileup"]["time"],
         mem=cluster["SortedBamToMpileup"]["mem-per-cpu"]
+    group: "star_alignments"
     shell:"""
         samtools mpileup -d 100 -B -C 50 -f {input.reference} {input.bam} > {output.mpileup}
         {params.pipe}/scripts/uniqueMpileup.sh {output.mpileup} > {output.unique}

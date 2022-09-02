@@ -27,6 +27,7 @@ rule cutadapt_trimming:
     resources:
         time=cluster["cutadapt_trimming"]["time"],
         mem=cluster["cutadapt_trimming"]["mem-per-cpu"]
+    group: "preprocessing"
     singularity: config["singularity"]["cutadapt"]
     shell:"""
       #cutadapt -a file:{params.adapter} \
@@ -72,6 +73,7 @@ rule bash_catFastq:
     resources:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]
+    group: "preprocessing"
     shell:"""
     
         echo "Concatentate following files: " {input}

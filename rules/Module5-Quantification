@@ -12,6 +12,7 @@ rule seqkit_quantify_mature_BOWTIE:
     resources:
         time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+    group: "bowtie_quantify"
     singularity: config["singularity"]["seqkit"]
     shell:"""
         seqkit bam -C {input.bam} 2> {output}
@@ -31,6 +32,7 @@ rule seqkit_quantify_mature_species_BOWTIE:
     resources:
         time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+    group: "bowtie_quantify"
     singularity: config["singularity"]["seqkit"]
     shell:"""
         seqkit bam -C {input.bam} 2> {output}
@@ -50,6 +52,7 @@ rule seqkit_quantify_hairpin_BOWTIE:
     resources:
         time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+    group: "bowtie_quantify"
     singularity: config["singularity"]["seqkit"]
     shell:"""
         seqkit bam -C {input.bam} 2> {output}
@@ -74,6 +77,7 @@ rule featureCounts_quantify_reference_BOWTIE:
     resources:
         time=cluster["featureCounts_quantify_reference_BOWTIE"]["time"],
         mem=cluster["featureCounts_quantify_reference_BOWTIE"]["mem-per-cpu"]
+    group: "bowtie_quantify"
     singularity: config["singularity"]["subread"]
     shell:"""
         featureCounts --primary -M \
@@ -105,6 +109,7 @@ rule featureCounts_quantify_reference_STAR:
     resources:
         time=cluster["featureCounts_quantify_reference_STAR"]["time"],
         mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    group: "star_quantify"
     singularity: config["singularity"]["subread"]
     shell:"""
         featureCounts --primary -M \
@@ -146,6 +151,7 @@ rule bash_quantify_mirbase_STAR:
     resources:
         time=cluster["featureCounts_quantify_reference_STAR"]["time"],
         mem=cluster["featureCounts_quantify_reference_STAR"]["mem-per-cpu"]
+    group: "star_quantify"
     singularity: config["singularity"]["samtools"]
     shell:"""
         mkdir -p $TMPDIR >> {log} 2>&1

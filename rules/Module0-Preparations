@@ -201,7 +201,6 @@ rule star_createIndex_mature:
         index=config["matureSTARIndex"],
         tmpdir="%s/STAR_tmp/Mature" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_mature"]["time"],
@@ -229,7 +228,6 @@ rule star_createIndex_mature_species:
         index=config["matureSpeciesSTARIndex"],
         tmpdir="%s/STAR_tmp/MatureSpecies" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_mature"]["time"],
@@ -257,7 +255,6 @@ rule star_createIndex_hairpin:
         index=config["hairpinSTARIndex"],
         tmpdir="%s/STAR_tmp/Hairpin" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_hairpin"]["time"],
@@ -285,7 +282,6 @@ rule star_createIndex_hairpin_species:
         index=config["hairpinSpeciesSTARIndex"],
         tmpdir="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_hairpin"]["time"],
@@ -313,7 +309,6 @@ rule star_createIndex_reference:
         index=config["referenceSTARIndex"],
         tmpdir="%s/STAR_tmp/Reference" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_reference"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_reference"]["time"],

@@ -1,5 +1,5 @@
 __default__:
-    job-name:  ExosomeMirna
+    job-name:  Snakemake_miRNA
     account: project_2001310
     time: 30
     cpus-per-task: 1
@@ -109,7 +109,7 @@ bowtie_map_clear_reads_mature:
 bowtie_map_clear_reads_reference:
     job-name: bowtie_map_clear_reads_reference
     time: 200
-    cpus-per-task: 20
+    cpus-per-task: 5
     mem-per-cpu: 4000
 
 bowtie_map_nonmature_reads_hairpin:
@@ -121,19 +121,19 @@ bowtie_map_nonmature_reads_hairpin:
 star_map_clear_reads_mature:
     job-name: star_map_clear_reads_mature
     time: 100
-    cpus-per-task: 20
+    cpus-per-task: 5
     mem-per-cpu: 4000
     
 star_map_clear_reads_hairpin:
     job-name: star_map_clear_reads_hairpin
     time: 100
-    cpus-per-task: 20
+    cpus-per-task: 5
     mem-per-cpu: 4000
 
 star_map_clear_reads_reference:
     job-name: star_map_clear_reads_reference
     time: 100
-    cpus-per-task: 20
+    cpus-per-task: 5
     mem-per-cpu: 4000
 
 
