@@ -30,17 +30,14 @@ rule cutadapt_trimming:
     group: "preprocessing"
     singularity: config["singularity"]["cutadapt"]
     shell:"""
-      #cutadapt -a file:{params.adapter} \
-      #         -j {threads} \
-      #         -o {output.fastqAdapter} {input} 2> {log};
       cutadapt -a {params.adapter} \
                -j {threads} \
-               -o {output.fastqAdapter} {input} 2> {log};
+               -o {output.fastqAdapter} {input} &>> {log};
                
       cutadapt --minimum-length {params.minLength} \
                -j {threads} -q {params.qualtrim} --trim-n \
                --cut {params.fiveprimetrim} --cut -{params.threeprimetrim} \
-               -o {output.fastq} {output.fastqAdapter} 2> {log};
+               -o {output.fastq} {output.fastqAdapter} &>> {log};
                
       zcat {input} | wc -l > {output.wclin}
       zcat {output.fastqAdapter} | wc -l > {output.wcloutAdapter}
