@@ -18,7 +18,8 @@ rule R_pipelineReport:
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature_species.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]), samples=samples),
-        "%s/Reference/novelLoci.bed" % (config["project-folder"])
+        "%s/Reference/novelLoci.bed" % (config["project-folder"]),
+        stats="%s/STATS/mirdb.stats" % (config["project-folder"])
     output:
         "%s/pipelineReport.html" % (config["project-folder"])
     log:

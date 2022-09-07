@@ -7,6 +7,8 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
+16: Bugfix for mirna-species filtering (caused that not all miRNAs were quantified)
+15: Subparagraph added for novel clustering (missing linebreak added)
 14: stdout and stderr are now redirected to CUTADAPT log files
 13: STAR indices are not created in groups anymore
 12: Quantification is now also grouped

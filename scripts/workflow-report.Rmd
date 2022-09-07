@@ -111,6 +111,7 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 
 ```{r get pipeline version}
 pipeSMK <- readLines(file.path(pipelineFolder,"miRNA-pipeline.smk"))
+mirdbstat <- readLines(file.path(projFolder, "STATS", "mirdb.stats"))
 pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
 if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
     sampleInfo <- read.table(file.path(projFolder, "sampleInfo.txt"), header=TRUE)
@@ -121,6 +122,8 @@ if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
 }
 
 ```
+
+## Runtime stats
 
 ```{r import barcodesID, results="asis"}
 samplesheet <- read.table(samplesheet.file, header=TRUE)
@@ -147,6 +150,33 @@ out <- data.frame(c("Project folder",
 
 out_html <- knitr::kable(out, col.names = NULL, "html")
 kable_styling(out_html, "striped", position = "left")
+
+font.size <- 1
+if(length(samples)>25) font.size <- 0.5
+
+```
+
+## Data sources stats
+
+```{r data stats, results="asis"}
+
+out <- data.frame(c("mirDB miRNA:",
+                    "Species-spec. miRNA:",
+                    "mirDB hairpin:",
+                    "Species-spec. hairpin:"
+                    ),
+                  c(prettyNum(mirdbstat[1], big.mark = ","),
+                    prettyNum(mirdbstat[2], big.mark = ","),
+                    prettyNum(mirdbstat[3], big.mark = ","),
+                    prettyNum(mirdbstat[4], big.mark = ",")
+                    ))
+
+out_html <- knitr::kable(out, col.names = NULL, "html")
+kable_styling(out_html, "striped", position = "left")
+
+font.size <- 1
+if(length(samples)>25) font.size <- 0.5
+
 ```
 
 # Quality checks
@@ -173,7 +203,7 @@ for(i in 2:length(conc.reports.files)){
 par(oma=c(6,5,0,0))
 labels <- gsub("_R1.fastq.gz.report","",conc.reports.files)
 plotThis <- sapply(conc.reports,nrow)
-barplot(plotThis, ylab="Concatenated files", las=2, names=labels, col=reportColours[3], yaxt="n")
+barplot(plotThis, ylab="Concatenated files", las=2, names=labels, col=reportColours[3], yaxt="n", cex.names=font.size)
 axis(2, at=seq(0,max(plotThis)), las=2)
 ```
 
@@ -196,7 +226,7 @@ raw.reads <- raw.reads / 4
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=reportColours[1])
+barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=reportColours[1], cex.names=font.size)
 ```
 
 ### Trimmed, lane-wise reads
@@ -216,14 +246,14 @@ trimmed.reads <- trimmed.reads / 4
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=reportColours[2])
+barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=reportColours[2], cex.names=font.size)
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(reportColours[1], reportColours[2]))
+barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1],reportColours[2]))
 ```
 
@@ -244,7 +274,7 @@ conc.reads <- conc.reads / 4
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.reads, las=2, main="Concatenated reads", col=reportColours[3])
+barplot(conc.reads, las=2, main="Concatenated reads", col=reportColours[3], cex.names=font.size)
 ```
 
 
@@ -264,11 +294,11 @@ names(raw.bases) <- gsub(".wcc", "", names(raw.bases))
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=reportColours[3])
+barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=reportColours[3], cex.names=font.size)
 ```
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=reportColours[3])
+barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=reportColours[3], cex.names=font.size)
 ```
 ### Trimmed, lane-wise bases
 ```{r}
@@ -285,24 +315,24 @@ names(trimmed.bases) <- gsub("_trimmed.wcc", "", names(trimmed.bases))
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=reportColours[3])
+barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=reportColours[3], cex.names=font.size)
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=reportColours[3])
+barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=reportColours[3], cex.names=font.size)
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=reportColours[3])
+barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=reportColours[3], cex.names=font.size)
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(reportColours[1], reportColours[2]))
+barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
@@ -310,7 +340,7 @@ legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColo
 par(mar=c(15,5,2,8), xpd=TRUE)
 plotThis <- rbind(raw.bases/raw.reads,
                   trimmed.bases/trimmed.reads)
-barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(reportColours[1], reportColours[2]))
+barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
@@ -330,7 +360,7 @@ names(conc.bases) <- gsub("_R1.wcc", "", names(conc.bases))
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.bases, las=2, main="Concatenated Bases", col=reportColours[3])
+barplot(conc.bases, las=2, main="Concatenated Bases", col=reportColours[3], cex.names=font.size)
 ```
 
 # Contamination removal
@@ -348,7 +378,7 @@ trna.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1],reportColours[2],reportColours[3]))
 ```
 
@@ -361,7 +391,7 @@ trna.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -380,7 +410,7 @@ phix.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -393,7 +423,7 @@ phix.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -414,7 +444,7 @@ mature.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature.unmapped.reads, mature.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+        aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -426,7 +456,7 @@ mature.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -443,7 +473,7 @@ mature_species.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature_species.unmapped.reads, mature_species.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+        aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -455,14 +485,14 @@ mature_species.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 Differences between the total Mature.fa and Mature_Species.fa only:
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(reportColours[3]))
+barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(reportColours[3]), cex.names=font.size)
 ```
 
 
@@ -477,7 +507,7 @@ hairpin.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -489,7 +519,7 @@ hairpin.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -524,7 +554,7 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -546,7 +576,7 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]))
+barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
 legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
@@ -588,7 +618,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature.fa)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature.fa)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -631,7 +661,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature_species.fa)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature_species.fa)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -676,7 +706,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Reference"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Reference)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Reference)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -684,7 +714,7 @@ Unmapped 'Others' is currently not imported from the STAR-logs functions, hence 
 
 Actually, I use here the starlog.totalReads and not the hairpin_species. THIS NEEDS TO BE ADJUSTED!!!
 ```{r}
-barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot", col=reportColours[1])
+barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot", col=reportColours[1], cex.names=font.size)
 ```
 
 ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE SOFT-CLIPPED AGAIN, HOW FAR ARE THE ALIGNED SOFT-CLIPPED PARTS AWAY FROM THEIR 'PARTNER'?
@@ -746,7 +776,7 @@ star.mature[is.na(star.mature)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa", col=reportColours[1])
+barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa", col=reportColours[1], cex.names=font.size)
 ```
 
 RPKM quantification of mirbase mature.fa miRNAs.
@@ -852,7 +882,7 @@ star.hairpin[is.na(star.hairpin)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa", col=reportColours[1])
+barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa", col=reportColours[1], cex.names=font.size)
 ```
 
 ```{r}
@@ -897,7 +927,7 @@ star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
 
 ```{r}
-barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa", col=reportColours[1])
+barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa", col=reportColours[1], cex.names=font.size)
 ```
 ```{r}
 # Get the quantification
@@ -1499,6 +1529,7 @@ star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
 hc <- hclust(star.mature_species.rpkm.dist)           
 plot(hc)  
 ```
+
 ### Hierarchical clustering for Novel predictions (STAR)
 
 Here we use this object: novel.rpkm
