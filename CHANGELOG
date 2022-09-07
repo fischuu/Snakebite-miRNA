@@ -7,6 +7,12 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
+22: Bugfix for RPKm calculation in STAR protein coding expression values
+21: hairpin_species quantification table is exported to the QUANTIFICATION folder
+20: hairpin quantification table is exported to the QUANTIFICATION folder
+19: mature_species quantification table is exported to the QUANTIFICATION folder
+18: mature quantification table is exported to the QUANTIFICATION folder
+17: tRNA quantification table is exported to the QUANTIFICATION folder
 16: Bugfix for mirna-species filtering (caused that not all miRNAs were quantified)
 15: Subparagraph added for novel clustering (missing linebreak added)
 14: stdout and stderr are now redirected to CUTADAPT log files

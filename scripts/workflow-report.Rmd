@@ -749,6 +749,10 @@ rownames(trna.quant.rpkm) <- trna.quant$tRNA
 datatable(trna.quant.rpkm)
 ```
 
+```{r export trna counts}
+write.table(trna.quant, file.path(projFolder, "QUANTIFICATION","trna_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+```
+
 ## Mirbase - Mature.fa
 
 ### Bowtie
@@ -789,13 +793,19 @@ colnames(mirbase_mature_quant) <- c(gsub("_star_mature.txt", "", mirbase_mature_
 for(i in 2:length(mirbase_mature_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_mature.txt", "", mirbase_mature_quant.files[i]), "miRNA")
-  mirbase_mature_quant <- merge(mirbase_mature_quant, tmp, by="miRNA")
+  mirbase_mature_quant <- merge(mirbase_mature_quant, tmp, by="miRNA", all.x=TRUE)
 }
+
+mirbase_mature_quant[is.na(mirbase_mature_quant)] <- 0
 mirbase_mature_quant.miomapped <- apply(mirbase_mature_quant[,-1],2,sum)/1000000
 mirbase_mature_quant.rpkm <- t(t(mirbase_mature_quant[,-1])/mirbase_mature_quant.miomapped)
 rownames(mirbase_mature_quant.rpkm) <- mirbase_mature_quant[,1]
 
 datatable(mirbase_mature_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_mature_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Mature_Species.fa
@@ -840,8 +850,9 @@ colnames(mirbase_mature_species_quant) <- c(gsub("_star_mature_species.txt", "",
 for(i in 2:length(mirbase_mature_species_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_species_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_mature_species.txt", "", mirbase_mature_species_quant.files[i]), "miRNA")
-  mirbase_mature_species_quant <- merge(mirbase_mature_species_quant, tmp, by="miRNA")
+  mirbase_mature_species_quant <- merge(mirbase_mature_species_quant, tmp, by="miRNA", all=TRUE)
 }
+mirbase_mature_species_quant[is.na(mirbase_mature_species_quant)] <- 0
 mirbase_mature_species_quant.miomapped <- apply(mirbase_mature_species_quant[,-1],2,sum)/1000000
 mirbase_mature_species_quant.rpkm <- t(t(mirbase_mature_species_quant[,-1])/mirbase_mature_species_quant.miomapped)
 rownames(mirbase_mature_species_quant.rpkm) <- mirbase_mature_species_quant[,1]
@@ -854,6 +865,11 @@ And the RPKM normalised values
 ```{r}
 datatable(mirbase_mature_species_quant.rpkm)
 ```
+
+```{r}
+write.table(mirbase_mature_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+```
+
 
 ## Mirbase - Hairpin.fa
 
@@ -871,7 +887,7 @@ for(i in 2:length(star.hairpin.files)){
     tmp.star.hairpin <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin.files[i]), skip=1)
     colnames(tmp.star.hairpin) <- c(star.hairpin.files[i], "miRNA")
     
-    star.hairpin <- merge(star.hairpin, tmp.star.hairpin, by="miRNA")
+    star.hairpin <- merge(star.hairpin, tmp.star.hairpin, by="miRNA", all.x=TRUE)
 }
 
 star.hairpin[is.na(star.hairpin)] <- 0
@@ -893,13 +909,18 @@ colnames(mirbase_hairpin_quant) <- c(gsub("_star_hairpin.txt", "", mirbase_hairp
 for(i in 2:length(mirbase_hairpin_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_hairpin.txt", "", mirbase_hairpin_quant.files[i]), "miRNA")
-  mirbase_hairpin_quant <- merge(mirbase_hairpin_quant, tmp, by="miRNA")
+  mirbase_hairpin_quant <- merge(mirbase_hairpin_quant, tmp, by="miRNA", all.x=TRUE)
 }
+mirbase_hairpin_quant[is.na(mirbase_hairpin_quant)] <- 0
 mirbase_hairpin_quant.miomapped <- apply(mirbase_hairpin_quant[,-1],2,sum)/1000000
 mirbase_hairpin_quant.rpkm <- t(t(mirbase_hairpin_quant[,-1])/mirbase_hairpin_quant.miomapped)
 rownames(mirbase_hairpin_quant.rpkm) <- mirbase_hairpin_quant[,1]
 
 datatable(mirbase_hairpin_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_hairpin_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Hairpin_Species.fa
@@ -937,14 +958,19 @@ colnames(mirbase_hairpin_species_quant) <- c(gsub("_star_hairpin_species.txt", "
 for(i in 2:length(mirbase_hairpin_species_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_species_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_hairpin_species.txt", "", mirbase_hairpin_species_quant.files[i]), "miRNA")
-  mirbase_hairpin_species_quant <- merge(mirbase_hairpin_species_quant, tmp, by="miRNA")
+  mirbase_hairpin_species_quant <- merge(mirbase_hairpin_species_quant, tmp, by="miRNA", all=TRUE)
 }
+mirbase_hairpin_species_quant[is.na(mirbase_hairpin_species_quant)] <- 0
 mirbase_hairpin_species_quant.miomapped <- apply(mirbase_hairpin_species_quant[,-1],2,sum)/1000000
 mirbase_hairpin_species_quant.rpkm <- t(t(mirbase_hairpin_species_quant[,-1])/mirbase_hairpin_species_quant.miomapped)
 rownames(mirbase_hairpin_species_quant.rpkm) <- mirbase_hairpin_species_quant[,1]
 
 datatable(mirbase_hairpin_species_quant)
 datatable(mirbase_hairpin_species_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_hairpin_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ### Differences Mature.fa and Mature_Species.fa
@@ -1038,7 +1064,7 @@ colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 
 # Do the RPKM normalisation
 alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))
-alignmentStats <- alignmentStats[,-2]
+alignmentStats <- alignmentStats[-2,]
 star.reads.mapped <- apply(alignmentStats,2,sum)
 tmp <- fc.expr.star
 tmp <- merge(tmp, annotation, by.x="Geneid", by.y="gene_id")
@@ -1212,7 +1238,7 @@ colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
 for(i in 2:length(samples)){
   tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
   colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
-  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name")
+  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
 }
 
 novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
@@ -1225,6 +1251,10 @@ novel.rpkm.kb <- novel.rpkm/novel.kb
 
 novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
 
+```
+
+```{r}
+write.table(novel.quant, file.path(projFolder, "QUANTIFICATION","novel_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ### Visualisation of novel loci

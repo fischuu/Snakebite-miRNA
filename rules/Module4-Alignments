@@ -34,7 +34,7 @@ rule bowtie_map_clear_reads_mature:
         mkdir -p {params.fastqFolder}
 
         bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
-        
+
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
         touch {output.unmappedReads}
@@ -103,7 +103,7 @@ rule bowtie_map_clear_reads_mature_species:
         mkdir -p {params.fastqFolder}
 
         bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
-        
+
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
         touch {output.unmappedReads}
