@@ -1463,12 +1463,16 @@ colnames(overall_stats) <- samples
 
 ### Absolute numbers
 
+#### Table
+
 ```{r}
   out_html <- knitr::kable(overall_stats, "html")
   kable_styling(out_html, "striped", position = "left")
 ```
   
-```{r}
+#### Barplot  
+  
+```{r, fig.width=15, fig.height=7}
 set.seed(123)
 colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 
@@ -1478,19 +1482,23 @@ revVec <- function(x) x[(length(x):1)]
 par(mar=c(15,5,2,22), xpd=TRUE)
 barplot(overall_stats, col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
-legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
   
 ### Percentages
+
+#### Table 
 
 ```{r}
   out_html <- knitr::kable(round(t(t(overall_stats)/apply(overall_stats,2,sum))*100,2) , "html")
   kable_styling(out_html, "striped", position = "left")
 ```
 
-```{r}
+#### Barplot
+
+```{r, fig.width=15, fig.height=8}
 set.seed(123)
 colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 
@@ -1501,9 +1509,9 @@ par(mar=c(15,5,2,22), xpd=TRUE)
 
 barplot(t(t(overall_stats)/apply(overall_stats,2,sum)), col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
-legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
 
 ### Unconsidered reads

@@ -7,6 +7,8 @@
 
 0.5.* UPDATES
 --------------------------------------------------------------------------------
+24: Structure in chapter 'Origin of reads' optimised
+23: Resolution for the read summary figure adjusted
 22: Bugfix for RPKm calculation in STAR protein coding expression values
 21: hairpin_species quantification table is exported to the QUANTIFICATION folder
 20: hairpin quantification table is exported to the QUANTIFICATION folder
