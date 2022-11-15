@@ -53,7 +53,8 @@ rule bash_prepare_mirdb_references:
         mature="%s/References/mature_basesAdjusted.fa" % (config["project-folder"]),
         matureSpecies="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"]),
         hairpin="%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"]),
-        hairpinSpecies="%s/References/hairpin_basesAdjusted_species.fa" % (config["project-folder"])
+        hairpinSpecies="%s/References/hairpin_basesAdjusted_species.fa" % (config["project-folder"]),
+        stats="%s/STATS/mirdb.stats" % (config["project-folder"])
     log:
         "%s/logs/BASH/prepare_mirdb_references.log" % (config["project-folder"])
     benchmark:
@@ -65,14 +66,19 @@ rule bash_prepare_mirdb_references:
     singularity: config["singularity"]["bowtie"]
     params:
         species=config["params"]["species-id"]
-    shell:"""
+    shell:""" 
      # Change bases U to T
      sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
      sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
 
      # Filter species
-     grep -A 1 '{params.species}' {output.mature}  > {output.matureSpecies}
-     grep -A 1 '{params.species}' {output.hairpin}  > {output.hairpinSpecies}
+     grep -A 1 --no-group-separator '{params.species}' {output.mature}  > {output.matureSpecies}
+     grep -A 1 --no-group-separator '{params.species}' {output.hairpin}  > {output.hairpinSpecies}
+     
+     grep -e '>' {output.mature} | wc -l >> {output.stats}
+     grep -e '>' {output.matureSpecies} | wc -l >> {output.stats}
+     grep -e '>' {output.hairpin} | wc -l >> {output.stats}
+     grep -e '>' {output.hairpinSpecies} | wc -l >> {output.stats}
     """
     
 rule bowtie_createIndex_mature:
@@ -201,7 +207,6 @@ rule star_createIndex_mature:
         index=config["matureSTARIndex"],
         tmpdir="%s/STAR_tmp/Mature" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_mature"]["time"],
@@ -229,7 +234,6 @@ rule star_createIndex_mature_species:
         index=config["matureSpeciesSTARIndex"],
         tmpdir="%s/STAR_tmp/MatureSpecies" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_mature"]["time"],
@@ -257,7 +261,6 @@ rule star_createIndex_hairpin:
         index=config["hairpinSTARIndex"],
         tmpdir="%s/STAR_tmp/Hairpin" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_hairpin"]["time"],
@@ -285,7 +288,6 @@ rule star_createIndex_hairpin_species:
         index=config["hairpinSpeciesSTARIndex"],
         tmpdir="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_hairpin"]["time"],
@@ -313,7 +315,6 @@ rule star_createIndex_reference:
         index=config["referenceSTARIndex"],
         tmpdir="%s/STAR_tmp/Reference" % (config["project-folder"]),
         tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
-    group: "star-index"
     threads: cluster["star_createIndex_reference"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_reference"]["time"],

@@ -42,17 +42,19 @@ knitr::opts_chunk$set(echo = FALSE,
 # R -e "rmarkdown::render('./scripts/workflow-report.Rmd',output_file='./finalReport.html')"
 
 if(!is.element("snakemake",ls())){
-  projFolder <- "/scratch/project_2001310/MaitoInno_Feeding/"
+  projFolder <- "/scratch/project_2005619/bovreg_full/"
   pipelineFolder <- "/scratch/project_2001310/Pipeline-miRNA"
   pipelineConfig <- "/scratch/project_2001310/MaitoInno_Feeding/miRNA-pipeline_config-feeding.yaml"
   serverConfig <- "/scratch/project_2001310/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml"
   refGenome.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
   refAnnot.file <- "/scratch/project_2001310/MaitoInno_Feeding/References/ARS_UCD1.2/Bos_taurus.ARS-UCD1.2.95.gtf"
+  samplesheet.file <- ""
 }
 refGenome.fullPath <- refGenome.file
 refGenome.file <- basename(refGenome.file)
 ifelse(refGenome.file == "", refAvail <- FALSE, refAvail <- TRUE)
 bowtieRefAlignment <- FALSE
+reportColours <- c("#FF8200", "#00B5E2", "#78BE20", "#7F3F98", "#E13C98", "#0033A0", "#54585A")
 ```
 
 ```{r, include=FALSE}
@@ -109,6 +111,7 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 
 ```{r get pipeline version}
 pipeSMK <- readLines(file.path(pipelineFolder,"miRNA-pipeline.smk"))
+mirdbstat <- readLines(file.path(projFolder, "STATS", "mirdb.stats"))
 pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
 if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
     sampleInfo <- read.table(file.path(projFolder, "sampleInfo.txt"), header=TRUE)
@@ -120,9 +123,13 @@ if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
 
 ```
 
+## Runtime stats
+
 ```{r import barcodesID, results="asis"}
-rawsamples <- as.vector(as.matrix(read.table(file.path(projFolder, "rawsamples"))))
-samples <- as.vector(as.matrix(read.table(file.path(projFolder, "samples"), header=FALSE)))
+samplesheet <- read.table(samplesheet.file, header=TRUE)
+
+rawsamples <- unique(samplesheet$rawsample)
+samples <- unique(samplesheet$sample_name)
 
 out <- data.frame(c("Project folder",
                     "Number of raw-samples",
@@ -143,6 +150,33 @@ out <- data.frame(c("Project folder",
 
 out_html <- knitr::kable(out, col.names = NULL, "html")
 kable_styling(out_html, "striped", position = "left")
+
+font.size <- 1
+if(length(samples)>25) font.size <- 0.5
+
+```
+
+## Data sources stats
+
+```{r data stats, results="asis"}
+
+out <- data.frame(c("mirDB miRNA:",
+                    "Species-spec. miRNA:",
+                    "mirDB hairpin:",
+                    "Species-spec. hairpin:"
+                    ),
+                  c(prettyNum(mirdbstat[1], big.mark = ","),
+                    prettyNum(mirdbstat[2], big.mark = ","),
+                    prettyNum(mirdbstat[3], big.mark = ","),
+                    prettyNum(mirdbstat[4], big.mark = ",")
+                    ))
+
+out_html <- knitr::kable(out, col.names = NULL, "html")
+kable_styling(out_html, "striped", position = "left")
+
+font.size <- 1
+if(length(samples)>25) font.size <- 0.5
+
 ```
 
 # Quality checks
@@ -161,12 +195,16 @@ conc.reports[[1]] <- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", c
 for(i in 2:length(conc.reports.files)){
   conc.reports[[i]]<- read.table(file.path(projFolder, "FASTQ", "CONCATENATED", conc.reports.files[i]))
 }
+
+
 ```
 
 ```{r visualize concatenation reports}
 par(oma=c(6,5,0,0))
-labels <- gsub(".fastq.gz.report","",conc.reports.files)
-barplot(sapply(conc.reports,nrow), ylab="Concatenated files", names=labels, las=2)
+labels <- gsub("_R1.fastq.gz.report","",conc.reports.files)
+plotThis <- sapply(conc.reports,nrow)
+barplot(plotThis, ylab="Concatenated files", las=2, names=labels, col=reportColours[3], yaxt="n", cex.names=font.size)
+axis(2, at=seq(0,max(plotThis)), las=2)
 ```
 
 ## Sequencing depth
@@ -182,12 +220,13 @@ for(i in 1:length(raw.read.files)){
 }
 
 names(raw.reads) <- raw.read.files
+names(raw.reads) <- gsub(".wcl", "", names(raw.reads))
 raw.reads <- raw.reads / 4
 ```
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=4)
+barplot(raw.reads, las=2, main="Raw, lane-wise reads", col=reportColours[1], cex.names=font.size)
 ```
 
 ### Trimmed, lane-wise reads
@@ -201,20 +240,21 @@ for(i in 1:length(trimmed.read.files)){
 }
 
 names(trimmed.reads) <- trimmed.read.files
+names(trimmed.reads) <- gsub("_trimmed.wcl", "", names(trimmed.reads))
 trimmed.reads <- trimmed.reads / 4
 ```
 
 ```{r}
 par(mar=c(15,5,2,0))
-barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=7)
+barplot(trimmed.reads, las=2, main="Trimmed, lane-wise reads", col=reportColours[2], cex.names=font.size)
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(rbind(raw.reads,trimmed.reads), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise reads", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1],reportColours[2]))
 ```
 
 ### Concatenated reads
@@ -228,12 +268,13 @@ for(i in 1:length(conc.read.files)){
 }
 
 names(conc.reads) <- conc.read.files
+names(conc.reads) <- gsub("_R1.wcl", "", names(conc.reads))
 conc.reads <- conc.reads / 4
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.reads, las=2, main="Concatenated reads", col=4)
+barplot(conc.reads, las=2, main="Concatenated reads", col=reportColours[3], cex.names=font.size)
 ```
 
 
@@ -248,15 +289,16 @@ for(i in 1:length(raw.bases.files)){
 }
 
 names(raw.bases) <- raw.bases.files
+names(raw.bases) <- gsub(".wcc", "", names(raw.bases))
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=4)
+barplot(raw.bases, las=2, main="Raw, lane-wise bases", col=reportColours[3], cex.names=font.size)
 ```
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=4)
+barplot(raw.bases/raw.reads, las=2, main="Raw, lane-wise bases per read", col=reportColours[3], cex.names=font.size)
 ```
 ### Trimmed, lane-wise bases
 ```{r}
@@ -268,37 +310,38 @@ for(i in 1:length(trimmed.bases.files)){
 }
 
 names(trimmed.bases) <- trimmed.bases.files
+names(trimmed.bases) <- gsub("_trimmed.wcc", "", names(trimmed.bases))
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=4)
+barplot(trimmed.bases, las=2, main="Trimmed, lane-wise bases", col=reportColours[3], cex.names=font.size)
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=4)
+barplot(raw.bases-trimmed.bases, las=2, main="Number of trimmed bases per lane", col=reportColours[3], cex.names=font.size)
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=4)
+barplot(trimmed.bases/trimmed.reads, las=2, main="Trimmed, lane-wise bases per read", col=reportColours[3], cex.names=font.size)
 ```
 
 ### Raw and trimmed, lane-wise reads
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
-barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(rbind(raw.bases,trimmed.bases), beside=TRUE, las=2, main="Raw and Trimmed, lane-wise bases", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
 ```{r}
 par(mar=c(15,5,2,8), xpd=TRUE)
 plotThis <- rbind(raw.bases/raw.reads,
                   trimmed.bases/trimmed.reads)
-barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(4,7))
-legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(4,7))
+barplot(plotThis, beside=TRUE, las=2, main="Avg read length in bases", col=c(reportColours[1], reportColours[2]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Raw","Trimmed"), fill=c(reportColours[1], reportColours[2]))
 ```
 
 ### Concatenated bases
@@ -312,11 +355,12 @@ for(i in 1:length(conc.bases.files)){
 }
 
 names(conc.bases) <- conc.bases.files
+names(conc.bases) <- gsub("_R1.wcc", "", names(conc.bases))
 ```
 
 ```{r}
 par(mar=c(15,6,2,0))
-barplot(conc.bases, las=2, main="Concatenated Bases", col=4)
+barplot(conc.bases, las=2, main="Concatenated Bases", col=reportColours[3], cex.names=font.size)
 ```
 
 # Contamination removal
@@ -334,8 +378,8 @@ trna.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+barplot(rbind(conc.reads,trna.unmapped.reads, trna.mapped.reads), beside=TRUE, las=2, main="Concatenated and tRNA reads", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1],reportColours[2],reportColours[3]))
 ```
 
 ### Bases
@@ -347,8 +391,8 @@ trna.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(4,5,6))
+barplot(rbind(conc.bases,trna.unmapped.bases, trna.mapped.bases), beside=TRUE, las=2, main="Concatenated and tRNA bases", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","tRNA (unmapped)", "tRNA (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -366,8 +410,8 @@ phix.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+barplot(rbind(trna.unmapped.reads,phix.unmapped.reads, phix.mapped.reads), beside=TRUE, las=2, main="tRNA filtered and PhiX reads", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Conc.","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ### Bases
@@ -379,8 +423,8 @@ phix.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(4,5,6))
+barplot(rbind(trna.unmapped.bases,phix.unmapped.bases, phix.mapped.bases), beside=TRUE, las=2, main="tRNA filtered and PhiX bases", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("tRNA filtered","PhiX (unmapped)", "PhiX (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -400,8 +444,8 @@ mature.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature.unmapped.reads, mature.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+        aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -412,8 +456,8 @@ mature.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(phix.unmapped.bases, mature.unmapped.bases, mature.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature.fa (unmapped)", "Mature.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -429,8 +473,8 @@ mature_species.mapped.reads <- tmp$mapped
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
 barplot(rbind(phix.unmapped.reads,mature_species.unmapped.reads, mature_species.mapped.reads), beside=TRUE, las=2, main="Filtered reads 
-        aligned to Mature_Species.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+        aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -441,14 +485,14 @@ mature_species.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(phix.unmapped.bases, mature_species.unmapped.bases, mature_species.mapped.bases), beside=TRUE, las=2, main="Filtered bases aligned to Mature_Species.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Total reads","Mature_Species.fa (unmapped)", "Mature_Species.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 Differences between the total Mature.fa and Mature_Species.fa only:
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(4))
+barplot(mature.mapped.reads - mature_species.mapped.reads, las=2, main="Reads that align more to Mature.fa vs Mature_Species.fa", col=c(reportColours[3]), cex.names=font.size)
 ```
 
 
@@ -463,8 +507,8 @@ hairpin.mapped.reads <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(mature.unmapped.reads, hairpin.unmapped.reads, hairpin.mapped.reads), beside=TRUE, las=2, main="Mature.fa unaligned reads aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -475,8 +519,8 @@ hairpin.mapped.bases <- tmp$mapped
 
 ```{r}
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(4,5,6))
+barplot(rbind(mature.unmapped.bases, hairpin.unmapped.bases, hairpin.mapped.bases), beside=TRUE, las=2, main="Mature.fa unaligned bases aligned to Hairpin.fa", col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Mature.fa (unmapped)","Hairpin.fa (unmapped)", "Hairpin.fa (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ### Hairpin-species
@@ -510,8 +554,8 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+barplot(rbind(hairpin.unmapped.reads, reference.bowtie.unmapped.reads, reference.bowtie.mapped.reads), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 ```{r}
@@ -532,8 +576,8 @@ if(bowtieRefAlignment){
   useTitle <- "Bowtie alignment against Reference genome was not executed" 
 }
 par(mar=c(15,6,2,8), xpd=TRUE)
-barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(4,5,6))
-legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(4,5,6))
+barplot(rbind(hairpin.unmapped.bases, reference.bowtie.unmapped.bases, reference.bowtie.mapped.bases), beside=TRUE, las=2, main=useTitle, col=c(reportColours[1], reportColours[2], reportColours[3]), cex.names=font.size)
+legend("topright", inset=c(-0.2,0), legend=c("Hairpin.fa (unmapped)","Reference (unmapped)", "Reference (mapped)"), fill=c(reportColours[1], reportColours[2], reportColours[3]))
 ```
 
 
@@ -574,7 +618,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature.fa)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature.fa)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -617,7 +661,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Mature"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature_species.fa)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Mature_species.fa)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -662,7 +706,7 @@ starlogs.matrix <- rbind(starlogs.uniqueReads,
                          starlogs.chimericReads)
 colnames(starlogs.matrix) <- gsub(paste0(file.path(projFolder,"BAM", "STAR", "Reference"),"/"),"",starlogs.dirs)
 
-barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Reference)", las=2)
+barplot(starlogs.matrix, col=2:7, main = "STAR alignment stats (Reference)", las=2, cex.names=font.size)
 legend("topright", inset=c(-0.5,0), legend=gsub("starlogs.","",rownames(starlogs.matrix)), fill=c(2:7))
 ```
 
@@ -670,12 +714,44 @@ Unmapped 'Others' is currently not imported from the STAR-logs functions, hence 
 
 Actually, I use here the starlog.totalReads and not the hairpin_species. THIS NEEDS TO BE ADJUSTED!!!
 ```{r}
-barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot")
+barplot(starlogs.totalReads - apply(starlogs.matrix,2,sum), las=2, main="Unconsidered reads in above barplot", col=reportColours[1], cex.names=font.size)
 ```
 
 ADD STILL STATISTICS ON THE SOFT-CLIPPING, HOW MUCH IS CLIPPED, CAN WE ALIGN THE SOFT-CLIPPED AGAIN, HOW FAR ARE THE ALIGNED SOFT-CLIPPED PARTS AWAY FROM THEIR 'PARTNER'?
 
 # Quantification
+
+## tRNA
+Despite the filtering against the tRNA database, we also quantify the different tRNAs and base further downstream analyses on the quantifications.
+
+```{r}
+trna.files <- list.files(file.path(projFolder,"STATS", "BOWTIE", "tRNA"), pattern="*idxstats")
+trna.samples <- gsub("_tRNA.idxstats", "", trna.files)
+trna.quant <- read.table(file.path(projFolder,"STATS", "BOWTIE", "tRNA", trna.files[1]))[,1:3]
+colnames(trna.quant) <- c("tRNA", "Length", trna.samples[1])
+
+for(i in 2:length(trna.files)){
+tmp <- read.table(file.path(projFolder,"STATS", "BOWTIE", "tRNA", trna.files[i]))[,c(1,3)]
+colnames(tmp) <- c("tRNA", trna.samples[i])
+
+trna.quant <- merge(trna.quant, tmp, by="tRNA")
+}
+
+trna.quant <- trna.quant[- which(trna.quant$tRNA=="*"),]
+
+trna.quant.rpkm <- t(t(trna.quant[,-c(1:2)])/(apply(trna.quant[,-c(1:2)],2,sum)/10^6) )
+
+trna.quant.rpkm <- trna.quant.rpkm/(trna.quant$Length/10^3)
+rownames(trna.quant.rpkm) <- trna.quant$tRNA
+```
+
+```{r}
+datatable(trna.quant.rpkm)
+```
+
+```{r export trna counts}
+write.table(trna.quant, file.path(projFolder, "QUANTIFICATION","trna_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+```
 
 ## Mirbase - Mature.fa
 
@@ -704,8 +780,9 @@ star.mature[is.na(star.mature)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa")
+barplot(apply(star.mature[,-1],2,sum), las=2, main="Reads aligned to Mature.fa", col=reportColours[1], cex.names=font.size)
 ```
+
 RPKM quantification of mirbase mature.fa miRNAs.
 
 ```{r}
@@ -716,13 +793,19 @@ colnames(mirbase_mature_quant) <- c(gsub("_star_mature.txt", "", mirbase_mature_
 for(i in 2:length(mirbase_mature_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_mature.txt", "", mirbase_mature_quant.files[i]), "miRNA")
-  mirbase_mature_quant <- merge(mirbase_mature_quant, tmp, by="miRNA")
+  mirbase_mature_quant <- merge(mirbase_mature_quant, tmp, by="miRNA", all.x=TRUE)
 }
+
+mirbase_mature_quant[is.na(mirbase_mature_quant)] <- 0
 mirbase_mature_quant.miomapped <- apply(mirbase_mature_quant[,-1],2,sum)/1000000
 mirbase_mature_quant.rpkm <- t(t(mirbase_mature_quant[,-1])/mirbase_mature_quant.miomapped)
 rownames(mirbase_mature_quant.rpkm) <- mirbase_mature_quant[,1]
 
 datatable(mirbase_mature_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_mature_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Mature_Species.fa
@@ -756,7 +839,7 @@ rownames(star.mature_species.rpkm) <- star.mature_species[,1]
 
 
 ```{r}
-barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa")
+barplot(apply(star.mature_species[,-1], 2, sum), las=2, main="Reads aligned to Mature_Species.fa", col=reportColours[1])
 ```
 The raw counts per mature mirna per sample
 ```{r}
@@ -767,8 +850,9 @@ colnames(mirbase_mature_species_quant) <- c(gsub("_star_mature_species.txt", "",
 for(i in 2:length(mirbase_mature_species_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_mature_species_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_mature_species.txt", "", mirbase_mature_species_quant.files[i]), "miRNA")
-  mirbase_mature_species_quant <- merge(mirbase_mature_species_quant, tmp, by="miRNA")
+  mirbase_mature_species_quant <- merge(mirbase_mature_species_quant, tmp, by="miRNA", all=TRUE)
 }
+mirbase_mature_species_quant[is.na(mirbase_mature_species_quant)] <- 0
 mirbase_mature_species_quant.miomapped <- apply(mirbase_mature_species_quant[,-1],2,sum)/1000000
 mirbase_mature_species_quant.rpkm <- t(t(mirbase_mature_species_quant[,-1])/mirbase_mature_species_quant.miomapped)
 rownames(mirbase_mature_species_quant.rpkm) <- mirbase_mature_species_quant[,1]
@@ -781,6 +865,11 @@ And the RPKM normalised values
 ```{r}
 datatable(mirbase_mature_species_quant.rpkm)
 ```
+
+```{r}
+write.table(mirbase_mature_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+```
+
 
 ## Mirbase - Hairpin.fa
 
@@ -798,7 +887,7 @@ for(i in 2:length(star.hairpin.files)){
     tmp.star.hairpin <- read.table(file.path(projFolder,"QUANTIFICATION", "STAR","Mirbase", star.hairpin.files[i]), skip=1)
     colnames(tmp.star.hairpin) <- c(star.hairpin.files[i], "miRNA")
     
-    star.hairpin <- merge(star.hairpin, tmp.star.hairpin, by="miRNA")
+    star.hairpin <- merge(star.hairpin, tmp.star.hairpin, by="miRNA", all.x=TRUE)
 }
 
 star.hairpin[is.na(star.hairpin)] <- 0
@@ -809,7 +898,7 @@ star.hairpin[is.na(star.hairpin)] <- 0
 ```
 
 ```{r}
-barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa")
+barplot(apply(star.hairpin[,-1],2,sum), las=2, main="Reads aligned to Hairpin.fa", col=reportColours[1], cex.names=font.size)
 ```
 
 ```{r}
@@ -820,13 +909,18 @@ colnames(mirbase_hairpin_quant) <- c(gsub("_star_hairpin.txt", "", mirbase_hairp
 for(i in 2:length(mirbase_hairpin_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_hairpin.txt", "", mirbase_hairpin_quant.files[i]), "miRNA")
-  mirbase_hairpin_quant <- merge(mirbase_hairpin_quant, tmp, by="miRNA")
+  mirbase_hairpin_quant <- merge(mirbase_hairpin_quant, tmp, by="miRNA", all.x=TRUE)
 }
+mirbase_hairpin_quant[is.na(mirbase_hairpin_quant)] <- 0
 mirbase_hairpin_quant.miomapped <- apply(mirbase_hairpin_quant[,-1],2,sum)/1000000
 mirbase_hairpin_quant.rpkm <- t(t(mirbase_hairpin_quant[,-1])/mirbase_hairpin_quant.miomapped)
 rownames(mirbase_hairpin_quant.rpkm) <- mirbase_hairpin_quant[,1]
 
 datatable(mirbase_hairpin_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_hairpin_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Hairpin_Species.fa
@@ -854,7 +948,7 @@ star.hairpin_species[is.na(star.hairpin_species)] <- 0
 
 
 ```{r}
-barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa")
+barplot(apply(star.hairpin_species[,-1], 2, sum), las=2, main="Reads aligned to Hairpin_Species.fa", col=reportColours[1], cex.names=font.size)
 ```
 ```{r}
 # Get the quantification
@@ -864,14 +958,19 @@ colnames(mirbase_hairpin_species_quant) <- c(gsub("_star_hairpin_species.txt", "
 for(i in 2:length(mirbase_hairpin_species_quant.files)){
   tmp <- read.table(file.path(projFolder, "QUANTIFICATION", "STAR", "Mirbase", mirbase_hairpin_species_quant.files[i]), skip=1)
   colnames(tmp) <- c(gsub("_star_hairpin_species.txt", "", mirbase_hairpin_species_quant.files[i]), "miRNA")
-  mirbase_hairpin_species_quant <- merge(mirbase_hairpin_species_quant, tmp, by="miRNA")
+  mirbase_hairpin_species_quant <- merge(mirbase_hairpin_species_quant, tmp, by="miRNA", all=TRUE)
 }
+mirbase_hairpin_species_quant[is.na(mirbase_hairpin_species_quant)] <- 0
 mirbase_hairpin_species_quant.miomapped <- apply(mirbase_hairpin_species_quant[,-1],2,sum)/1000000
 mirbase_hairpin_species_quant.rpkm <- t(t(mirbase_hairpin_species_quant[,-1])/mirbase_hairpin_species_quant.miomapped)
 rownames(mirbase_hairpin_species_quant.rpkm) <- mirbase_hairpin_species_quant[,1]
 
 datatable(mirbase_hairpin_species_quant)
 datatable(mirbase_hairpin_species_quant.rpkm)
+```
+
+```{r}
+write.table(mirbase_hairpin_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ### Differences Mature.fa and Mature_Species.fa
@@ -965,7 +1064,7 @@ colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 
 # Do the RPKM normalisation
 alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))
-alignmentStats <- alignmentStats[,-2]
+alignmentStats <- alignmentStats[-2,]
 star.reads.mapped <- apply(alignmentStats,2,sum)
 tmp <- fc.expr.star
 tmp <- merge(tmp, annotation, by.x="Geneid", by.y="gene_id")
@@ -1139,7 +1238,7 @@ colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
 for(i in 2:length(samples)){
   tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
   colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
-  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name")
+  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
 }
 
 novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
@@ -1152,6 +1251,10 @@ novel.rpkm.kb <- novel.rpkm/novel.kb
 
 novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
 
+```
+
+```{r}
+write.table(novel.quant, file.path(projFolder, "QUANTIFICATION","novel_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ### Visualisation of novel loci
@@ -1360,12 +1463,16 @@ colnames(overall_stats) <- samples
 
 ### Absolute numbers
 
+#### Table
+
 ```{r}
   out_html <- knitr::kable(overall_stats, "html")
   kable_styling(out_html, "striped", position = "left")
 ```
   
-```{r}
+#### Barplot  
+  
+```{r, fig.width=15, fig.height=7}
 set.seed(123)
 colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 
@@ -1375,19 +1482,23 @@ revVec <- function(x) x[(length(x):1)]
 par(mar=c(15,5,2,22), xpd=TRUE)
 barplot(overall_stats, col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
-legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
   
 ### Percentages
+
+#### Table 
 
 ```{r}
   out_html <- knitr::kable(round(t(t(overall_stats)/apply(overall_stats,2,sum))*100,2) , "html")
   kable_styling(out_html, "striped", position = "left")
 ```
 
-```{r}
+#### Barplot
+
+```{r, fig.width=15, fig.height=8}
 set.seed(123)
 colors <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 
@@ -1398,9 +1509,9 @@ par(mar=c(15,5,2,22), xpd=TRUE)
 
 barplot(t(t(overall_stats)/apply(overall_stats,2,sum)), col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[10]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
-legend("topright", inset=c(-1.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
+legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
 
 ### Unconsidered reads
@@ -1413,14 +1524,29 @@ In above statistics, what is the ratio of reads that is not considered compared 
 unconsideredReads <- rawReads_perSample - apply(overall_stats,2,sum)
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 
-barplot(unconsideredReads, las=2)
+barplot(unconsideredReads, las=2, col=reportColours[1])
 ```
 
 # Analyses
 
 ## Clustering
 
-### hclust based on star.mature_species.rpkm
+### Hierarchical clustering for tRNA (BOWTIE)
+
+Here we use this object: star.mature_species.rpkm
+
+```{r}
+cluster.data <- trna.quant.rpkm
+#colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+hc <- hclust(trna.quant.rpkm.dist)           
+plot(hc)  
+```
+
+
+### Hierarchical clustering for Mature_species (STAR)
+
+Here we use this object: star.mature_species.rpkm
 
 ```{r}
 cluster.data <- star.mature_species.rpkm
@@ -1430,7 +1556,9 @@ hc <- hclust(star.mature_species.rpkm.dist)
 plot(hc)  
 ```
 
-### hclust based on  star.protein_coding.rpkm
+### Hierarchical clustering for protein coding genes (STAR)
+
+Here we use this object: star.protein_coding.rpkm
 
 ```{r}
 cluster.data <- star.protein_coding.rpkm
@@ -1440,7 +1568,10 @@ hc <- hclust(star.mature_species.rpkm.dist)
 plot(hc)  
 ```
 
-### hclust based on novel.rpkm
+### Hierarchical clustering for Novel predictions (STAR)
+
+Here we use this object: novel.rpkm
+
 
 ```{r}
 cluster.data <- novel.rpkm
@@ -1512,7 +1643,7 @@ names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
     for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1533,7 +1664,7 @@ pairs(expr.PCA$x[,1:cols])
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+    tmpTitle <- paste("#### 10C: ",colnames(sampleInfo)[i],"\n")
     cat(sprintf(tmpTitle))
     pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
     par(xpd=TRUE)
@@ -1544,7 +1675,6 @@ if(sampleInfo.avail){
   }
 }
 ```
-
 
 ### PCA - Reference-protein_coding (STAR)
 
@@ -1568,7 +1698,7 @@ names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
     for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1589,7 +1719,7 @@ pairs(expr.PCA$x[,1:cols])
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+  tmpTitle <- paste("#### 10C: ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
   pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
@@ -1624,7 +1754,7 @@ names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
     for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### 3C: ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1645,7 +1775,7 @@ pairs(expr.PCA$x[,1:cols])
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### 10C: ",colnames(sampleInfo)[i],"\n")
+  tmpTitle <- paste("#### 10C: ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
   pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
@@ -1657,6 +1787,63 @@ for(i in 2:ncol(sampleInfo)){
 }
 ```
 
+### PCA - tRNAS (BOWTIE)
+
+```{r performPCA_trna}
+expr.PCA <- prcomp(t(trna.quant.rpkm))
+expr.PCA.novel <- expr.PCA
+```
+
+This is just the plain PCA, without using any colouring schemes.
+
+```{r}
+palette("default")
+pairs(expr.PCA$x[,1:3])
+```
+
+```{r}
+names(expr.PCA$x[,1])[which(expr.PCA$x[,1]>0)]
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+    for(i in 2:ncol(sampleInfo)){
+      tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
+      cat(sprintf(tmpTitle))
+      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      par(xpd=TRUE)
+      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+      par(xpd=FALSE)
+      cat(sprintf("\n\n"))
+    }
+  }  
+}
+```
+
+```{r}
+cols <- min(ncol(expr.PCA$x),10)
+pairs(expr.PCA$x[,1:cols])
+```
+
+```{r, results="asis"}
+if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+for(i in 2:ncol(sampleInfo)){
+  tmpTitle <- paste("#### 10C: ",colnames(sampleInfo)[i],"\n")
+  cat(sprintf(tmpTitle))
+  pairs(expr.PCA$x[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+  par(xpd=TRUE)
+  legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+  par(xpd=FALSE)
+  cat(sprintf("\n\n"))
+}
+}
+}
+```
+
+
+
 ### ICS - Mature_Species.fa (STAR)
 ```{r, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
@@ -1664,7 +1851,7 @@ FOBI <- ics(expr.PCA.mature_species$x[,1:cols])
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+  tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
   cat(sprintf(tmpTitle))
   plot(FOBI,col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
@@ -1686,7 +1873,7 @@ FOBI <- ics(expr.PCA$x[,1:cols])
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
     cat(sprintf(tmpTitle))
     plot(FOBI, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
     par(xpd=TRUE)
@@ -1712,7 +1899,7 @@ TSNEout <- tsne(expr.PCA.mature_species$x[,1:cols], k=5)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+  tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
   cat(sprintf(tmpTitle))
   plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
@@ -1734,7 +1921,7 @@ TSNEout <- tsne(star.mature_species.rpkm, k=5)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
+    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.-data based)\n")
     cat(sprintf(tmpTitle))
     plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
     par(xpd=TRUE)
@@ -1756,7 +1943,7 @@ TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
     cat(sprintf(tmpTitle))
     plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
     par(xpd=TRUE)
@@ -1778,7 +1965,7 @@ TSNEout <- tsne(star.protein_coding.rpkm, k=5)
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
 for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
+  tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
   cat(sprintf(tmpTitle))
   plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
   par(xpd=TRUE)
@@ -1803,7 +1990,7 @@ KPCAres <- kpca(expr.PCA.mature_species$x[,1:cols])
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1828,7 +2015,7 @@ KPCAres <- kpca(star.mature_species.rpkm)
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1854,7 +2041,7 @@ KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(PCA based data)\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA based data)\n")
       cat(sprintf(tmpTitle))
       pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1881,7 +2068,7 @@ KPCAres <- kpca(star.protein_coding.rpkm)
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"(Orig.based data)\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.based data)\n")
       cat(sprintf(tmpTitle))
       pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1908,7 +2095,7 @@ lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1934,7 +2121,7 @@ lleres <- lle(star.mature_species.rpkm, m=7, k=17, v=0.99)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1963,7 +2150,7 @@ lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -1989,7 +2176,7 @@ lleres <- lle(star.protein_coding.rpkm, m=7, k=17, v=0.99)
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("### ",colnames(sampleInfo)[i],"\n")
+      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
       pairs(lleres$Y[,1:5], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
@@ -2002,6 +2189,9 @@ if(sampleInfo.avail){
    plot(lleres$Y[,1:5], pch=20)
 }
 ```
+
+# Benchmarks
+Do here the analysis of the snakemake benchmark output to optimise resource allocation
 
 # Runtime checks
 Add here:

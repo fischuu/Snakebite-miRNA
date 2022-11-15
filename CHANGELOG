@@ -4,6 +4,37 @@
 #####                                                                      #####
 ################################################################################
 
+
+0.5.* UPDATES
+--------------------------------------------------------------------------------
+24: Structure in chapter 'Origin of reads' optimised
+23: Resolution for the read summary figure adjusted
+22: Bugfix for RPKm calculation in STAR protein coding expression values
+21: hairpin_species quantification table is exported to the QUANTIFICATION folder
+20: hairpin quantification table is exported to the QUANTIFICATION folder
+19: mature_species quantification table is exported to the QUANTIFICATION folder
+18: mature quantification table is exported to the QUANTIFICATION folder
+17: tRNA quantification table is exported to the QUANTIFICATION folder
+16: Bugfix for mirna-species filtering (caused that not all miRNAs were quantified)
+15: Subparagraph added for novel clustering (missing linebreak added)
+14: stdout and stderr are now redirected to CUTADAPT log files
+13: STAR indices are not created in groups anymore
+12: Quantification is now also grouped
+11: Preprocessing is done in a single group now
+10: QC rules are combined into two groups, fastqc and multiqc 
+9: The alignment module has now only two groups, bowtie_alignment and star_alignment
+8: All rules in the decontamination module are now grouped together
+7: Bug in the concatenation file selection fixed
+6: Concatenating figure displays now only integers on the y-axis
+5: Changed input to a single samplesheet format allowing flexible file names
+4: Moved graphs into subparagraphs for better report readability
+3: tRNA quantification, clustering and PCA were added to the final report
+2: Colours in the report are adjusted to new colouring scheme
+1: tRNA reads are now sorted, indexed and the idxstats are calculated (effectively tRNAs are quantified now)
+
+Previous updates
+--------------------------------------------------------------------------------
+
 * 0.4: Release version
 * 0.3.29: Added the novel mirna visualisation and quantification as well as hclust and PCA parts for it
 REVERSED!!! * 0.3.28: pipeline and server config files are now extracted from system call

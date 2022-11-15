@@ -9,16 +9,52 @@ import yaml
 ##### Snakemake miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.4
-version = "0.4"
+##### Version: 0.5.24
+version = "0.5.24"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
 
+##### Sample sheets #####
+
 ##### load config and sample sheets #####
 
-rawsamples = pd.read_table(config["rawsamples"], header=None)[0].tolist()
-samples = pd.read_table(config["samples"], header=None)[0].tolist()
+samplesheet = pd.read_table(config["samplesheet-file"]).set_index("rawsample", drop=False)
+rawsamples=list(samplesheet.rawsample)
+samples=list(set(list(samplesheet.sample_name)))
+lane=list(samplesheet.lane)
+
+wildcard_constraints:
+    rawsamples="|".join(rawsamples),
+    samples="|".join(samples)
+    
+    ##### input function definitions ######
+
+def get_lane(wildcards):
+    output = samplesheet.loc[wildcards.rawsamples][["lane"]]
+    return output.tolist()
+
+def get_sample(wildcards):
+    output = samplesheet.loc[wildcards.rawsamples][["sample_name"]]
+    return output.tolist()
+
+def get_raw_input_fastqs(wildcards):
+    reads = samplesheet.loc[wildcards.rawsamples][["read1", "read2"]]
+    path = config["rawdata-folder"]
+    output = [path + x for x in reads]
+    return output
+
+def get_raw_input_read1(wildcards):
+    reads = samplesheet.loc[wildcards.rawsamples][["read1"]]
+    path = config["rawdata-folder"]
+    output = [path + "/" + x for x in reads]
+    return output
+
+def get_fastq_for_concatenating_read1(wildcards):
+    rs = samplesheet.loc[samplesheet["sample_name"] == wildcards.samples]["rawsample"]
+    path = config["project-folder"] + "/FASTQ/TRIMMED/"
+    output = [path + x for x in rs + "_trimmed.fastq.gz"]
+    return output   
 
 #### CONTINUE FROM HERE TO ADD PIPE CONFIG ONTO THE FILE
 #if '--configfile' in sys.argv:
@@ -147,6 +183,8 @@ rule all:
         expand("%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
+      # ALIGNMENTS
+        expand("%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam.bai" % (config["project-folder"]),samples=samples),
       # QUANTIFICATION
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
@@ -172,7 +210,10 @@ rule all:
 #        "%s/References/gtf_merged_star.gtf" % (config["project-folder"])
 ##      #  "%s/PRODIGAL/ars_unmapped/final.contigs.prodigal.gtf" % (config["project-folder"]),
 ##      #  "%s/kraken_ars_unmapped/ars_unmapped_taxonomy.report" % (config["project-folder"])
-#
+rule decontamination:
+    input:
+        expand("%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"]), samples=samples),
+        expand("%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"]), samples=samples)
 #### setup report #####
 #
 #report: "report/workflow.rst"

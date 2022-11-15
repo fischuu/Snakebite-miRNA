@@ -2,12 +2,10 @@
 project-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig
 pipeline-folder: /scratch/project_2001310/Pipeline-miRNA
 scratch-folder: $LOCAL_SCRATCH
+rawdata-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig/FASTQ/RAW
 pipeline-config: /scratch/project_2001746/TestProject/GBS-pipeline_config.yaml
 server-config: /users/fischerd/git/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml
-
-# absolute path to sample sheet (list of sample identifiers)
-rawsamples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/rawsamples
-samples: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samples
+samplesheet-file: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samplesheet.tsv
 
 tRNARef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/tRNA/bosTau8-tRNAs.fa
 phixRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/phix/phix174.fa

@@ -18,7 +18,8 @@ rule R_pipelineReport:
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_mature_species.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Mirbase/{samples}_star_hairpin.txt" % (config["project-folder"]), samples=samples),
-        "%s/Reference/novelLoci.bed" % (config["project-folder"])
+        "%s/Reference/novelLoci.bed" % (config["project-folder"]),
+        stats="%s/STATS/mirdb.stats" % (config["project-folder"])
     output:
         "%s/pipelineReport.html" % (config["project-folder"])
     log:
@@ -32,7 +33,8 @@ rule R_pipelineReport:
        pipeFolder=config["pipeline-folder"],
        pipeConfig=config["pipeline-config"],
        refGenome=config["reference"],
-       refAnnot=config["refAnnot"]
+       refAnnot=config["refAnnot"],
+       samplesheet=config["samplesheet-file"]
     threads: cluster["R_pipelineReport"]["cpus-per-task"]
     resources:
         time=cluster["R_pipelineReport"]["time"],
@@ -43,6 +45,7 @@ rule R_pipelineReport:
              refGenome.file <- '{params.refGenome}'; \
              refAnnot.file <- '{params.refAnnot}'; \
              pipelineConfig <- '{params.pipeConfig}'; \
+             samplesheet.file <- '{params.samplesheet}'; \
              snakemake <- TRUE; \
              rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
     """

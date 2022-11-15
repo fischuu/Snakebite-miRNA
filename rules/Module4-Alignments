@@ -23,7 +23,7 @@ rule bowtie_map_clear_reads_mature:
         "%s/logs/BOWTIE/bowtie_map_mature.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/BOWTIE/bowtie_map_mature.{samples}.benchmark.tsv" % (config["project-folder"])
-    group: "bowtie_map_clear_reads_mature"
+    group: "bowtie_alignments"
     threads: cluster["bowtie_map_clear_reads_mature"]["cpus-per-task"]
     resources:
         time=cluster["bowtie_map_clear_reads_mature"]["time"],
@@ -34,7 +34,7 @@ rule bowtie_map_clear_reads_mature:
         mkdir -p {params.fastqFolder}
 
         bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
-        
+
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
         touch {output.unmappedReads}
@@ -55,7 +55,7 @@ rule samtools_clear_reads_mature_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Mature/{samples}_mature.stats" % (config["project-folder"]),
-    group: "bowtie_map_clear_reads_mature"
+    group: "bowtie_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -92,7 +92,7 @@ rule bowtie_map_clear_reads_mature_species:
         "%s/logs/BOWTIE/bowtie_map_mature_species.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/BOWTIE/bowtie_map_mature_species.{samples}.benchmark.tsv" % (config["project-folder"])
-    group: "bowtie_map_clear_reads_mature_species"
+    group: "bowtie_alignments"
     threads: cluster["bowtie_map_clear_reads_mature"]["cpus-per-task"]
     resources:
         time=cluster["bowtie_map_clear_reads_mature"]["time"],
@@ -103,7 +103,7 @@ rule bowtie_map_clear_reads_mature_species:
         mkdir -p {params.fastqFolder}
 
         bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads}  | samtools view -bS | samtools sort - > {output.file} 2> {log};
-        
+
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
         touch {output.unmappedReads}
@@ -124,7 +124,7 @@ rule samtools_clear_reads_mature_species_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
-    group: "bowtie_map_clear_reads_mature_species"
+    group: "bowtie_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -161,7 +161,7 @@ rule bowtie_map_nonmature_reads_hairpin:
         "%s/logs/BOWTIE/bowtie_map_hairpin.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/BOWTIE/bowtie_map_hairpin.{samples}.benchmark.tsv" % (config["project-folder"])
-    group: "bowtie_map_nonmature_reads_hairpin"
+    group: "bowtie_alignments"
     threads: cluster["bowtie_map_nonmature_reads_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["bowtie_map_nonmature_reads_hairpin"]["time"],
@@ -193,7 +193,7 @@ rule samtools_nonmature_reads_hairpin_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.stats" % (config["project-folder"]),
-    group: "bowtie_map_nonmature_reads_hairpin"
+    group: "bowtie_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -230,7 +230,7 @@ rule bowtie_map_clear_reads_reference:
         "%s/logs/BOWTIE/bowtie_map_reference.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/BOWTIE/bowtie_map_reference.{samples}.benchmark.tsv" % (config["project-folder"])
-    group: "bowtie_map_clear_reads_reference"
+    group: "bowtie_alignments"
     threads: cluster["bowtie_map_clear_reads_reference"]["cpus-per-task"]
     resources:
         time=cluster["bowtie_map_clear_reads_reference"]["time"],
@@ -262,7 +262,7 @@ rule samtools_clear_reads_reference_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Reference/{samples}_reference.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Reference/{samples}_reference.stats" % (config["project-folder"]),
-    group: "bowtie_map_clear_reads_reference"
+    group: "bowtie_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -343,7 +343,7 @@ rule samtools_star_reads_mature_flagstats:
         fastqUnmapped="%s/FASTQ/Mature/unmapped_star/{samples}_mature_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_mature.{samples}.log" % (config["project-folder"])
-    group: "star_stats"
+    group: "star_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -429,7 +429,7 @@ rule samtools_star_reads_mature_species_flagstats:
         fastqUnmapped="%s/FASTQ/Mature_Species/unmapped_star/{samples}_mature_species_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_mature_species.{samples}.log" % (config["project-folder"])
-    group: "star_stats"
+    group: "star_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -515,7 +515,7 @@ rule samtools_star_reads_hairpin_flagstats:
         fastqUnmapped="%s/FASTQ/Hairpin/unmapped_star/{samples}_hairpin_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_hairpin.{samples}.log" % (config["project-folder"])
-    group: "star_stats"
+    group: "star_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -601,7 +601,7 @@ rule samtools_star_reads_hairpin_species_flagstats:
         fastqUnmapped="%s/FASTQ/Hairpin_Species/unmapped_star/{samples}_hairpin_species_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_hairpin_species.{samples}.log" % (config["project-folder"])
-    group: "star_stats"
+    group: "star_alignments"
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -711,7 +711,7 @@ rule samtools_star_reads_reference_flagstats:
         fastqUnmapped="%s/FASTQ/Reference/unmapped_star/{samples}_reference_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_reference.{samples}.log" % (config["project-folder"])
-    group: "star_stats"   
+    group: "star_alignments"   
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -748,6 +748,7 @@ rule bash_get_softclipped_fasta:
         l=config["params"]["extractSoftClipped"]["length"],
         pipe=config["pipeline-folder"]
     threads: cluster["__default__"]["cpus-per-task"]
+    group: "star_alignments"   
     resources:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]

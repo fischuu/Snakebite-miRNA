@@ -3,9 +3,9 @@ rule fastqc_quality_control_raw_data:
     Quality control of fastq files (FASTQC).
     """
     input:
-        "%s/FASTQ/RAW/{rawsamples}.fastq.gz" % (config["project-folder"])
+        get_raw_input_read1
     output:
-        "%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"])
+        "%s/QC/RAW/{rawsamples}_R1_001_fastqc.zip" % (config["project-folder"])
     log:
         "%s/logs/FASTQC/fastqc_raw.{rawsamples}.log" % (config["project-folder"])
     benchmark:
@@ -16,6 +16,7 @@ rule fastqc_quality_control_raw_data:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -27,7 +28,7 @@ rule multiqc_quality_control_raw_data:
     Quality control of fastq files in lr1(MULTIQC).
     """
     input:
-        expand("%s/QC/RAW/{rawsamples}_fastqc.zip" % (config["project-folder"]), rawsamples=rawsamples)
+        expand("%s/QC/RAW/{rawsamples}_R1_001_fastqc.zip" % (config["project-folder"]), rawsamples=rawsamples)
     output:
         folder=directory("%s/QC/RAW/multiqc/" % (config["project-folder"])),
         file="%s/QC/RAW/multiqc/multiqc_rawreport.html" % (config["project-folder"])
@@ -39,6 +40,7 @@ rule multiqc_quality_control_raw_data:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output.folder} --filename {output.file} {input} > {log} 2>&1;
@@ -49,19 +51,20 @@ rule fastqc_quality_control_trimmedData:
     Quality control of fastq files (FASTQC).
     """
     input:
-        "%s/FASTQ/TRIMMED/{raw_samples}_trimmed.fastq.gz" % (config["project-folder"])
+        "%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"])
     output:
-        "%s/QC/TRIMMED/{raw_samples}_trimmed_fastqc.zip" % (config["project-folder"])
+        "%s/QC/TRIMMED/{rawsamples}_trimmed_fastqc.zip" % (config["project-folder"])
     log:
-        "%s/logs/FASTQC/fastqc_trimmed.{raw_samples}.log" % (config["project-folder"])
+        "%s/logs/FASTQC/fastqc_trimmed.{rawsamples}.log" % (config["project-folder"])
     benchmark:
-        "%s/benchmark/FASTQC/fastqc_trimmed.{raw_samples}.benchmark.tsv" % (config["project-folder"])
+        "%s/benchmark/FASTQC/fastqc_trimmed.{rawsamples}.benchmark.tsv" % (config["project-folder"])
     params:
         outfolder="%s/QC/TRIMMED/" % (config["project-folder"])
     threads: cluster["fastqc"]["cpus-per-task"]
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -84,6 +87,7 @@ rule multiqc_quality_control_trimmedData:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output} {input} 2> {log};
@@ -105,6 +109,7 @@ rule fastqc_quality_control_concatenatedData:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     params:
         outfolder="%s/QC/CONCATENATED/" % (config["project-folder"])
     singularity: config["singularity"]["fastqc"]    
@@ -130,6 +135,7 @@ rule multiqc_quality_control_concatenatedData:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output} {input} 2> {log};
@@ -155,6 +161,7 @@ rule fastqc_quality_control_tRNA:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -181,6 +188,7 @@ rule multiqc_quality_control_tRNA:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
@@ -207,6 +215,7 @@ rule fastqc_quality_control_PhiX:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -233,6 +242,7 @@ rule multiqc_quality_control_PhiX:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
@@ -259,6 +269,7 @@ rule fastqc_quality_control_Mature:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -285,6 +296,7 @@ rule multiqc_quality_control_Mature:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
@@ -311,6 +323,7 @@ rule fastqc_quality_control_Hairpin:
     resources:
         time=cluster["fastqc"]["time"],
         mem=cluster["fastqc"]["mem-per-cpu"]
+    group: "fastqc"   
     singularity: config["singularity"]["fastqc"]
     shell:"""
         mkdir -p {params.outfolder};
@@ -337,6 +350,7 @@ rule multiqc_quality_control_Hairpin:
     resources:
         time=cluster["multiqc"]["time"],
         mem=cluster["multiqc"]["mem-per-cpu"]
+    group: "multiqc"
     singularity: config["singularity"]["multiqc"]
     shell:"""
         multiqc -f -o {output.unmapped} {input.unmapped} 2> {log};
