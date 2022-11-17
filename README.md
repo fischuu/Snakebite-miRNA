@@ -7,6 +7,9 @@ This is the Luke miRNA pipeline
  * FastQC
  * MultiQC
  * 
+# DAG
+The visual overview of the various rules of the pipeline
+![alt text](https://github.com/fischuu/Pipeline-miRNA/blob/main/workflow.png?raw=true)
 
 # To be implemented
  * Filter the mature.fa and hairpin.fa based on a given species identifier (e.g. bta)
