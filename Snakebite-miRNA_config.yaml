@@ -4,7 +4,7 @@ pipeline-folder: /scratch/project_2001310/Pipeline-miRNA
 scratch-folder: $LOCAL_SCRATCH
 rawdata-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig/FASTQ/RAW
 pipeline-config: /scratch/project_2001746/TestProject/GBS-pipeline_config.yaml
-server-config: /users/fischerd/git/Pipeline-miRNA/miRNA-pipeline_puhti-config.yaml
+server-config: /scratch/project_2001746/TestProject/miRNA-pipeline_puhti-config.yaml
 samplesheet-file: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samplesheet.tsv
 
 tRNARef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/tRNA/bosTau8-tRNAs.fa
