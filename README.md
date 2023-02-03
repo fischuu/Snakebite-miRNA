@@ -1,4 +1,4 @@
-# Pipeline-miRNA
+# Snakebite-miRNA
 This is the Luke miRNA pipeline
 
 # Included tools:
