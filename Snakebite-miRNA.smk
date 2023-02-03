@@ -6,7 +6,7 @@ import re
 import os, sys
 import yaml
 
-##### Snakemake miRNA pipeline #####
+##### Snakebite miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
 ##### Version: 0.6
