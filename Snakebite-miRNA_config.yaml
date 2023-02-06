@@ -23,6 +23,8 @@ params:
     mMulti: 5
     k: 1
     threads: 20
+  star:
+    limitBAMsortRAM: "1436064474"
   cutadapt:
     adapter: "AACTGTAGGCACCATCAAT"
     minLength: 16

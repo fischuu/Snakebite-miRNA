@@ -22,4 +22,5 @@ snakemake -s $pipelineFolder/Snakebite-miRNA.smk \
           --cluster-config $projectFolder/Snakebite-miRNA_server-config.yaml \
           --cluster "sbatch -t {resources.time} --account={cluster.account} --gres=nvme:{cluster.nvme} --job-name={cluster.job-name} --tasks-per-node={cluster.ntasks} --cpus-per-task={threads} --mem-per-cpu={resources.mem} -p {cluster.partition} -D {cluster.working-directory}" \
           --scheduler greedy \
+          --cluster-cancel scancel \
           $@ 

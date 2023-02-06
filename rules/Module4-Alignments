@@ -283,7 +283,8 @@ rule star_map_clear_reads_mature:
     params:
         index=config["matureSTARIndex"],
         tmpdirTop="%s/STAR_tmp/Mature" % (config["project-folder"]),
-        tmpdir="%s/STAR_tmp/Mature/{samples}" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Mature/{samples}" % (config["project-folder"]),
+        limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
     threads: cluster["star_map_clear_reads_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_map_clear_reads_mature"]["time"],
@@ -313,6 +314,7 @@ rule star_map_clear_reads_mature:
             --outSAMunmapped Within \
             --outMultimapperOrder Random \
             --runThreadN {threads} \
+            --limitBAMsortRAM {params.limitBAMsortRAM} \
             --outFileNamePrefix {wildcards.samples}_ 2> {log};
             
         cd {params.tmpdirTop};
@@ -367,7 +369,8 @@ rule star_map_clear_reads_mature_species:
     params:
         index=config["matureSpeciesSTARIndex"],
         tmpdirTop="%s/STAR_tmp/Mature_Species" % (config["project-folder"]),
-        tmpdir="%s/STAR_tmp/Mature_Species/{samples}" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Mature_Species/{samples}" % (config["project-folder"]),
+        limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
     threads: cluster["star_map_clear_reads_mature"]["cpus-per-task"]
     resources:
         time=cluster["star_map_clear_reads_mature"]["time"],
@@ -397,6 +400,7 @@ rule star_map_clear_reads_mature_species:
             --outSAMunmapped Within \
             --outMultimapperOrder Random \
             --runThreadN {threads} \
+            --limitBAMsortRAM {params.limitBAMsortRAM} \
             --outFileNamePrefix {wildcards.samples}_ 2> {log};
             
         cd {params.tmpdirTop};
@@ -451,7 +455,8 @@ rule star_map_clear_reads_hairpin:
     params:
         index=config["hairpinSTARIndex"],
         tmpdirTop="%s/STAR_tmp/Hairpin" % (config["project-folder"]),
-        tmpdir="%s/STAR_tmp/Hairpin/{samples}" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Hairpin/{samples}" % (config["project-folder"]),
+        limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
     threads: cluster["star_map_clear_reads_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_map_clear_reads_hairpin"]["time"],
@@ -481,6 +486,7 @@ rule star_map_clear_reads_hairpin:
             --outSAMunmapped Within \
             --outMultimapperOrder Random \
             --runThreadN {threads} \
+            --limitBAMsortRAM {params.limitBAMsortRAM} \
             --outFileNamePrefix {wildcards.samples}_ 2> {log};
             
         cd {params.tmpdirTop};
@@ -535,7 +541,8 @@ rule star_map_clear_reads_hairpin_species:
     params:
         index=config["hairpinSpeciesSTARIndex"],
         tmpdirTop="%s/STAR_tmp/HairpinSpecies" % (config["project-folder"]),
-        tmpdir="%s/STAR_tmp/HairpinSpecies/{samples}" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/HairpinSpecies/{samples}" % (config["project-folder"]),
+        limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
     threads: cluster["star_map_clear_reads_hairpin"]["cpus-per-task"]
     resources:
         time=cluster["star_map_clear_reads_hairpin"]["time"],
@@ -565,6 +572,7 @@ rule star_map_clear_reads_hairpin_species:
             --outSAMunmapped Within \
             --outMultimapperOrder Random \
             --runThreadN {threads} \
+            --limitBAMsortRAM {params.limitBAMsortRAM} \
             --outFileNamePrefix {wildcards.samples}_ 2> {log};
             
         cd {params.tmpdirTop};
@@ -620,7 +628,8 @@ rule star_map_unmapped_mirbase_reads_reference:
     params:
         index=config["referenceSTARIndex"],
         tmpdirTop="%s/STAR_tmp/Reference" % (config["project-folder"]),
-        tmpdir="%s/STAR_tmp/Reference/{samples}" % (config["project-folder"])
+        tmpdir="%s/STAR_tmp/Reference/{samples}" % (config["project-folder"]),
+        limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
     threads: cluster["star_map_clear_reads_reference"]["cpus-per-task"]
     resources:
         time=cluster["star_map_clear_reads_reference"]["time"],
@@ -650,6 +659,7 @@ rule star_map_unmapped_mirbase_reads_reference:
             --outSAMunmapped Within \
             --outMultimapperOrder Random \
             --runThreadN {threads} \
+            --limitBAMsortRAM {params.limitBAMsortRAM} \
             --outFileNamePrefix {wildcards.samples}_ 2> {log};
             
         cd {params.tmpdirTop};           
