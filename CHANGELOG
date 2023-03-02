@@ -6,6 +6,7 @@
 
 0.7.* UPDATES
 --------------------------------------------------------------------------------
+6: Case caught, when no novel genes are detected
 5: Critical bugfix in the seqkit output
 4: Path bug in final report fixed (after renaming not adjusted)
 3: Resource allocations for a missing rule added
