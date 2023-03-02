@@ -1207,8 +1207,19 @@ kable_styling(out_html, "striped", position = "left")
 ## Novel genes/miRNA
 
 ```{r}
+novelFile.info <- file.info(file.path(projFolder, "Reference", "novelLoci.bed"))
+
+if(novelFile.info$size==0){
+  novelDetected <- FALSE
+} else {
+  novelDetected <- TRUE
+}
 # Import the novel miRNA annotation
-novelMirna <- importBed(file.path(projFolder, "Reference", "novelLoci.bed"))
+if(novelDetected){
+  novelMirna <- importBed(file.path(projFolder, "Reference", "novelLoci.bed"))
+} else {
+  novelMirna <- data.frame(Chr=NA, Start=NA, Stop=NA)
+}
 ```
 
 ```{r}
@@ -1236,25 +1247,28 @@ kable_styling(out_html, "striped", position = "left")
 
 ```{r}
 # Import the quantification
-novel.quant <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[1],"_star_novelMirna_bedtools.txt"))))
-colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
-
-for(i in 2:length(samples)){
-  tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
-  colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
-  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
+if(novelDetected){
+  novel.quant <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[1],"_star_novelMirna_bedtools.txt"))))
+  colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
+  
+  for(i in 2:length(samples)){
+    tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
+    colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
+    novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
+  }
+  
+  novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
+  rownames(novel.rpkm) <- novel.quant$Name
+  
+  novel.miomapped <- apply(novel.rpkm,2,sum)/10^6
+  novel.kb <- as.numeric(gsub("bp","",sapply(strsplit(rownames(novel.rpkm),"_"),"[",2)))/1000
+  
+  novel.rpkm.kb <- novel.rpkm/novel.kb
+  
+  novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
+} else {
+  novel.quant <- 0
 }
-
-novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
-rownames(novel.rpkm) <- novel.quant$Name
-
-novel.miomapped <- apply(novel.rpkm,2,sum)/10^6
-novel.kb <- as.numeric(gsub("bp","",sapply(strsplit(rownames(novel.rpkm),"_"),"[",2)))/1000
-
-novel.rpkm.kb <- novel.rpkm/novel.kb
-
-novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
-
 ```
 
 ```{r}
@@ -1266,62 +1280,63 @@ write.table(novel.quant, file.path(projFolder, "QUANTIFICATION","novel_counts.ts
 An overall visualisation, how the novel loci are distributed across the provided genome
 
 ```{r}
-chr.sort <- function(x){
-  x.num <- suppressWarnings(as.numeric(x[which(!is.na(as.numeric(x)))]))
-  x.non_num <- suppressWarnings(x[which(is.na(as.numeric(x)))])
-  c(sort(x.num), sort(x.non_num))
+if(novelDetected){
+  chr.sort <- function(x){
+    x.num <- suppressWarnings(as.numeric(x[which(!is.na(as.numeric(x)))]))
+    x.non_num <- suppressWarnings(x[which(is.na(as.numeric(x)))])
+    c(sort(x.num), sort(x.non_num))
+  }
+  
+  genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
+  
+  chrs <- chr.sort(genome.info[,1])
+  chrs.length <- vector(mode="numeric", length=length(chrs))
+  names(chrs.length) <- chrs
+  
+  index <- 1
+  for(i in chrs){
+    chrs.length[index] <- genome.info$V2[genome.info==i]
+    index <- index + 1
+  }
+  chrs.length <- chrs.length / 10^6
+  plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
+  
+  axis(2, at=1:length(chrs), chrs, las=2)
+  
+  for(i in 1:length(chrs)){
+    lines(c(0, chrs.length[i]), c(i,i))
+  }
+  
+  for(i in 1:nrow(novelMirna)){
+    jitter <- 0.1
+    curChr <- which(novelMirna[i,1]==chrs)
+    points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
+  }
+  
+  
+  
+  novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
+  
+  for(i in 1:nrow(novelMirna.high)){
+    jitter <- 0.1
+    curChr <- which(novelMirna.high[i,1]==chrs)
+    points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
+  }
+
 }
-
-genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
-
-chrs <- chr.sort(genome.info[,1])
-chrs.length <- vector(mode="numeric", length=length(chrs))
-names(chrs.length) <- chrs
-
-index <- 1
-for(i in chrs){
-  chrs.length[index] <- genome.info$V2[genome.info==i]
-  index <- index + 1
-}
-chrs.length <- chrs.length / 10^6
-plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
-
-axis(2, at=1:length(chrs), chrs, las=2)
-
-for(i in 1:length(chrs)){
-  lines(c(0, chrs.length[i]), c(i,i))
-}
-
-for(i in 1:nrow(novelMirna)){
-  jitter <- 0.1
-  curChr <- which(novelMirna[i,1]==chrs)
-  points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
-}
-
-
-
-novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
-
-for(i in 1:nrow(novelMirna.high)){
-  jitter <- 0.1
-  curChr <- which(novelMirna.high[i,1]==chrs)
-  points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
-}
-
-
 ```
 
 ### Expression table
 
 ```{r}
- datatable(novel.quant)
+if(novelDetected) datatable(novel.quant)
 ```
 ### Annotation of the novel genes
 
 These are the sequences of the predicted genes
 
 ```{r}
-novel.fa <- importFA(file.path(projFolder, "Reference", "novelLoci.fa"))
+if(novelDetected) novel.fa <- importFA(file.path(projFolder, "Reference", "novelLoci.fa"))
 ```
 
 
@@ -1437,7 +1452,7 @@ for(i in 1:length(samples)){
 
 contamination_phixReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(samples[i], names(phix.mapped.reads))]
+  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(paste0("^", samples.adj[i]), names(phix.mapped.reads))]
 }
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
@@ -1578,10 +1593,12 @@ Here we use this object: novel.rpkm
 
 
 ```{r}
-cluster.data <- novel.rpkm
-star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.novel.rpkm.dist)           
-plot(hc)  
+if(novelDetected){
+  cluster.data <- novel.rpkm
+  star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.novel.rpkm.dist)           
+  plot(hc)  
+}
 ```
 
 ## Dimension reduction
@@ -1739,8 +1756,10 @@ for(i in 2:ncol(sampleInfo)){
 ### PCA - Novel predictions (STAR)
 
 ```{r performPCA_novel}
-expr.PCA <- prcomp(t(novel.rpkm))
-expr.PCA.novel <- expr.PCA
+if(novelDetected){
+  expr.PCA <- prcomp(t(novel.rpkm))
+  expr.PCA.novel <- expr.PCA
+}
 ```
 
 This is just the plain PCA, without using any colouring schemes.
@@ -1849,7 +1868,7 @@ for(i in 2:ncol(sampleInfo)){
 
 
 ### ICS - Mature_Species.fa (STAR)
-```{r, results="asis"}
+```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 FOBI <- ics(expr.PCA.mature_species$x[,1:cols])
 if(sampleInfo.avail){
