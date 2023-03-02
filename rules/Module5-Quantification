@@ -14,7 +14,7 @@ rule seqkit_quantify_mature_BOWTIE:
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
-        seqkit bam -C {input.bam} 2> {output}
+        seqkit bam -C {input.bam} > {output} 2>&1
     """
     
 rule seqkit_quantify_mature_species_BOWTIE:
@@ -33,7 +33,7 @@ rule seqkit_quantify_mature_species_BOWTIE:
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
-        seqkit bam -C {input.bam} 2> {output}
+        seqkit bam -C {input.bam} > {output} 2>&1
     """
     
 rule seqkit_quantify_hairpin_BOWTIE:
@@ -52,7 +52,7 @@ rule seqkit_quantify_hairpin_BOWTIE:
         mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
-        seqkit bam -C {input.bam} 2> {output}
+            seqkit bam -C {input.bam} > {output} 2>&1
     """
 
 rule featureCounts_quantify_reference_BOWTIE:
