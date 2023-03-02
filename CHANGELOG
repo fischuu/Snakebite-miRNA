@@ -6,6 +6,9 @@
 
 0.7.* UPDATES
 --------------------------------------------------------------------------------
+4: Path bug in final report fixed (after renaming not adjusted)
+3: Resource allocations for a missing rule added
+2: Some defaults server resource allocations adjusted
 1: New dev branch opened
 
 0.6.*: Stable release

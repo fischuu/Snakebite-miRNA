@@ -121,7 +121,7 @@ bowtie_map_nonmature_reads_hairpin:
 star_map_clear_reads_mature:
     job-name: star_map_clear_reads_mature
     time: 50
-    cpus-per-task: 2
+    cpus-per-task: 20
     mem-per-cpu: 2000
     
 star_map_clear_reads_hairpin:
@@ -134,9 +134,13 @@ star_map_clear_reads_reference:
     job-name: star_map_clear_reads_reference
     time: 100
     cpus-per-task: 5
-    mem-per-cpu: 4000
+    mem-per-cpu: 8000
 
-
+star_map_unmapped_mirbase_reads_reference:
+    job-name: star_map_unmapped_mirbase_reads_reference
+    time: 100
+    cpus-per-task: 5
+    mem-per-cpu: 8000
     
 # Module 5 - Quantification
 ################################################################################

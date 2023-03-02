@@ -630,10 +630,10 @@ rule star_map_unmapped_mirbase_reads_reference:
         tmpdirTop="%s/STAR_tmp/Reference" % (config["project-folder"]),
         tmpdir="%s/STAR_tmp/Reference/{samples}" % (config["project-folder"]),
         limitBAMsortRAM=config["params"]["star"]["limitBAMsortRAM"]
-    threads: cluster["star_map_clear_reads_reference"]["cpus-per-task"]
+    threads: cluster["star_map_unmapped_mirbase_reads_reference"]["cpus-per-task"]
     resources:
-        time=cluster["star_map_clear_reads_reference"]["time"],
-        mem=cluster["star_map_clear_reads_reference"]["mem-per-cpu"]
+        time=cluster["star_map_unmapped_mirbase_reads_reference"]["time"],
+        mem=cluster["star_map_unmapped_mirbase_reads_reference"]["mem-per-cpu"]
     singularity: config["singularity"]["star"]
     shell:"""
         mkdir -p {output.dir};
