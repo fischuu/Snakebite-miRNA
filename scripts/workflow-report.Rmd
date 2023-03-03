@@ -2108,13 +2108,13 @@ if(ncol(sampleInfo)>1){
 
 ### Locally linear embedding (LLE) - Mature_species.fa (STAR)
 PCA based data
-```{r}
+```{r, eval=FALSE}
 # LLE
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
-```{r, results="asis"}
+```{r, results="asis", eval=FALSE}
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
@@ -2128,7 +2128,10 @@ if(sampleInfo.avail){
   }
   }
 } else {
-   plot(lleres$Y[,1:5], pch=20)
+   if(ncol(lleres$Y)>4){
+     plot(lleres$Y[,1:5], pch=20)  
+   }
+   
 }
 ```
 
@@ -2163,13 +2166,13 @@ if(sampleInfo.avail){
 ### Locally linear embedding (LLE) - Reference-protein_coding (STAR)
 
 PCA based data
-```{r}
+```{r, eval=FALSE}
 # LLE
 cols <- min(ncol(expr.PCA.protein_coding$x),10)
 lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
-```{r, results="asis"}
+```{r, results="asis", eval=FALSE}
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){

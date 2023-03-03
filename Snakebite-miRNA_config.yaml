@@ -16,7 +16,7 @@ refAnnot: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bo
 starbase: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/STAR
 
 params:
-  protocol: "qiagen" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
+  protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
   species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
   bowtie:
     m: 1
@@ -26,7 +26,8 @@ params:
   star:
     limitBAMsortRAM: "1436064474"
   cutadapt:
-    adapter: "AACTGTAGGCACCATCAAT"
+    adapter5p: "AACTGTAGGCACCATCAAT"
+    adapter3p: "AGATCGGAAGAG"
     minLength: 16
     qualtrim: 30
     fiveprimetrim: 0
