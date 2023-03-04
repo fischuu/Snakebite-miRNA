@@ -110,7 +110,7 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 # Basic stats
 
 ```{r get pipeline version}
-pipeSMK <- readLines(file.path(pipelineFolder,"miRNA-pipeline.smk"))
+pipeSMK <- readLines(file.path(pipelineFolder,"Snakebite-miRNA.smk"))
 mirdbstat <- readLines(file.path(projFolder, "STATS", "mirdb.stats"))
 pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
 if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
@@ -1085,6 +1085,10 @@ fc.expr.stats <- merge(fc.in[[1]]$summary, fc.in[[2]]$summary, by="Status")
 for(i in 3:length(fc.files)){
   fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status")
 }
+
+colnames(fc.expr.stats) <- gsub("_reference_star.bam", "", sapply(strsplit(colnames(fc.expr.stats), "Reference."),"[",2))
+colnames(fc.expr.stats)[1] <- "Status"
+
 ```
 
 Now get the counts per biotype
@@ -1203,8 +1207,19 @@ kable_styling(out_html, "striped", position = "left")
 ## Novel genes/miRNA
 
 ```{r}
+novelFile.info <- file.info(file.path(projFolder, "Reference", "novelLoci.bed"))
+
+if(novelFile.info$size==0){
+  novelDetected <- FALSE
+} else {
+  novelDetected <- TRUE
+}
 # Import the novel miRNA annotation
-novelMirna <- importBed(file.path(projFolder, "Reference", "novelLoci.bed"))
+if(novelDetected){
+  novelMirna <- importBed(file.path(projFolder, "Reference", "novelLoci.bed"))
+} else {
+  novelMirna <- data.frame(Chr=NA, Start=NA, Stop=NA)
+}
 ```
 
 ```{r}
@@ -1232,25 +1247,28 @@ kable_styling(out_html, "striped", position = "left")
 
 ```{r}
 # Import the quantification
-novel.quant <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[1],"_star_novelMirna_bedtools.txt"))))
-colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
-
-for(i in 2:length(samples)){
-  tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
-  colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
-  novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
+if(novelDetected){
+  novel.quant <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[1],"_star_novelMirna_bedtools.txt"))))
+  colnames(novel.quant) <- c("Chr", "Start", "End", "Name", samples[1])
+  
+  for(i in 2:length(samples)){
+    tmp <- read.table(file.path(file.path(projFolder, "QUANTIFICATION", "STAR", "Novel_genes", paste0(samples[i],"_star_novelMirna_bedtools.txt"))))
+    colnames(tmp) <- c("Chr", "Start", "End", "Name", samples[i])
+    novel.quant <- merge(novel.quant, tmp[,c("Name", samples[i])], by="Name", all=TRUE)
+  }
+  
+  novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
+  rownames(novel.rpkm) <- novel.quant$Name
+  
+  novel.miomapped <- apply(novel.rpkm,2,sum)/10^6
+  novel.kb <- as.numeric(gsub("bp","",sapply(strsplit(rownames(novel.rpkm),"_"),"[",2)))/1000
+  
+  novel.rpkm.kb <- novel.rpkm/novel.kb
+  
+  novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
+} else {
+  novel.quant <- 0
 }
-
-novel.rpkm <- as.matrix(novel.quant[,-c(1:4)])
-rownames(novel.rpkm) <- novel.quant$Name
-
-novel.miomapped <- apply(novel.rpkm,2,sum)/10^6
-novel.kb <- as.numeric(gsub("bp","",sapply(strsplit(rownames(novel.rpkm),"_"),"[",2)))/1000
-
-novel.rpkm.kb <- novel.rpkm/novel.kb
-
-novel.rpkm <- t(t(novel.rpkm.kb)/novel.miomapped)
-
 ```
 
 ```{r}
@@ -1262,62 +1280,63 @@ write.table(novel.quant, file.path(projFolder, "QUANTIFICATION","novel_counts.ts
 An overall visualisation, how the novel loci are distributed across the provided genome
 
 ```{r}
-chr.sort <- function(x){
-  x.num <- suppressWarnings(as.numeric(x[which(!is.na(as.numeric(x)))]))
-  x.non_num <- suppressWarnings(x[which(is.na(as.numeric(x)))])
-  c(sort(x.num), sort(x.non_num))
+if(novelDetected){
+  chr.sort <- function(x){
+    x.num <- suppressWarnings(as.numeric(x[which(!is.na(as.numeric(x)))]))
+    x.non_num <- suppressWarnings(x[which(is.na(as.numeric(x)))])
+    c(sort(x.num), sort(x.non_num))
+  }
+  
+  genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
+  
+  chrs <- chr.sort(genome.info[,1])
+  chrs.length <- vector(mode="numeric", length=length(chrs))
+  names(chrs.length) <- chrs
+  
+  index <- 1
+  for(i in chrs){
+    chrs.length[index] <- genome.info$V2[genome.info==i]
+    index <- index + 1
+  }
+  chrs.length <- chrs.length / 10^6
+  plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
+  
+  axis(2, at=1:length(chrs), chrs, las=2)
+  
+  for(i in 1:length(chrs)){
+    lines(c(0, chrs.length[i]), c(i,i))
+  }
+  
+  for(i in 1:nrow(novelMirna)){
+    jitter <- 0.1
+    curChr <- which(novelMirna[i,1]==chrs)
+    points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
+  }
+  
+  
+  
+  novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
+  
+  for(i in 1:nrow(novelMirna.high)){
+    jitter <- 0.1
+    curChr <- which(novelMirna.high[i,1]==chrs)
+    points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
+  }
+
 }
-
-genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
-
-chrs <- chr.sort(genome.info[,1])
-chrs.length <- vector(mode="numeric", length=length(chrs))
-names(chrs.length) <- chrs
-
-index <- 1
-for(i in chrs){
-  chrs.length[index] <- genome.info$V2[genome.info==i]
-  index <- index + 1
-}
-chrs.length <- chrs.length / 10^6
-plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
-
-axis(2, at=1:length(chrs), chrs, las=2)
-
-for(i in 1:length(chrs)){
-  lines(c(0, chrs.length[i]), c(i,i))
-}
-
-for(i in 1:nrow(novelMirna)){
-  jitter <- 0.1
-  curChr <- which(novelMirna[i,1]==chrs)
-  points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
-}
-
-
-
-novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
-
-for(i in 1:nrow(novelMirna.high)){
-  jitter <- 0.1
-  curChr <- which(novelMirna.high[i,1]==chrs)
-  points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
-}
-
-
 ```
 
 ### Expression table
 
 ```{r}
- datatable(novel.quant)
+if(novelDetected) datatable(novel.quant)
 ```
 ### Annotation of the novel genes
 
 These are the sequences of the predicted genes
 
 ```{r}
-novel.fa <- importFA(file.path(projFolder, "Reference", "novelLoci.fa"))
+if(novelDetected) novel.fa <- importFA(file.path(projFolder, "Reference", "novelLoci.fa"))
 ```
 
 
@@ -1387,59 +1406,59 @@ samples.adj <- gsub("-",".", samples)
 
 rawReads_perSample <- c()
 for(i in 1:length(samples)){
-  rawReads_perSample[i] <- sum(raw.reads[grep(samples[i], names(raw.reads))])
+  rawReads_perSample[i] <- sum(raw.reads[grep(paste0("^", samples[i]), names(raw.reads))])
 }
 names(rawReads_perSample) <- samples
 
 qcRemovedReads_perSample <- c()
 for(i in 1:length(samples)){
-  qcRemovedReads_perSample[i] <- rawReads_perSample[grep(samples[i], names(rawReads_perSample))]-sum(trimmed.reads[grep(samples[i], names(trimmed.reads))])
+  qcRemovedReads_perSample[i] <- rawReads_perSample[grep(paste0("^",samples[i]), names(rawReads_perSample))]-sum(trimmed.reads[grep(paste0("^", samples[i]), names(trimmed.reads))])
 }
 
 refAssignedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refAssignedReads_perSample[i] <- fc.expr.stats[1,grep(samples.adj[1], colnames(fc.expr.stats))]
+  refAssignedReads_perSample[i] <- fc.expr.stats[1,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
 refUnassigned_AmbiguityReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,grep(samples.adj[i], colnames(fc.expr.stats))]
+  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
 refUnassigned_NoFeatureReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,grep(samples.adj[i], colnames(fc.expr.stats))]
+  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
 refUnassigned_UnmappedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(samples.adj[i], colnames(fc.expr.stats))]
+  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
 mirbaseAssigned_MatureReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,grep(samples[i], colnames(star.mature_species))])
+  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
 }
 
 mirbaseAssigned_HairpinReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(samples[i], colnames(star.hairpin_species))])
+  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
 }
 
 contamination_trnaReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_trnaReads_perSample[i] <- trna.mapped.reads[grep(samples[i], names(trna.mapped.reads))]
+  contamination_trnaReads_perSample[i] <- trna.mapped.reads[grep(paste0("^", samples.adj[i]), names(trna.mapped.reads))]
 }
 
 contamination_phixReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(samples[i], names(phix.mapped.reads))]
+  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(paste0("^", samples.adj[i]), names(phix.mapped.reads))]
 }
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
 
 for(i in 1:length(samples)){
-  reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(samples[i], colnames(counts_per_biotype))]
+  reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(paste0("^",samples[i],"_"), colnames(counts_per_biotype))]
 }
 
 
@@ -1574,10 +1593,12 @@ Here we use this object: novel.rpkm
 
 
 ```{r}
-cluster.data <- novel.rpkm
-star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.novel.rpkm.dist)           
-plot(hc)  
+if(novelDetected){
+  cluster.data <- novel.rpkm
+  star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.novel.rpkm.dist)           
+  plot(hc)  
+}
 ```
 
 ## Dimension reduction
@@ -1735,8 +1756,10 @@ for(i in 2:ncol(sampleInfo)){
 ### PCA - Novel predictions (STAR)
 
 ```{r performPCA_novel}
-expr.PCA <- prcomp(t(novel.rpkm))
-expr.PCA.novel <- expr.PCA
+if(novelDetected){
+  expr.PCA <- prcomp(t(novel.rpkm))
+  expr.PCA.novel <- expr.PCA
+}
 ```
 
 This is just the plain PCA, without using any colouring schemes.
@@ -1845,7 +1868,7 @@ for(i in 2:ncol(sampleInfo)){
 
 
 ### ICS - Mature_Species.fa (STAR)
-```{r, results="asis"}
+```{r, eval=FALSE, results="asis"}
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 FOBI <- ics(expr.PCA.mature_species$x[,1:cols])
 if(sampleInfo.avail){
@@ -2085,13 +2108,13 @@ if(ncol(sampleInfo)>1){
 
 ### Locally linear embedding (LLE) - Mature_species.fa (STAR)
 PCA based data
-```{r}
+```{r, eval=FALSE}
 # LLE
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 lleres <- lle(expr.PCA.mature_species$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
-```{r, results="asis"}
+```{r, results="asis", eval=FALSE}
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
@@ -2105,7 +2128,10 @@ if(sampleInfo.avail){
   }
   }
 } else {
-   plot(lleres$Y[,1:5], pch=20)
+   if(ncol(lleres$Y)>4){
+     plot(lleres$Y[,1:5], pch=20)  
+   }
+   
 }
 ```
 
@@ -2140,13 +2166,13 @@ if(sampleInfo.avail){
 ### Locally linear embedding (LLE) - Reference-protein_coding (STAR)
 
 PCA based data
-```{r}
+```{r, eval=FALSE}
 # LLE
 cols <- min(ncol(expr.PCA.protein_coding$x),10)
 lleres <- lle(expr.PCA.protein_coding$x[,1:cols], m=7, k=17, v=0.99)
 ```
 
-```{r, results="asis"}
+```{r, results="asis", eval=FALSE}
 if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){

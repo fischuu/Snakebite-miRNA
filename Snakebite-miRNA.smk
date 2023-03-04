@@ -9,8 +9,8 @@ import yaml
 ##### Snakebite miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.6.2
-version = "0.6.2"
+##### Version: 0.7.8
+version = "0.7.8"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -105,19 +105,20 @@ config["singularity"]["stringtie"] = "docker://fischuu/stringtie:2.2.1-0.1"
 
 ##### Apply pre-configuration settings #####
 if config["params"]["protocol"] == 'illumina':
-    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGG"
     config["params"]["cutadapt"]["fiveprimetrim"] = 0 
     config["params"]["cutadapt"]["threeprimetrim"] = 0
 elif config["params"]["protocol"] == 'nextflex':
-    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGG"
     config["params"]["cutadapt"]["fiveprimetrim"] = 4
     config["params"]["cutadapt"]["threeprimetrim"] = 4
 elif config["params"]["protocol"] == 'qiagen':
-    config["params"]["cutadapt"]["adapter"] = "AACTGTAGGCACCATCAAT"
+    config["params"]["cutadapt"]["adapter3p"] = "AACTGTAGGCACCATCAAT"
+    config["params"]["cutadapt"]["adapter5p"] = "GTTCAGAGTTCTACAGTCCGACGATC"
     config["params"]["cutadapt"]["fiveprimetrim"] = 0
     config["params"]["cutadapt"]["threeprimetrim"] = 0
 elif config["params"]["protocol"] == 'lexogen':
-    config["params"]["cutadapt"]["adapter"] = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC"
+    config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC"
     config["params"]["cutadapt"]["fiveprimetrim"] = 0
     config["params"]["cutadapt"]["threeprimetrim"] = 0
     
@@ -142,7 +143,8 @@ print("##### protocol        : "+config["params"]["protocol"])
 print("#####")
 print("##### Trimming configuration")
 print("##### --------------------------------")
-print("##### adapter         : "+ config["params"]["cutadapt"]["adapter"])
+print("##### 5'-adapter      : "+ config["params"]["cutadapt"]["adapter5p"])
+print("##### 3'-adapter      : "+ config["params"]["cutadapt"]["adapter3p"])
 print("##### 5'-trim bases   : "+ str(config["params"]["cutadapt"]["fiveprimetrim"]))
 print("##### 3'-trim bases   : "+ str(config["params"]["cutadapt"]["threeprimetrim"]))
 print("#####")

@@ -18,7 +18,9 @@ rule cutadapt_trimming:
     benchmark:
         "%s/benchmark/CUTADAPT/cutadapt.{rawsamples}.benchmark.tsv" % (config["project-folder"])
     params:
-        adapter=config["params"]["cutadapt"]["adapter"],
+        fastq5pAdapter="%s/FASTQ/TRIMMED/{rawsamples}_trimmed_only5pAdapter.fastq.gz" % (config["project-folder"]),    
+        adapter5p=config["params"]["cutadapt"]["adapter5p"],
+        adapter3p=config["params"]["cutadapt"]["adapter3p"],
         minLength=config["params"]["cutadapt"]["minLength"],
         qualtrim=config["params"]["cutadapt"]["qualtrim"],
         fiveprimetrim=config["params"]["cutadapt"]["fiveprimetrim"],
@@ -29,10 +31,21 @@ rule cutadapt_trimming:
         mem=cluster["cutadapt_trimming"]["mem-per-cpu"]
     singularity: config["singularity"]["cutadapt"]
     shell:"""
-      cutadapt -a {params.adapter} \
-               -j {threads} \
-               -o {output.fastqAdapter} {input} &>> {log};
-               
+      if({params.adapter5p}="")
+      then
+          cutadapt -g {params.adapter5p} \
+                   -j {threads} \
+                   -o {params.fastq5pAdapter} {input} &>> {log};
+    
+          cutadapt -a {params.adapter3p} \
+                   -j {threads} \
+                   -o {output.fastqAdapter} {params.fastq5pAdapter} &>> {log};
+      else
+          cutadapt -a {params.adapter3p} \
+                   -j {threads} \
+                   -o {output.fastqAdapter} {input} &>> {log};
+      fi      
+
       cutadapt --minimum-length {params.minLength} \
                -j {threads} -q {params.qualtrim} --trim-n \
                --cut {params.fiveprimetrim} --cut -{params.threeprimetrim} \

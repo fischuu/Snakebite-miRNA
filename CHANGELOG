@@ -4,6 +4,17 @@
 #####                                                                      #####
 ################################################################################
 
+0.7.* UPDATES
+--------------------------------------------------------------------------------
+8: Pipeline allows now separate 3' and 5' adapter trimming
+7: Critical bugfix, seqkit rules reported suddenly non-zero exit errors
+6: Case caught, when no novel genes are detected
+5: Critical bugfix in the seqkit output
+4: Path bug in final report fixed (after renaming not adjusted)
+3: Resource allocations for a missing rule added
+2: Some defaults server resource allocations adjusted
+1: New dev branch opened
+
 0.6.*: Stable release
 --------------------------------------------------------------------------------
 1: Grous removed as they have caused some problems to users
