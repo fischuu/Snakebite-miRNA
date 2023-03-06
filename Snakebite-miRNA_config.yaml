@@ -26,8 +26,8 @@ params:
   star:
     limitBAMsortRAM: "1436064474"
   cutadapt:
-    adapter5p: "AACTGTAGGCACCATCAAT"
-    adapter3p: "AGATCGGAAGAG"
+    adapter5p: ""
+    adapter3p: ""
     minLength: 16
     qualtrim: 30
     fiveprimetrim: 0
