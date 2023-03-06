@@ -106,10 +106,12 @@ config["singularity"]["stringtie"] = "docker://fischuu/stringtie:2.2.1-0.1"
 ##### Apply pre-configuration settings #####
 if config["params"]["protocol"] == 'illumina':
     config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["adapter5p"] = ""
     config["params"]["cutadapt"]["fiveprimetrim"] = 0 
     config["params"]["cutadapt"]["threeprimetrim"] = 0
 elif config["params"]["protocol"] == 'nextflex':
     config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGG"
+    config["params"]["cutadapt"]["adapter5p"] = ""
     config["params"]["cutadapt"]["fiveprimetrim"] = 4
     config["params"]["cutadapt"]["threeprimetrim"] = 4
 elif config["params"]["protocol"] == 'qiagen':
@@ -119,6 +121,7 @@ elif config["params"]["protocol"] == 'qiagen':
     config["params"]["cutadapt"]["threeprimetrim"] = 0
 elif config["params"]["protocol"] == 'lexogen':
     config["params"]["cutadapt"]["adapter3p"] = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCAC"
+    config["params"]["cutadapt"]["adapter5p"] = ""
     config["params"]["cutadapt"]["fiveprimetrim"] = 0
     config["params"]["cutadapt"]["threeprimetrim"] = 0
     
