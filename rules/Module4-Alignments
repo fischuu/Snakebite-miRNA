@@ -54,6 +54,7 @@ rule samtools_clear_reads_mature_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Mature/{samples}_mature.stats" % (config["project-folder"]),
+        bai="%s/BAM/BOWTIE/Mature/{samples}_mature.bam.bai" % (config["project-folder"])
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -121,6 +122,7 @@ rule samtools_clear_reads_mature_species_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
+        bai="%s/BAM/BOWTIE/Mature_Species/{samples}_mature_species.bam.bai" % (config["project-folder"])
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
@@ -188,6 +190,7 @@ rule samtools_nonmature_reads_hairpin_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.stats" % (config["project-folder"]),
+        bai="%s/BAM/BOWTIE/Hairpin/{samples}_hairpin.bam.bai" % (config["project-folder"])
     threads: cluster["__default__"]["cpus-per-task"]
     resources:
         time=cluster["__default__"]["time"],
