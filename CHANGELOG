@@ -6,6 +6,7 @@
 
 0.9.* UPDATES
 --------------------------------------------------------------------------------
+2: Added the option not to use any adapter trimming
 1: New dev-branch opened
 
 0.8.* Stable release
