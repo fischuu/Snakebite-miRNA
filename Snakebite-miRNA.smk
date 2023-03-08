@@ -9,8 +9,8 @@ import yaml
 ##### Snakebite miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.8.1
-version = "0.8.1"
+##### Version: 0.9.2
+version = "0.9.2"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -219,6 +219,11 @@ rule decontamination:
     input:
         expand("%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"]), samples=samples)
+        
+rule preprocessing:
+    input:
+        expand("%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"]), rawsamples=rawsamples)
+        
 #### setup report #####
 #
 #report: "report/workflow.rst"

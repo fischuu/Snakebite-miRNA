@@ -4,6 +4,12 @@
 #####                                                                      #####
 ################################################################################
 
+0.9.* UPDATES
+--------------------------------------------------------------------------------
+3: Critical bugfix - Separate 3' and 5' adapter trimming was doing wrong
+2: Added the option not to use any adapter trimming
+1: New dev-branch opened
+
 0.8.* Stable release
 --------------------------------------------------------------------------------
 1: Updates 0.7.9 was not merged into the release version, fixed

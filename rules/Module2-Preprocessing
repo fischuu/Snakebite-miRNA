@@ -31,19 +31,32 @@ rule cutadapt_trimming:
         mem=cluster["cutadapt_trimming"]["mem-per-cpu"]
     singularity: config["singularity"]["cutadapt"]
     shell:"""
-      if({params.adapter5p}="")
+      if [ "{params.adapter5p}" = "" ];
       then
+          if [ "{params.adapter3p}" = "" ];
+          then
+             echo "NOTE!!! No 3' or 5' adapter trimming performed!!!"
+             cp {input} {output.fastqAdapter}
+          else
+              echo "NOTE!!! No 5' adapter trimming performed!!!"
+              cutadapt -a {params.adapter3p} \
+                       -j {threads} \
+                       -o {output.fastqAdapter} {input} &>> {log};
+          fi
+      else
           cutadapt -g {params.adapter5p} \
                    -j {threads} \
                    -o {params.fastq5pAdapter} {input} &>> {log};
-    
-          cutadapt -a {params.adapter3p} \
-                   -j {threads} \
-                   -o {output.fastqAdapter} {params.fastq5pAdapter} &>> {log};
-      else
-          cutadapt -a {params.adapter3p} \
-                   -j {threads} \
-                   -o {output.fastqAdapter} {input} &>> {log};
+                   
+          if [ "{params.adapter3p}" = "" ];
+          then
+              echo "WARNING!!! No 3' adapter trimming performed!!!"
+              cp {params.fastq5pAdapter} {output.fastqAdapter}
+          else 
+              cutadapt -a {params.adapter3p} \
+                       -j {threads} \
+                       -o {output.fastqAdapter} {params.fastq5pAdapter} &>> {log};
+          fi
       fi      
 
       cutadapt --minimum-length {params.minLength} \
