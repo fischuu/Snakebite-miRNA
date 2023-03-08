@@ -219,6 +219,11 @@ rule decontamination:
     input:
         expand("%s/FASTQ/tRNA/mapped/{samples}_tRNA_mapped.fastq" % (config["project-folder"]), samples=samples),
         expand("%s/FASTQ/PhiX/mapped/{samples}_PhiX_mapped.fastq" % (config["project-folder"]), samples=samples)
+        
+rule preprocessing:
+    input:
+        expand("%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"]), rawsamples=rawsamples)
+        
 #### setup report #####
 #
 #report: "report/workflow.rst"
