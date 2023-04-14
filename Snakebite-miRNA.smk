@@ -76,6 +76,43 @@ if os.path.exists(config["server-config"]):
         cluster = yaml.load(yml, Loader=yaml.FullLoader)
 
 ##### Complete the input configuration
+if config["project-folder"][-1] == '/':
+   config["project-folder"]=config["project-folder"][:-1]
+   
+if(config["rawdata-folder"][0]!='/'):
+    config["rawdata-folder"] = config["project-folder"] + '/' + config["rawdata-folder"]
+
+if(config["pipeline-config"][0]!='/'):
+    config["pipeline-config"] = config["project-folder"] + '/' + config["pipeline-config"]
+
+if(config["samplesheet-file"][0]!='/'):
+    config["samplesheet-file"] = config["project-folder"] + '/' + config["samplesheet-file"]
+
+if(config["sampleInfo-file"][0]!='/'):
+    config["sampleInfo-file"] = config["project-folder"] + '/' + config["sampleInfo-file"]
+
+if(config["tRNARef"][0]!='/'):
+    config["tRNARef"] = config["project-folder"] + '/' + config["tRNARef"]
+
+if(config["phixRef"][0]!='/'):
+    config["phixRef"] = config["project-folder"] + '/' + config["phixRef"]
+
+if(config["matureRef"][0]!='/'):
+    config["matureRef"] = config["project-folder"] + '/' + config["matureRef"]
+
+if(config["hairpinRef"][0]!='/'):
+    config["hairpinRef"] = config["project-folder"] + '/' + config["hairpinRef"]
+
+if(config["reference"][0]!='/'):
+    config["reference"] = config["project-folder"] + '/' + config["reference"]
+
+if(config["refAnnot"][0]!='/'):
+    config["refAnnot"] = config["project-folder"] + '/' + config["refAnnot"]
+
+if(config["starbase"][0]!='/'):
+    config["starbase"] = config["project-folder"] + '/' + config["starbase"]
+
+
 config["tRNAIndex"] = config["tRNARef"]
 config["phixIndex"] = config["phixRef"]
 config["matureIndex"] =  "%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
@@ -137,12 +174,14 @@ print("##### Version: "+version)
 print("#####")
 print("##### Pipeline configuration")
 print("##### --------------------------------")
-print("##### project-folder  : "+config["project-folder"])
-print("##### pipeline-folder : "+config["pipeline-folder"])
-print("##### server-config   : "+config["server-config"])
-print("##### pipeline-config : "+config["pipeline-config"])
-print("##### species-id      : "+config["params"]["species-id"])
-print("##### protocol        : "+config["params"]["protocol"])
+print("##### project-folder   : "+config["project-folder"])
+print("##### pipeline-folder  : "+config["pipeline-folder"])
+print("##### server-config    : "+config["server-config"])
+print("##### pipeline-config  : "+config["pipeline-config"])
+print("##### species-id       : "+config["params"]["species-id"])
+print("##### protocol         : "+config["params"]["protocol"])
+print("##### Samplesheet file : "+config["samplesheet-file"])
+print("##### Sample-Info file : "+config["sampleInfo-file"])
 print("#####")
 print("##### Trimming configuration")
 print("##### --------------------------------")
@@ -223,6 +262,10 @@ rule decontamination:
 rule preprocessing:
     input:
         expand("%s/FASTQ/TRIMMED/{rawsamples}_trimmed.fastq.gz" % (config["project-folder"]), rawsamples=rawsamples)
+
+rule reporting:
+    input:
+        "%s/pipelineReport.html" % (config["project-folder"])
         
 #### setup report #####
 #

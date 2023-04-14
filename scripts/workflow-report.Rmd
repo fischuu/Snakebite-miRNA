@@ -113,14 +113,16 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 pipeSMK <- readLines(file.path(pipelineFolder,"Snakebite-miRNA.smk"))
 mirdbstat <- readLines(file.path(projFolder, "STATS", "mirdb.stats"))
 pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
-if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
-    sampleInfo <- read.table(file.path(projFolder, "sampleInfo.txt"), header=TRUE)
-    sampleInfo.avail <- TRUE
-} else {
-  sampleInfo <- data.frame(var=0, None=0)
-    sampleInfo.avail <- FALSE
-}
 
+sampleInfo <- data.frame(var=0, None=0)
+sampleInfo.avail <- FALSE
+
+if(sampleinfo.file!=""){
+    if(file.exists(sampleinfo.file)){
+        sampleInfo <- read.table(sampleinfo.file, sep="\t", header=TRUE)
+        sampleInfo.avail <- TRUE  
+  }
+}
 ```
 
 ## Runtime stats
@@ -1061,6 +1063,9 @@ colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 #scale.factors <- calcNormFactors(fc.expr.star[,-1],lib.size=conc.reads, method = "TMM")
 #fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
 #rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
+
+# Export the matrix to QUANTIFICATION folder
+  write.table(fc.expr.star, file.path(projFolder, "QUANTIFICATION","reference_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 # Do the RPKM normalisation
 alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))

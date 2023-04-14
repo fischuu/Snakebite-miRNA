@@ -37,7 +37,8 @@ rule getJoinedLoci:
         merged="%s/MPILEUP/mpileup_reference/merged.bed" % (config["project-folder"]),
         joined="%s/MPILEUP/mpileup_reference/joinedLoci.bed" % (config["project-folder"])
     params:
-        pipe=config["pipeline-folder"]
+        pipe=config["pipeline-folder"],
+        cover=config["params"]["novel"]["minCover"]
     singularity: config["singularity"]["bedtools"]
     group: "Novel_mirna"
     threads: cluster["__default__"]["cpus-per-task"]
@@ -46,7 +47,7 @@ rule getJoinedLoci:
         mem=cluster["__default__"]["mem-per-cpu"]
     shell:"""
          multiIntersectBed -i {input} > {output.merged}
-         {params.pipe}/scripts/getJoinedLoci.sh {output.merged} 10 | bedtools sort | bedtools merge | awk "{{if(\$3-\$2 > 15) print}}" > {output.joined}
+         {params.pipe}/scripts/getJoinedLoci.sh {output.merged} {params.cover} | bedtools sort | bedtools merge | awk "{{if(\$3-\$2 > 15) print}}" > {output.joined}
     """
 
 

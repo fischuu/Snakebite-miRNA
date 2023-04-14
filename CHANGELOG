@@ -6,6 +6,10 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+5: sampleInfo-file option added
+4: Config allows now relatives PATHs and adjustes them tot eh current project folder
+3: Parameter for minimum coverage for novel miRNA detection added
+2: Quantification table for reference counts added
 1: New dev branch, identical to 0.10
 
 0.10 Stable release
