@@ -121,6 +121,7 @@ if(sampleinfo.file!=""){
     if(file.exists(sampleinfo.file)){
         sampleInfo <- read.table(sampleinfo.file, sep="\t", header=TRUE)
         sampleInfo.avail <- TRUE  
+        colnames(sampleInfo)[1] <- "sampleID"
   }
 }
 ```
