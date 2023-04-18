@@ -1,6 +1,13 @@
 # Snakebite-miRNA
 This is the Luke miRNA pipeline
 
+# Installation
+TO install, run likt this
+
+```
+git clone git@github.com:fischuu/Snakebite-miRNA.git
+```
+
 # Included tools:
  * Bowtie 
  * cutadapt
