@@ -6,6 +6,9 @@ TO install, run likt this
 
 ```
 git clone git@github.com:fischuu/Snakebite-miRNA.git
+
+git clone https://github.com/fischuu/Snakebite-miRNA.git
+
 ```
 
 # Included tools:
