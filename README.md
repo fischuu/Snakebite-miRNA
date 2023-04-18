@@ -2,11 +2,15 @@
 This is the Luke miRNA pipeline
 
 # Installation
-TO install, run likt this
+To install, run likt this (using ssh). Please keep in mind, you need to have a registered ssh key at github for this clone to work. If you do not have such a key, pleae proceed via https cloning
 
 ```
 git clone git@github.com:fischuu/Snakebite-miRNA.git
+```
 
+Or via HTTPS
+
+```
 git clone https://github.com/fischuu/Snakebite-miRNA.git
 
 ```
