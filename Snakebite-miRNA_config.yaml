@@ -41,3 +41,6 @@ params:
     tpm: 0
   novel:
     minCover: 10
+  de:
+    minAbundance: 10
+    FDR: 0.1

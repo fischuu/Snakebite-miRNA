@@ -24,7 +24,7 @@ library("viridis")  # Needed for the colouring of the plots
 library("rjson")    # Needed for multiqc dgsb etail data
 library("DT")
 library("kableExtra")
-#library("edgeR")
+library("edgeR")
 library("ICS")
 library("tsne")
 library("lle")
@@ -116,12 +116,14 @@ pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)
 
 sampleInfo <- data.frame(var=0, None=0)
 sampleInfo.avail <- FALSE
+do.DEtesting <- FALSE
 
 if(sampleinfo.file!=""){
     if(file.exists(sampleinfo.file)){
         sampleInfo <- read.table(sampleinfo.file, sep="\t", header=TRUE)
         sampleInfo.avail <- TRUE  
         colnames(sampleInfo)[1] <- "sampleID"
+        if(is.element("DEgroup", colnames(sampleInfo))) do.DEtesting <- TRUE 
   }
 }
 ```
@@ -141,6 +143,7 @@ out <- data.frame(c("Project folder",
                     "Used annotation file",
                     "No. of grouping information",
                     "Grouping names",
+                    "Found DE groups",
                     "Pipeline version"),
                   c(projFolder,
                     length(rawsamples),
@@ -149,6 +152,7 @@ out <- data.frame(c("Project folder",
                     basename(refAnnot.file),
                     ncol(sampleInfo)-1,
                     paste(colnames(sampleInfo)[-1],collapse=", "),
+                    do.DEtesting,
                     pipeVersion))
 
 out_html <- knitr::kable(out, col.names = NULL, "html")
@@ -2219,6 +2223,149 @@ if(sampleInfo.avail){
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)
+}
+```
+
+## Differentially gene expression
+In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we will perform pairwise group comparisons here.
+
+```{r import the data}
+# Hairpin
+  hp <- read.table(file.path(projFolder, "QUANTIFICATION", "mirbase_hairpin_species_star-counts.tsv"), header=TRUE)
+  colnames(hp)[1] <- "gene"
+  
+# mature
+  mature <- read.table(file.path(projFolder, "QUANTIFICATION", "mirbase_mature_species_star-counts.tsv"), header=TRUE)
+  colnames(mature)[1] <- "gene"
+  
+# tRNA
+  trna <- read.table(file.path(projFolder, "QUANTIFICATION", "trna_counts.tsv"), header=TRUE)
+  colnames(trna)[1] <- "gene"
+  
+# reference
+  ref <- read.table(file.path(projFolder, "QUANTIFICATION", "reference_counts.tsv"), header=TRUE)
+  colnames(ref)[1] <- "gene"
+  
+# novel
+  novel <- read.table(file.path(projFolder, "QUANTIFICATION", "novel_counts.tsv"), header=TRUE)
+  colnames(novel)[1] <- "gene"
+```
+
+```{r merge the data together}    
+# Now merge the count data
+  allCounts <- rbind(hp,
+                     mature,
+                     trna[,-2],
+                     ref,
+                     novel[,-c(2,3,4)])
+
+  rownames(allCounts) <- allCounts[,1]
+  allCounts <- allCounts[,-1]
+```
+
+```{r remove low abundances}
+# Remove low abundance rows
+  geneCounts <- apply(allCounts, 1, sum)
+  allCounts.filtered <- allCounts[geneCounts>abundanceRemove, ]
+```
+
+```{r calculate normalisation factors}
+# calculate normalization factors
+  allData <- DGEList(counts=allCounts)
+  allData <- calcNormFactors(allData)
+```
+
+```{r get normcounts object}
+# normalize counts using the normalization factors
+  normCounts <- cpm(allData, normalized.lib.sizes=TRUE)
+  write.table(normCounts, file.path(projFolder, "RESULTS", "normalisedCounts.tsv"), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+```
+
+```{r create group object}
+if(do.DEtesting){
+  group <- rep("UNKNOWN", ncol(allCounts))
+  realColnames <- strsplit(readLines(file.path(projFolder, "QUANTIFICATION", "mirbase_hairpin_species_star-counts.tsv"), n=1), "\t")[[1]][-1]
+
+  foundGroups <- unique(sampleInfo$DEgroup)
+  
+  for(i in 1:length(foundGroups)){
+    groupSamples <- sampleInfo$sampleID[sampleInfo$DEgroup==foundGroups[i]]
+    
+    group[which(is.element(realColnames, groupSamples))] <- paste0("Group",foundGroups[i])
+  }  
+  
+  group <- factor(group)
+}
+```
+
+```{r do de testing}
+if(do.DEtesting){
+  # perform differential expression analysis using negative binomial model
+    design <- model.matrix(~group+0)
+    y <- DGEList(counts=normCounts)
+    y <- estimateDisp(y, design)
+    fit <- glmQLFit(y, design)
+}
+```
+
+```{r core function for DE testing}
+  giveMeResults <- function(g1, g2, groupVector=gsub("group", "", colnames(fit$design)), fitIn=fit, FDR=de.fdr, filePath=NULL, biotype.split=TRUE){
+    
+    totalGroups <- length(groupVector)
+    x <- rep(0, totalGroups)
+    
+    x[groupVector==g1] <- 1
+    x[groupVector==g2] <- -1
+    qlf <- glmQLFTest(fitIn, contrast = x)
+    if(substr(qlf$comparison, 1,1)=="-"){
+      comparison <- gsub(" ", "vs", gsub("-", "",gsub("1\\*group", "", qlf$comparison)))  
+    } else {
+      comparison <- gsub("group", "", gsub("^1\\*", "", gsub(" -1\\*", "vs", gsub("1*groupgroup", "", qlf$comparison))))
+    }
+    
+    #cat(g1, "and", g2,"\n")
+    #print(comparison)
+    #cat("-----------------------------------------------------\n")
+    
+    DEgenes <- topTags(qlf, n=nrow(normCounts))[["table"]]
+    DEgenes <- data.frame(gene=rownames(DEgenes), DEgenes)
+    
+    out <- DEgenes[DEgenes$FDR<FDR,]
+    
+    if(!is.null(filePath)){
+      write.table(out, file.path(filePath, paste0("edgeR-", comparison, ".tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      
+      if(biotype.split){
+        out.hp <- out[is.element(out$gene, hp$gene),]
+        write.table(out.hp, file.path(filePath, paste0("edgeR-", comparison, "-hp.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.mature <- out[is.element(out$gene, mature$gene),]
+        write.table(out.mature, file.path(filePath, paste0("edgeR-", comparison, "-mature.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.trna <- out[is.element(out$gene, trna$gene),]
+        write.table(out.trna, file.path(filePath, paste0("edgeR-", comparison, "-trna.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.ref <- out[is.element(out$gene, ref$gene),]
+        write.table(out.ref, file.path(filePath, paste0("edgeR-", comparison, "-ref.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      
+        out.novel <- out[is.element(out$gene, novel$gene),]
+        write.table(out.novel, file.path(filePath, paste0("edgeR-", comparison, "-novel.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      }
+      
+    }
+    
+    out
+  }
+```
+
+```{r now do the DE testing}
+if(do.DEtesting){
+  for(g1 in 1:(length(foundGroups)-1)){
+    for(g2 in (g1+1):length(foundGroups)){
+      if(!dir.exists(file.path(projFolder, "RESULTS", "edgeR"))) dir.create(file.path(projFolder, "RESULTS", "edgeR"))
+      out <- giveMeResults(g1=paste0("Group",foundGroups[g1]), g2=paste0("Group",foundGroups[g2]), filePath = file.path(projFolder, "RESULTS", "edgeR"))  
+    }
+  }
 }
 ```
 

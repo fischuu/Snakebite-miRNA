@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+6: Option for DE testing with edgeR added
 5: sampleInfo-file option added
 4: Config allows now relatives PATHs and adjustes them tot eh current project folder
 3: Parameter for minimum coverage for novel miRNA detection added
