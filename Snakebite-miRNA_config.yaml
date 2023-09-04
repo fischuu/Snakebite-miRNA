@@ -35,6 +35,10 @@ params:
     threeprimetrim: 0
   fastx:
     length: 20
+  featureCount:
+    gOption: "gene_id"
+    tOption: "gene"
+    tOption2: "exon"
   extractSoftClipped:
     length: 15
   stringtie:

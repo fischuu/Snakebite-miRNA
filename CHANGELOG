@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+8: Added featureCounts options to account for non-default gtf file in quantification (-t and -g options)
 7: Additional server resources added to the server_config file
 6: Option for DE testing with edgeR added
 5: sampleInfo-file option added
