@@ -35,7 +35,7 @@ params:
     threeprimetrim: 0
   fastx:
     length: 20
-  featureCount:
+  featureCounts:
     gOption: "gene_id"
     tOption: "gene"
     tOption2: "exon"
