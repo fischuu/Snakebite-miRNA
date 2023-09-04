@@ -117,7 +117,7 @@ rule featureCounts_quantify_reference_STAR:
         tmpdir=config["scratch-folder"],
         gOption=config["params"]["featureCounts"]["gOption"],
         tOption=config["params"]["featureCounts"]["tOption"],
-        tOption=config["params"]["featureCounts"]["tOption2"]
+        tOption2=config["params"]["featureCounts"]["tOption2"]
     threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
     resources:
         time=cluster["featureCounts_quantify_reference_STAR"]["time"],
