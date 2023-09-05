@@ -46,7 +46,7 @@ rule bowtie_map_concatenated_reads_tRNA:
         sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
         sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
     """
-
+    
 rule samtools_concatenated_reads_tRNA_flagstats:
     """
     Get mapping stats (samtools).
@@ -59,10 +59,10 @@ rule samtools_concatenated_reads_tRNA_flagstats:
         sorted="%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam" % (config["project-folder"]),
         index="%s/BAM/BOWTIE/tRNA/{samples}_tRNA.sorted.bam.bai" % (config["project-folder"]),
         idxstats="%s/STATS/BOWTIE/tRNA/{samples}_tRNA.idxstats" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_concatenated_reads_tRNA_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_concatenated_reads_tRNA_flagstats"]["time"],
+        mem=cluster["samtools_concatenated_reads_tRNA_flagstats"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat}
@@ -132,10 +132,9 @@ rule samtools_nonTRNA_reads_phix_flagstats:
     output:
         flagstat="%s/STATS/BOWTIE/PhiX/{samples}_PhiX.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/PhiX/{samples}_PhiX.stats" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_nonTRNA_reads_phix_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_nonTRNA_reads_phix_flagstats"]["time"],
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat};

@@ -9,8 +9,8 @@ import yaml
 ##### Snakebite miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.11.9
-version = "0.11.9"
+##### Version: 0.11.11
+version = "0.11.11"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -84,6 +84,9 @@ if(config["rawdata-folder"][0]!='/'):
 
 if(config["pipeline-config"][0]!='/'):
     config["pipeline-config"] = config["project-folder"] + '/' + config["pipeline-config"]
+
+if(config["server-config"][0]!='/'):
+    config["server-config"] = config["project-folder"] + '/' + config["server-config"]
 
 if(config["samplesheet-file"][0]!='/'):
     config["samplesheet-file"] = config["project-folder"] + '/' + config["samplesheet-file"]

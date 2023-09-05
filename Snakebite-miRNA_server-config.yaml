@@ -104,6 +104,12 @@ samtools_concatenated_reads_tRNA_flagstats:
     cpus-per-task: 1
     mem-per-cpu: 32000
 
+samtools_nonTRNA_reads_phix_flagstats:
+    job-name: samtools_nonTRNA_reads_phix_flagstats
+    time: 300
+    cpus-per-task: 1
+    mem-per-cpu: 32000
+
 # Module 4 - Alignments
 ################################################################################
 bowtie_map_clear_reads_mature:
