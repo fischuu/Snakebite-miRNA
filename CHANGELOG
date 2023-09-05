@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+9: Added samtools_concatenated_reads_tRNA_flagstats to the dedicated resource allocations 
 8: Added featureCounts options to account for non-default gtf file in quantification (-t and -g options)
 7: Additional server resources added to the server_config file
 6: Option for DE testing with edgeR added
