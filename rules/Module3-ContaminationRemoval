@@ -135,6 +135,7 @@ rule samtools_nonTRNA_reads_phix_flagstats:
     threads: cluster["samtools_nonTRNA_reads_phix_flagstats"]["cpus-per-task"]
     resources:
         time=cluster["samtools_nonTRNA_reads_phix_flagstats"]["time"],
+        mem=cluster["samtools_nonTRNA_reads_phix_flagstats"]["mem"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat};

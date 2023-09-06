@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+12: Missing memory allocation in one rule was added.
 11: Bugfix, server-config did not receive the project path, if not given explicitely in config file
 10: Added samtools_nonTRNA_reads_phix_flagstats to default resource allocation
 9: Added samtools_concatenated_reads_tRNA_flagstats to the dedicated resource allocations 
