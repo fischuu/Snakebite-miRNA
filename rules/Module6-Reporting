@@ -37,6 +37,7 @@ rule R_pipelineReport:
        samplesheet=config["samplesheet-file"],
        sampleinfo=config["sampleInfo-file"],
        abundanceRemove=config["params"]["de"]["minAbundance"],
+       tOption=config["params"]["featureCounts"]["tOption"],
        fdr=config["params"]["de"]["FDR"]
     threads: cluster["R_pipelineReport"]["cpus-per-task"]
     resources:
@@ -52,6 +53,7 @@ rule R_pipelineReport:
              sampleinfo.file <- '{params.sampleinfo}'; \
              abundanceRemove <- '{params.abundanceRemove}' ; \
              de.fdr <- '{params.fdr}' ; \
+             tOption <- '{params.tOption}' ; \
              snakemake <- TRUE; \
              rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
     """

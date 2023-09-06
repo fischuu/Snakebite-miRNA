@@ -986,7 +986,7 @@ write.table(mirbase_hairpin_species_quant, file.path(projFolder, "QUANTIFICATION
 First some general stats about the used reference genome annotation
 
 ```{r}
-annotation <- importGTF(refAnnot.file)
+annotation <- importGTF(refAnnot.file, level=tOption)
 ```
 
 Following numbers of various annotations per biotype are available inside annotaiton file
@@ -1059,9 +1059,12 @@ for(i in 1:length(fc.files)){
 
 fc.expr.star <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
 
-for(i in 3:length(fc.files)){
-  fc.expr.star <- merge(fc.expr.star, fc.in[[i]]$expValues, by="Geneid")
+if(length(fc.files)>2){
+  for(i in 3:length(fc.files)){
+    fc.expr.star <- merge(fc.expr.star, fc.in[[i]]$expValues, by="Geneid")
+  }  
 }
+
 colnames(fc.expr.star) <- sub(".*?Reference.", "",colnames(fc.expr.star))
 colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 
@@ -1092,8 +1095,10 @@ rownames(fc.expr.star.rpkm) <- tmp[,1]
 
 fc.expr.stats <- merge(fc.in[[1]]$summary, fc.in[[2]]$summary, by="Status")
 
-for(i in 3:length(fc.files)){
-  fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status")
+if(length(fc.files)>2){
+  for(i in 3:length(fc.files)){
+    fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status") 
+  }
 }
 
 colnames(fc.expr.stats) <- gsub("_reference_star.bam", "", sapply(strsplit(colnames(fc.expr.stats), "Reference."),"[",2))
@@ -1115,7 +1120,8 @@ dir.create(file.path(projFolder, "RESULTS", "Biotype-expressions"), showWarnings
 
 star.protein_coding.rpkm <- NULL
 
-for(i in 1:length(biotypes)){
+if(length(biotypes)>1){
+  for(i in 1:length(biotypes)){
   biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
   tmp <- fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),]
   if(length(biotype.genes)==1){
@@ -1156,6 +1162,7 @@ for(i in 1:length(biotypes)){
   print(htmltools::tagList(datatable(report_toplist)))
    
   counts_per_biotype[i,] <- apply(fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),-1],2,sum)
+}
 }
 
 counts_per_biotype <- rbind(apply(star.hairpin_species[,-1],2,sum), 
@@ -1467,6 +1474,10 @@ for(i in 1:length(samples)){
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
 
+if(is.null(nrow(reference_CountsPerBiotype_perSample))){
+reference_CountsPerBiotype_perSample <-  t(as.matrix(reference_CountsPerBiotype_perSample))
+}
+
 for(i in 1:length(samples)){
   reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(paste0("^",samples[i],"_"), colnames(counts_per_biotype))]
 }
@@ -1565,11 +1576,13 @@ barplot(unconsideredReads, las=2, col=reportColours[1])
 Here we use this object: star.mature_species.rpkm
 
 ```{r}
-cluster.data <- trna.quant.rpkm
-#colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(trna.quant.rpkm.dist)           
-plot(hc)  
+if(ncol(trna.quant.rpkm)>2){
+  cluster.data <- trna.quant.rpkm
+  #colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(trna.quant.rpkm.dist)           
+  plot(hc)    
+}
 ```
 
 
@@ -1578,11 +1591,14 @@ plot(hc)
 Here we use this object: star.mature_species.rpkm
 
 ```{r}
-cluster.data <- star.mature_species.rpkm
-colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.mature_species.rpkm.dist)           
-plot(hc)  
+if(ncol(star.mature_species.rpkm)>2){
+  cluster.data <- star.mature_species.rpkm
+  colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.mature_species.rpkm.dist)           
+  plot(hc)    
+}
+
 ```
 
 ### Hierarchical clustering for protein coding genes (STAR)
@@ -1590,11 +1606,15 @@ plot(hc)
 Here we use this object: star.protein_coding.rpkm
 
 ```{r}
-cluster.data <- star.protein_coding.rpkm
-colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.mature_species.rpkm.dist)           
-plot(hc)  
+
+if(!is.null(star.protein_coding.rpkm)){
+  cluster.data <- star.protein_coding.rpkm
+  colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.mature_species.rpkm.dist)           
+  plot(hc)    
+}
+
 ```
 
 ### Hierarchical clustering for Novel predictions (STAR)
@@ -1663,7 +1683,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(3, ncol(expr.PCA$x))])
 ```
 
 ```{r}
@@ -1676,7 +1696,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1710,15 +1730,17 @@ if(sampleInfo.avail){
 ### PCA - Reference-protein_coding (STAR)
 
 ```{r performPCA_protein_coding}
-expr.PCA <- prcomp(t(star.protein_coding.rpkm))
-expr.PCA.protein_coding <- expr.PCA
+if(!is.null(star.protein_coding.rpkm)){
+  expr.PCA <- prcomp(t(star.protein_coding.rpkm))
+  expr.PCA.protein_coding <- expr.PCA  
+}
 ```
 
 This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1731,7 +1753,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1776,7 +1798,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1789,7 +1811,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1831,7 +1853,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1844,7 +1866,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1927,6 +1949,7 @@ if(sampleInfo.avail){
 First, the PCA based t-SNE run (using the PCA-based reduced data as input)
 
 ```{r, results="asis"}
+if(length(samples)>2){
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(expr.PCA.mature_species$x[,1:cols], k=5)
 if(sampleInfo.avail){
@@ -1943,12 +1966,14 @@ if(sampleInfo.avail){
 }
   }else {
    plot(TSNEout, pch=20)
+  }
 }
 ```
 
 And then the run for the original data
 
 ```{r, eval=FALSE, results="asis"}
+if(length(samples)>2){
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(star.mature_species.rpkm, k=5)
 if(sampleInfo.avail){
@@ -1965,12 +1990,14 @@ if(sampleInfo.avail){
 }
   }else {
    plot(TSNEout, pch=20)
+  }
 }
 ```
 
 ### t-SNE - Reference-protein_coding (STAR)
 First for the PCA reduced input data
 ```{r, results="asis"}
+if(length(samples)>2){
 cols <- min(ncol(expr.PCA.protein_coding$x),10)
 TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
 if(sampleInfo.avail){
@@ -1987,6 +2014,7 @@ if(sampleInfo.avail){
 }
   }else {
    plot(TSNEout, pch=20)
+  }
 }
 ```
 
@@ -2014,12 +2042,15 @@ for(i in 2:ncol(sampleInfo)){
 ### Kernel PCA - Mature_species.fa (STAR)
 PCA-based data
 ```{r}
+if(length(samples)>2){
 # Kernel PCA
 cols <- min(min(dim(expr.PCA.mature_species$x)),10)-1
 KPCAres <- kpca(expr.PCA.mature_species$x[,1:cols])
+}
 ```
 
 ```{r, results="asis"}
+if(length(samples)>2){
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
@@ -2035,6 +2066,7 @@ if(ncol(sampleInfo)>1){
   }else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
+  }
 }
 ```
 Original data
@@ -2065,12 +2097,15 @@ if(ncol(sampleInfo)>1){
 ### Kernel PCA - Reference-protein_coding (STAR)
 PCA-based data
 ```{r}
+if(length(samples)>2){
 # Kernel PCA
 cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
 KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+}
 ```
 
 ```{r, results="asis"}
+if(length(samples)>2){
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
@@ -2086,6 +2121,7 @@ if(ncol(sampleInfo)>1){
 } else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
+}
 }
 ```
 
@@ -2259,20 +2295,20 @@ In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we wil
                      ref,
                      novel[,-c(2,3,4)])
 
-  rownames(allCounts) <- allCounts[,1]
-  allCounts <- allCounts[,-1]
+  #rownames(allCounts) <- allCounts[,1]
+  #allCounts <- allCounts[,-1]
 ```
 
 ```{r remove low abundances}
 # Remove low abundance rows
-  geneCounts <- apply(allCounts, 1, sum)
+  geneCounts <- apply(allCounts[,-1], 1, sum)
   allCounts.filtered <- allCounts[geneCounts>abundanceRemove, ]
 ```
 
 ```{r calculate normalisation factors}
 # calculate normalization factors
-  allData <- DGEList(counts=allCounts)
-  allData <- calcNormFactors(allData)
+  allData <- DGEList(counts=allCounts[,-1])
+  allData <- calcNormFactors(allData[,-1])
 ```
 
 ```{r get normcounts object}
