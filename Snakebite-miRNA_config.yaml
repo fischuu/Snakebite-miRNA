@@ -44,7 +44,7 @@ params:
   stringtie:
     tpm: 0
   novel:
-    minCover: 10
+    minCover: 10         # minimum number of samples that have reads covering a locus (=number of samples and NOT number of reads!)
   de:
     minAbundance: 10
     FDR: 0.1
