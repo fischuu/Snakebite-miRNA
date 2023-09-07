@@ -1307,39 +1307,40 @@ if(novelDetected){
   genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
   
   chrs <- chr.sort(genome.info[,1])
-  chrs.length <- vector(mode="numeric", length=length(chrs))
-  names(chrs.length) <- chrs
-  
-  index <- 1
-  for(i in chrs){
-    chrs.length[index] <- genome.info$V2[genome.info==i]
-    index <- index + 1
+  if(length(chrs)<1000){
+    chrs.length <- vector(mode="numeric", length=length(chrs))
+    names(chrs.length) <- chrs
+    
+    index <- 1
+    for(i in chrs){
+      chrs.length[index] <- genome.info$V2[genome.info==i]
+      index <- index + 1
+    }
+    chrs.length <- chrs.length / 10^6
+    plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
+    
+    axis(2, at=1:length(chrs), chrs, las=2)
+    
+    for(i in 1:length(chrs)){
+      lines(c(0, chrs.length[i]), c(i,i))
+    }
+    
+    for(i in 1:nrow(novelMirna)){
+      jitter <- 0.1
+      curChr <- which(novelMirna[i,1]==chrs)
+      points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
+    }
+    
+    
+    
+    novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
+    
+    for(i in 1:nrow(novelMirna.high)){
+      jitter <- 0.1
+      curChr <- which(novelMirna.high[i,1]==chrs)
+      points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
+    }
   }
-  chrs.length <- chrs.length / 10^6
-  plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
-  
-  axis(2, at=1:length(chrs), chrs, las=2)
-  
-  for(i in 1:length(chrs)){
-    lines(c(0, chrs.length[i]), c(i,i))
-  }
-  
-  for(i in 1:nrow(novelMirna)){
-    jitter <- 0.1
-    curChr <- which(novelMirna[i,1]==chrs)
-    points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
-  }
-  
-  
-  
-  novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
-  
-  for(i in 1:nrow(novelMirna.high)){
-    jitter <- 0.1
-    curChr <- which(novelMirna.high[i,1]==chrs)
-    points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
-  }
-
 }
 ```
 
@@ -1624,10 +1625,12 @@ Here we use this object: novel.rpkm
 
 ```{r}
 if(novelDetected){
-  cluster.data <- novel.rpkm
-  star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-  hc <- hclust(star.novel.rpkm.dist)           
-  plot(hc)  
+  if(ncol(novel.rpkm)>2){
+    cluster.data <- novel.rpkm
+    star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+    hc <- hclust(star.novel.rpkm.dist)           
+    plot(hc)  
+  }
 }
 ```
 
