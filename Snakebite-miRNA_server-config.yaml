@@ -157,15 +157,33 @@ star_map_unmapped_mirbase_reads_reference:
 samtools_clear_reads_mature_flagstats:
     job-name: samtools_clear_reads_mature_flagstats
     time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
 
 samtools_star_reads_mature_flagstats:
     job-name: samtools_star_reads_mature_flagstats
     time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
+    
+samtools_star_reads_mature_species_flagstats:
+    job-name: samtools_star_reads_mature_species_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1    
+
+samtools_star_reads_reference_flagstats:
+    job-name: samtools_star_reads_reference_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
     
 seqkit_quantify_mature_BOWTIE:
     job-name: seqkit_quantify_mature_BOWTIE
     time: 300
-
+    mem-per-cpu: 32000
+    cpus-per-task: 1
+    
 # Module 5 - Quantification
 ################################################################################
 seqkit_quantify_maturefa_BOWTIE:

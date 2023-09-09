@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+16: Some default resource allocations added
 15: Bugfix, in getJoinedLoci minimum coverage was >, but it should have been >= to meet correct settings 
 14: Bugfix, that crashed finalReport in case only two samples were used in the pipeline
 13: tOption is now also used in the final report

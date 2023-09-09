@@ -55,10 +55,10 @@ rule samtools_clear_reads_mature_flagstats:
         flagstat="%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]),
         stats="%s/STATS/BOWTIE/Mature/{samples}_mature.stats" % (config["project-folder"]),
         bai="%s/BAM/BOWTIE/Mature/{samples}_mature.bam.bai" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_clear_reads_mature_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_clear_reads_mature_flagstats"]["time"],
+        mem=cluster["samtools_clear_reads_mature_flagstats"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat};
@@ -339,10 +339,10 @@ rule samtools_star_reads_mature_flagstats:
         fastqUnmapped="%s/FASTQ/Mature/unmapped_star/{samples}_mature_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_mature.{samples}.log" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_star_reads_mature_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_star_reads_mature_flagstats"]["time"],
+        mem=cluster["samtools_star_reads_mature_flagstats"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
@@ -417,18 +417,17 @@ rule samtools_star_reads_mature_species_flagstats:
     Get mapping stats (samtools).
     """
     input:
-        "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"])
-    output:
+        "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"]),
         flagstat="%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
         stats="%s/STATS/STAR/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
         fastqMapped="%s/FASTQ/Mature_Species/mapped_star/{samples}_mature_species_mapped_star.fastq" % (config["project-folder"]),
         fastqUnmapped="%s/FASTQ/Mature_Species/unmapped_star/{samples}_mature_species_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_mature_species.{samples}.log" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_star_reads_mature_species_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_star_reads_mature_species_flagstats"]["time"],
+        mem=cluster["samtools_star_reads_mature_species_flagstats"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}
@@ -706,10 +705,10 @@ rule samtools_star_reads_reference_flagstats:
         fastqUnmapped="%s/FASTQ/Reference/unmapped_star/{samples}_reference_unmapped_star.fastq" % (config["project-folder"])
     log:
         "%s/logs/samtools/samtools_star_reference.{samples}.log" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
+    threads: cluster["samtools_star_reads_reference_flagstats"]["cpus-per-task"]
     resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
+        time=cluster["samtools_star_reads_reference_flagstats"]["time"],
+        mem=cluster["samtools_star_reads_reference_flagstats"]["mem-per-cpu"]
     singularity: config["singularity"]["samtools"]
     shell:"""
         samtools flagstat {input} > {output.flagstat} 2> {log}

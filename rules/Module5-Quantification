@@ -11,10 +11,10 @@ rule seqkit_quantify_mature_BOWTIE:
         "%s/logs/SEQKIT/seqkit_bowtie_maturefa.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/seqkit/seqkit_bowtie_maturefa.{samples}.benchmark.tsv" % (config["project-folder"])
-    threads: cluster["seqkit_quantify_maturefa_BOWTIE"]["cpus-per-task"]
+    threads: cluster["seqkit_quantify_mature_BOWTIE"]["cpus-per-task"]
     resources:
-        time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
-        mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+        time=cluster["seqkit_quantify_mature_BOWTIE"]["time"],
+        mem=cluster["seqkit_quantify_mature_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
     # This is needed, as the desired output is in stderr, but when I capture that in a file, I get a non-zero exit error
