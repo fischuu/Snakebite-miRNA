@@ -2001,22 +2001,24 @@ if(sampleInfo.avail){
 First for the PCA reduced input data
 ```{r, results="asis"}
 if(length(samples)>2){
-cols <- min(ncol(expr.PCA.protein_coding$x),10)
-TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
-if(sampleInfo.avail){
-  if(ncol(sampleInfo)>1){
-  for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
-    cat(sprintf(tmpTitle))
-    plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-    par(xpd=TRUE)
-    legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-    par(xpd=FALSE)
-    cat(sprintf("\n\n"))
-  }
-}
-  }else {
-   plot(TSNEout, pch=20)
+  if(!is.null(star.protein_coding.rpkm)){
+    cols <- min(ncol(expr.PCA.protein_coding$x),10)
+    TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
+    if(sampleInfo.avail){
+      if(ncol(sampleInfo)>1){
+      for(i in 2:ncol(sampleInfo)){
+        tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+        cat(sprintf(tmpTitle))
+        plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+        par(xpd=TRUE)
+        legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+        par(xpd=FALSE)
+        cat(sprintf("\n\n"))
+      }
+    }
+      }else {
+       plot(TSNEout, pch=20)
+      }
   }
 }
 ```
@@ -2024,22 +2026,24 @@ if(sampleInfo.avail){
 And then for the original data as well
 
 ```{r, eval=FALSE, results="asis"}
-cols <- min(ncol(expr.PCA.protein_coding$x),10)
-TSNEout <- tsne(star.protein_coding.rpkm, k=5)
-if(sampleInfo.avail){
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
-  cat(sprintf(tmpTitle))
-  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
-}
-}
-} else {
-   plot(TSNEout, pch=20)
+if(!is.null(star.protein_coding.rpkm)){
+  cols <- min(ncol(expr.PCA.protein_coding$x),10)
+  TSNEout <- tsne(star.protein_coding.rpkm, k=5)
+  if(sampleInfo.avail){
+  if(ncol(sampleInfo)>1){
+  for(i in 2:ncol(sampleInfo)){
+    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
+    cat(sprintf(tmpTitle))
+    plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+    par(xpd=TRUE)
+    legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+    par(xpd=FALSE)
+    cat(sprintf("\n\n"))
+  }
+  }
+  } else {
+     plot(TSNEout, pch=20)
+  }
 }
 ```
 ### Kernel PCA - Mature_species.fa (STAR)
@@ -2101,30 +2105,34 @@ if(ncol(sampleInfo)>1){
 PCA-based data
 ```{r}
 if(length(samples)>2){
-# Kernel PCA
-cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
-KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+  if(!is.null(star.protein_coding.rpkm)){
+    # Kernel PCA
+    cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
+    KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+  }
 }
 ```
 
 ```{r, results="asis"}
 if(length(samples)>2){
-if(sampleInfo.avail){
-if(ncol(sampleInfo)>1){
-  for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA based data)\n")
-      cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-      par(xpd=TRUE)
-      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-      par(xpd=FALSE)
-      cat(sprintf("\n\n"))
+  if(!is.null(star.protein_coding.rpkm)){
+      if(sampleInfo.avail){
+        if(ncol(sampleInfo)>1){
+          for(i in 2:ncol(sampleInfo)){
+              tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA based data)\n")
+              cat(sprintf(tmpTitle))
+              pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+              par(xpd=TRUE)
+              legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+              par(xpd=FALSE)
+              cat(sprintf("\n\n"))
+          }
+      }
+    } else {
+       ndim <- min(ncol(rotated(KPCAres)), 10)
+       plot(rotated(KPCAres)[,1:ndim], pch=20)
+    }
   }
-}
-} else {
-   ndim <- min(ncol(rotated(KPCAres)), 10)
-   plot(rotated(KPCAres)[,1:ndim], pch=20)
-}
 }
 ```
 
