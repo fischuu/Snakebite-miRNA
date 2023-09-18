@@ -417,7 +417,8 @@ rule samtools_star_reads_mature_species_flagstats:
     Get mapping stats (samtools).
     """
     input:
-        "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"]),
+        "%s/BAM/STAR/Mature_Species/{samples}_mature_species_star.bam" % (config["project-folder"])
+    output:
         flagstat="%s/STATS/STAR/Mature_Species/{samples}_mature_species.flagstat" % (config["project-folder"]),
         stats="%s/STATS/STAR/Mature_Species/{samples}_mature_species.stats" % (config["project-folder"]),
         fastqMapped="%s/FASTQ/Mature_Species/mapped_star/{samples}_mature_species_mapped_star.fastq" % (config["project-folder"]),
