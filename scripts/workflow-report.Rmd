@@ -1483,6 +1483,8 @@ for(i in 1:length(samples)){
   reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(paste0("^",samples[i],"_"), colnames(counts_per_biotype))]
 }
 
+# Now check still, how many of the NoFeatureReads were used to estiamte novel miRNA
+novel_mirna_counts <- apply(novel.quant[,-c(1:4)], 2, sum)
 
 overall_stats <- rbind(qcRemovedReads_perSample,
                        contamination_trnaReads_perSample,
@@ -1490,13 +1492,23 @@ overall_stats <- rbind(qcRemovedReads_perSample,
                        mirbaseAssigned_MatureReads_perSample,
                        mirbaseAssigned_HairpinReads_perSample,
                        refUnassigned_AmbiguityReads_perSample,
-                       refUnassigned_NoFeatureReads_perSample,
+                       refUnassigned_NoFeatureReads_perSample-novel_mirna_counts,
+                       novel_mirna_counts,
                        reference_CountsPerBiotype_perSample,
                        refUnassigned_UnmappedReads_perSample
                        )
 
 colnames(overall_stats) <- samples
-
+rownames(overall_stats) <- c("qcRemovedReads_perSample",
+                             "contamination_trnaReads_perSample",
+                             "contamination_phixReads_perSample",
+                             "mirbaseAssigned_MatureReads_perSample",
+                             "mirbaseAssigned_HairpinReads_perSample",
+                             "refUnassigned_AmbiguityReads_perSample",
+                             "refUnassigned_NoFeatureReads_perSample (w/o novel)",
+                             "novel_mirna_counts",
+                             "reference_CountsPerBiotype_perSample",
+                             "refUnassigned_UnmappedReads_perSample" )
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 ```
 
@@ -1523,7 +1535,7 @@ revVec <- function(x) x[(length(x):1)]
 par(mar=c(15,5,2,22), xpd=TRUE)
 barplot(overall_stats, col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[min(11, nrow(overall_stats))]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
@@ -1550,7 +1562,7 @@ par(mar=c(15,5,2,22), xpd=TRUE)
 
 barplot(t(t(overall_stats)/apply(overall_stats,2,sum)), col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[min(11, nrow(overall_stats))]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```

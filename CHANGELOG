@@ -6,6 +6,8 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+19: Barplot legends work now also, when no biotypes are provided in the referene annotation
+18: Overall statistics split now noFeature and noFeature, but used for novel miRNA
 17: SOme if-clauses added for more stable finalReport execusion
 16: Some default resource allocations added
 15: Bugfix, in getJoinedLoci minimum coverage was >, but it should have been >= to meet correct settings 
