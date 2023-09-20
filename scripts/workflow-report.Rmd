@@ -1453,14 +1453,14 @@ for(i in 1:length(samples)){
   refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
-mirbaseAssigned_MatureReads_perSample <- c()
+mirbaseAssigned_species_MatureReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
+  mirbaseAssigned_species_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
 }
 
-mirbaseAssigned_HairpinReads_perSample <- c()
+mirbaseAssigned_species_HairpinReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
+  mirbaseAssigned_species_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
 }
 
 contamination_trnaReads_perSample <- c()
@@ -1489,8 +1489,8 @@ novel_mirna_counts <- apply(novel.quant[,-c(1:4)], 2, sum)
 overall_stats <- rbind(qcRemovedReads_perSample,
                        contamination_trnaReads_perSample,
                        contamination_phixReads_perSample,
-                       mirbaseAssigned_MatureReads_perSample,
-                       mirbaseAssigned_HairpinReads_perSample,
+                       mirbaseAssigned_species_MatureReads_perSample,
+                       mirbaseAssigned_species_HairpinReads_perSample,
                        refUnassigned_AmbiguityReads_perSample,
                        refUnassigned_NoFeatureReads_perSample-novel_mirna_counts,
                        novel_mirna_counts,
@@ -1498,17 +1498,19 @@ overall_stats <- rbind(qcRemovedReads_perSample,
                        refUnassigned_UnmappedReads_perSample
                        )
 
+rownames(overall_stats)[7] <- "refUnassigned_NoFeatureReads_perSample (w/o novel)"
 colnames(overall_stats) <- samples
-rownames(overall_stats) <- c("qcRemovedReads_perSample",
-                             "contamination_trnaReads_perSample",
-                             "contamination_phixReads_perSample",
-                             "mirbaseAssigned_MatureReads_perSample",
-                             "mirbaseAssigned_HairpinReads_perSample",
-                             "refUnassigned_AmbiguityReads_perSample",
-                             "refUnassigned_NoFeatureReads_perSample (w/o novel)",
-                             "novel_mirna_counts",
-                             "reference_CountsPerBiotype_perSample",
-                             "refUnassigned_UnmappedReads_perSample" )
+#rownames(overall_stats) <- c("qcRemovedReads_perSample",
+#                             "contamination_trnaReads_perSample",
+#                             "contamination_phixReads_perSample",
+#                             "mirbaseAssigned_MatureReads_perSample",
+#                             "mirbaseAssigned_HairpinReads_perSample",
+#                             "refUnassigned_AmbiguityReads_perSample",
+#                             "refUnassigned_NoFeatureReads_perSample (w/o novel)",
+#                             "novel_mirna_counts",
+#                             "reference_CountsPerBiotype_perSample",
+#                             "refUnassigned_UnmappedReads_perSample" )
+
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 ```
 
@@ -2331,7 +2333,7 @@ In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we wil
 ```{r calculate normalisation factors}
 # calculate normalization factors
   allData <- DGEList(counts=allCounts[,-1])
-  allData <- calcNormFactors(allData[,-1])
+  allData <- calcNormFactors(allData)
 ```
 
 ```{r get normcounts object}
@@ -2342,7 +2344,7 @@ In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we wil
 
 ```{r create group object}
 if(do.DEtesting){
-  group <- rep("UNKNOWN", ncol(allCounts))
+  group <- rep("UNKNOWN", ncol(allCounts)-1)
   realColnames <- strsplit(readLines(file.path(projFolder, "QUANTIFICATION", "mirbase_hairpin_species_star-counts.tsv"), n=1), "\t")[[1]][-1]
 
   foundGroups <- unique(sampleInfo$DEgroup)

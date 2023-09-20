@@ -6,6 +6,7 @@
 
 0.11.* UPDATES
 --------------------------------------------------------------------------------
+20: Bugfix: One sample was removed from the DE analysis in the final report by accident.
 19: Barplot legends work now also, when no biotypes are provided in the referene annotation
 18: Overall statistics split now noFeature and noFeature, but used for novel miRNA
 17: SOme if-clauses added for more stable finalReport execusion
