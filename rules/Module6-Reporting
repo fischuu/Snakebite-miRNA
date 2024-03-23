@@ -34,7 +34,11 @@ rule R_pipelineReport:
        pipeConfig=config["pipeline-config"],
        refGenome=config["reference"],
        refAnnot=config["refAnnot"],
-       samplesheet=config["samplesheet-file"]
+       samplesheet=config["samplesheet-file"],
+       sampleinfo=config["sampleInfo-file"],
+       abundanceRemove=config["params"]["de"]["minAbundance"],
+       tOption=config["params"]["featureCounts"]["tOption"],
+       fdr=config["params"]["de"]["FDR"]
     threads: cluster["R_pipelineReport"]["cpus-per-task"]
     resources:
         time=cluster["R_pipelineReport"]["time"],
@@ -46,6 +50,10 @@ rule R_pipelineReport:
              refAnnot.file <- '{params.refAnnot}'; \
              pipelineConfig <- '{params.pipeConfig}'; \
              samplesheet.file <- '{params.samplesheet}'; \
+             sampleinfo.file <- '{params.sampleinfo}'; \
+             abundanceRemove <- '{params.abundanceRemove}' ; \
+             de.fdr <- '{params.fdr}' ; \
+             tOption <- '{params.tOption}' ; \
              snakemake <- TRUE; \
              rmarkdown::render('{params.script}',output_file='{output}')" &> {log}
     """

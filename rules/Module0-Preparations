@@ -323,5 +323,5 @@ rule star_createIndex_reference:
     shell:"""
         mkdir -p {params.tmpdirTop}
         
-        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --genomeChrBinNbits 15 --limitGenomeGenerateRAM 65000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
     """    

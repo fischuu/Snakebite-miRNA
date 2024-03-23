@@ -98,6 +98,18 @@ bowtie_map_nonTRNA_reads_phix:
     cpus-per-task: 1
     mem-per-cpu: 40000
     
+samtools_concatenated_reads_tRNA_flagstats:
+    job-name: samtools_concatenated_reads_tRNA_flagstats
+    time: 300
+    cpus-per-task: 1
+    mem-per-cpu: 32000
+
+samtools_nonTRNA_reads_phix_flagstats:
+    job-name: samtools_nonTRNA_reads_phix_flagstats
+    time: 300
+    cpus-per-task: 1
+    mem-per-cpu: 32000
+
 # Module 4 - Alignments
 ################################################################################
 bowtie_map_clear_reads_mature:
@@ -141,6 +153,36 @@ star_map_unmapped_mirbase_reads_reference:
     time: 100
     cpus-per-task: 5
     mem-per-cpu: 8000
+ 
+samtools_clear_reads_mature_flagstats:
+    job-name: samtools_clear_reads_mature_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
+
+samtools_star_reads_mature_flagstats:
+    job-name: samtools_star_reads_mature_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
+    
+samtools_star_reads_mature_species_flagstats:
+    job-name: samtools_star_reads_mature_species_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1    
+
+samtools_star_reads_reference_flagstats:
+    job-name: samtools_star_reads_reference_flagstats
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
+    
+seqkit_quantify_mature_BOWTIE:
+    job-name: seqkit_quantify_mature_BOWTIE
+    time: 300
+    mem-per-cpu: 32000
+    cpus-per-task: 1
     
 # Module 5 - Quantification
 ################################################################################

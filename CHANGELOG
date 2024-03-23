@@ -4,7 +4,30 @@
 #####                                                                      #####
 ################################################################################
 
-0.10.* Stable release
+0.11.* UPDATES
+--------------------------------------------------------------------------------
+20: Bugfix: One sample was removed from the DE analysis in the final report by accident.
+19: Barplot legends work now also, when no biotypes are provided in the referene annotation
+18: Overall statistics split now noFeature and noFeature, but used for novel miRNA
+17: SOme if-clauses added for more stable finalReport execusion
+16: Some default resource allocations added
+15: Bugfix, in getJoinedLoci minimum coverage was >, but it should have been >= to meet correct settings 
+14: Bugfix, that crashed finalReport in case only two samples were used in the pipeline
+13: tOption is now also used in the final report
+12: Missing memory allocation in one rule was added.
+11: Bugfix, server-config did not receive the project path, if not given explicitely in config file
+10: Added samtools_nonTRNA_reads_phix_flagstats to default resource allocation
+9: Added samtools_concatenated_reads_tRNA_flagstats to the dedicated resource allocations 
+8: Added featureCounts options to account for non-default gtf file in quantification (-t and -g options)
+7: Additional server resources added to the server_config file
+6: Option for DE testing with edgeR added
+5: sampleInfo-file option added
+4: Config allows now relatives PATHs and adjustes them tot eh current project folder
+3: Parameter for minimum coverage for novel miRNA detection added
+2: Quantification table for reference counts added
+1: New dev branch, identical to 0.10
+
+0.10 Stable release
 --------------------------------------------------------------------------------
 
 0.9.* UPDATES
@@ -13,9 +36,11 @@
 2: Added the option not to use any adapter trimming
 1: New dev-branch opened
 
-0.8.* Stable release
+0.8.1: Updates 0.7.9 was not merged into the release version, fixed
 --------------------------------------------------------------------------------
-1: Updates 0.7.9 was not merged into the release version, fixed
+
+0.8 Stable release
+--------------------------------------------------------------------------------
 
 0.7.* UPDATES
 --------------------------------------------------------------------------------

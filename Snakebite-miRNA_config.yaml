@@ -1,19 +1,20 @@
 # absolute path to the project folder
-project-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig
-pipeline-folder: /scratch/project_2001310/Pipeline-miRNA
+project-folder: "/scratch/project_2001310/BovReg_TwinBullSperm-orig"
+pipeline-folder: "/scratch/project_2001310/Snakebite-miRNA"
 scratch-folder: $LOCAL_SCRATCH
-rawdata-folder: /scratch/project_2001310/BovReg_TwinBullSperm-orig/FASTQ/RAW
-pipeline-config: /scratch/project_2001746/TestProject/GBS-pipeline_config.yaml
-server-config: /scratch/project_2001746/TestProject/miRNA-pipeline_puhti-config.yaml
-samplesheet-file: /scratch/project_2001310/BovReg_TwinBullSperm-orig/samplesheet.tsv
+rawdata-folder: "FASTQ/RAW"
+pipeline-config: "Snakebite-miRNA_config.yaml"
+server-config: "Snakebite-miRNA_server-config.yaml"
+samplesheet-file: "samplesheet.tsv"
+sampleInfo-file: "sampleInfo.tsv"
 
-tRNARef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/tRNA/bosTau8-tRNAs.fa
-phixRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/phix/phix174.fa
-matureRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/mature.fa
-hairpinRef: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/hairpin.fa
-reference: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa
-refAnnot: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf
-starbase: /scratch/project_2001310/BovReg_TwinBullSperm-orig/References/STAR
+tRNARef: "References/tRNA/bosTau8-tRNAs.fa"
+phixRef: "References/phix/phix174.fa"
+matureRef: "References/mature.fa"
+hairpinRef: "References/hairpin.fa"
+reference: "References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+refAnnot: "References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
+starbase: "References/STAR"
 
 params:
   protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
@@ -34,7 +35,16 @@ params:
     threeprimetrim: 0
   fastx:
     length: 20
+  featureCounts:
+    gOption: "gene_id"
+    tOption: "gene"
+    tOption2: "exon"
   extractSoftClipped:
     length: 15
   stringtie:
     tpm: 0
+  novel:
+    minCover: 10         # minimum number of samples that have reads covering a locus (=number of samples and NOT number of reads!)
+  de:
+    minAbundance: 10
+    FDR: 0.1

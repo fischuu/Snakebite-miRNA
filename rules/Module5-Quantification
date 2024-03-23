@@ -11,10 +11,10 @@ rule seqkit_quantify_mature_BOWTIE:
         "%s/logs/SEQKIT/seqkit_bowtie_maturefa.{samples}.log" % (config["project-folder"])
     benchmark:
         "%s/benchmark/seqkit/seqkit_bowtie_maturefa.{samples}.benchmark.tsv" % (config["project-folder"])
-    threads: cluster["seqkit_quantify_maturefa_BOWTIE"]["cpus-per-task"]
+    threads: cluster["seqkit_quantify_mature_BOWTIE"]["cpus-per-task"]
     resources:
-        time=cluster["seqkit_quantify_maturefa_BOWTIE"]["time"],
-        mem=cluster["seqkit_quantify_maturefa_BOWTIE"]["mem-per-cpu"]
+        time=cluster["seqkit_quantify_mature_BOWTIE"]["time"],
+        mem=cluster["seqkit_quantify_mature_BOWTIE"]["mem-per-cpu"]
     singularity: config["singularity"]["seqkit"]
     shell:"""
     # This is needed, as the desired output is in stderr, but when I capture that in a file, I get a non-zero exit error
@@ -80,8 +80,10 @@ rule featureCounts_quantify_reference_BOWTIE:
     benchmark:
         "%s/benchmark/FC/featureCounts_bowtie_reference.{samples}.benchmark.tsv" % (config["project-folder"])
     params:
-        annot=config["refAnnot"]
-    params: tmpdir=config["scratch-folder"]
+        annot=config["refAnnot"],
+        tmpdir=config["scratch-folder"],
+        gOption=config["params"]["featureCounts"]["gOption"],
+        tOption=config["params"]["featureCounts"]["tOption"]
     threads: cluster["featureCounts_quantify_reference_BOWTIE"]["cpus-per-task"]
     resources:
         time=cluster["featureCounts_quantify_reference_BOWTIE"]["time"],
@@ -91,8 +93,8 @@ rule featureCounts_quantify_reference_BOWTIE:
         featureCounts --primary -M \
                       -T {threads} \
                       -a {params.annot} \
-                      -t gene \
-                      -g gene_id \
+                      -t {params.tOption} \
+                      -g {params.gOption} \
                       -o {output.file} \
                       {input.bam} 2> {log}
     """
@@ -111,8 +113,11 @@ rule featureCounts_quantify_reference_STAR:
     benchmark:
         "%s/benchmark/FC/featureCounts_star_reference.{samples}.benchmark.tsv" % (config["project-folder"])
     params:
-        annot=config["refAnnot"]
-    params: tmpdir=config["scratch-folder"]
+        annot=config["refAnnot"],
+        tmpdir=config["scratch-folder"],
+        gOption=config["params"]["featureCounts"]["gOption"],
+        tOption=config["params"]["featureCounts"]["tOption"],
+        tOption2=config["params"]["featureCounts"]["tOption2"]
     threads: cluster["featureCounts_quantify_reference_STAR"]["cpus-per-task"]
     resources:
         time=cluster["featureCounts_quantify_reference_STAR"]["time"],
@@ -122,16 +127,16 @@ rule featureCounts_quantify_reference_STAR:
         featureCounts --primary -M \
                       -T {threads} \
                       -a {params.annot} \
-                      -t gene \
-                      -g gene_id \
+                      -t {params.tOption} \
+                      -g {params.gOption} \
                       -o {output.file} \
                       {input.bam} 2> {log}
 
         featureCounts --primary -M \
                       -T {threads} \
                       -a {params.annot} \
-                      -t exon \
-                      -g gene_id \
+                      -t {params.tOption2} \
+                      -g {params.gOption} \
                       -o {output.exon} \
                       {input.bam} 2> {log}
 

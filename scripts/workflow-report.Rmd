@@ -24,7 +24,7 @@ library("viridis")  # Needed for the colouring of the plots
 library("rjson")    # Needed for multiqc dgsb etail data
 library("DT")
 library("kableExtra")
-#library("edgeR")
+library("edgeR")
 library("ICS")
 library("tsne")
 library("lle")
@@ -113,14 +113,19 @@ if(file.exists(file.path(projFolder,"workflow.png"))) knitr::include_graphics(fi
 pipeSMK <- readLines(file.path(pipelineFolder,"Snakebite-miRNA.smk"))
 mirdbstat <- readLines(file.path(projFolder, "STATS", "mirdb.stats"))
 pipeVersion <- gsub("##### Version: ","",pipeSMK[grep("##### Version:", pipeSMK)])[1]
-if(file.exists(file.path(projFolder, "sampleInfo.txt"))){
-    sampleInfo <- read.table(file.path(projFolder, "sampleInfo.txt"), header=TRUE)
-    sampleInfo.avail <- TRUE
-} else {
-  sampleInfo <- data.frame(var=0, None=0)
-    sampleInfo.avail <- FALSE
-}
 
+sampleInfo <- data.frame(var=0, None=0)
+sampleInfo.avail <- FALSE
+do.DEtesting <- FALSE
+
+if(sampleinfo.file!=""){
+    if(file.exists(sampleinfo.file)){
+        sampleInfo <- read.table(sampleinfo.file, sep="\t", header=TRUE)
+        sampleInfo.avail <- TRUE  
+        colnames(sampleInfo)[1] <- "sampleID"
+        if(is.element("DEgroup", colnames(sampleInfo))) do.DEtesting <- TRUE 
+  }
+}
 ```
 
 ## Runtime stats
@@ -138,6 +143,7 @@ out <- data.frame(c("Project folder",
                     "Used annotation file",
                     "No. of grouping information",
                     "Grouping names",
+                    "Found DE groups",
                     "Pipeline version"),
                   c(projFolder,
                     length(rawsamples),
@@ -146,6 +152,7 @@ out <- data.frame(c("Project folder",
                     basename(refAnnot.file),
                     ncol(sampleInfo)-1,
                     paste(colnames(sampleInfo)[-1],collapse=", "),
+                    do.DEtesting,
                     pipeVersion))
 
 out_html <- knitr::kable(out, col.names = NULL, "html")
@@ -979,7 +986,7 @@ write.table(mirbase_hairpin_species_quant, file.path(projFolder, "QUANTIFICATION
 First some general stats about the used reference genome annotation
 
 ```{r}
-annotation <- importGTF(refAnnot.file)
+annotation <- importGTF(refAnnot.file, level=tOption)
 ```
 
 Following numbers of various annotations per biotype are available inside annotaiton file
@@ -1052,15 +1059,21 @@ for(i in 1:length(fc.files)){
 
 fc.expr.star <- merge(fc.in[[1]]$expValues, fc.in[[2]]$expValues, by="Geneid")
 
-for(i in 3:length(fc.files)){
-  fc.expr.star <- merge(fc.expr.star, fc.in[[i]]$expValues, by="Geneid")
+if(length(fc.files)>2){
+  for(i in 3:length(fc.files)){
+    fc.expr.star <- merge(fc.expr.star, fc.in[[i]]$expValues, by="Geneid")
+  }  
 }
+
 colnames(fc.expr.star) <- sub(".*?Reference.", "",colnames(fc.expr.star))
 colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 
 #scale.factors <- calcNormFactors(fc.expr.star[,-1],lib.size=conc.reads, method = "TMM")
 #fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
 #rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
+
+# Export the matrix to QUANTIFICATION folder
+  write.table(fc.expr.star, file.path(projFolder, "QUANTIFICATION","reference_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 # Do the RPKM normalisation
 alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))
@@ -1082,8 +1095,10 @@ rownames(fc.expr.star.rpkm) <- tmp[,1]
 
 fc.expr.stats <- merge(fc.in[[1]]$summary, fc.in[[2]]$summary, by="Status")
 
-for(i in 3:length(fc.files)){
-  fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status")
+if(length(fc.files)>2){
+  for(i in 3:length(fc.files)){
+    fc.expr.stats <- merge(fc.expr.stats, fc.in[[i]]$summary, by="Status") 
+  }
 }
 
 colnames(fc.expr.stats) <- gsub("_reference_star.bam", "", sapply(strsplit(colnames(fc.expr.stats), "Reference."),"[",2))
@@ -1105,7 +1120,8 @@ dir.create(file.path(projFolder, "RESULTS", "Biotype-expressions"), showWarnings
 
 star.protein_coding.rpkm <- NULL
 
-for(i in 1:length(biotypes)){
+if(length(biotypes)>1){
+  for(i in 1:length(biotypes)){
   biotype.genes <- annotation$gene_id[annotation$gene_biotype==biotypes[i]]
   tmp <- fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),]
   if(length(biotype.genes)==1){
@@ -1146,6 +1162,7 @@ for(i in 1:length(biotypes)){
   print(htmltools::tagList(datatable(report_toplist)))
    
   counts_per_biotype[i,] <- apply(fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),-1],2,sum)
+}
 }
 
 counts_per_biotype <- rbind(apply(star.hairpin_species[,-1],2,sum), 
@@ -1290,39 +1307,40 @@ if(novelDetected){
   genome.info <- read.table(paste0(refGenome.fullPath,".fai"))
   
   chrs <- chr.sort(genome.info[,1])
-  chrs.length <- vector(mode="numeric", length=length(chrs))
-  names(chrs.length) <- chrs
-  
-  index <- 1
-  for(i in chrs){
-    chrs.length[index] <- genome.info$V2[genome.info==i]
-    index <- index + 1
+  if(length(chrs)<1000){
+    chrs.length <- vector(mode="numeric", length=length(chrs))
+    names(chrs.length) <- chrs
+    
+    index <- 1
+    for(i in chrs){
+      chrs.length[index] <- genome.info$V2[genome.info==i]
+      index <- index + 1
+    }
+    chrs.length <- chrs.length / 10^6
+    plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
+    
+    axis(2, at=1:length(chrs), chrs, las=2)
+    
+    for(i in 1:length(chrs)){
+      lines(c(0, chrs.length[i]), c(i,i))
+    }
+    
+    for(i in 1:nrow(novelMirna)){
+      jitter <- 0.1
+      curChr <- which(novelMirna[i,1]==chrs)
+      points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
+    }
+    
+    
+    
+    novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
+    
+    for(i in 1:nrow(novelMirna.high)){
+      jitter <- 0.1
+      curChr <- which(novelMirna.high[i,1]==chrs)
+      points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
+    }
   }
-  chrs.length <- chrs.length / 10^6
-  plot(NA, xlim=c(0,max(ceiling(chrs.length))), ylim=c(0,length(chrs)+1), xlab="Position (in Mb)", ylab="Chromosome", yaxt="n", main="Location on Chr of novel loci")
-  
-  axis(2, at=1:length(chrs), chrs, las=2)
-  
-  for(i in 1:length(chrs)){
-    lines(c(0, chrs.length[i]), c(i,i))
-  }
-  
-  for(i in 1:nrow(novelMirna)){
-    jitter <- 0.1
-    curChr <- which(novelMirna[i,1]==chrs)
-    points(novelMirna[i,2]/10^6, curChr+jitter, pch = 16, cex = .6)
-  }
-  
-  
-  
-  novelMirna.high <- novelMirna[which((apply(novel.quant[,-(1:4)],1,median))>1000),]
-  
-  for(i in 1:nrow(novelMirna.high)){
-    jitter <- 0.1
-    curChr <- which(novelMirna.high[i,1]==chrs)
-    points(novelMirna.high[i,2]/10^6, curChr+jitter, pch = 16, cex = .6, col="red")
-  }
-
 }
 ```
 
@@ -1435,14 +1453,14 @@ for(i in 1:length(samples)){
   refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
 }
 
-mirbaseAssigned_MatureReads_perSample <- c()
+mirbaseAssigned_species_MatureReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
+  mirbaseAssigned_species_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
 }
 
-mirbaseAssigned_HairpinReads_perSample <- c()
+mirbaseAssigned_species_HairpinReads_perSample <- c()
 for(i in 1:length(samples)){
-  mirbaseAssigned_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
+  mirbaseAssigned_species_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
 }
 
 contamination_trnaReads_perSample <- c()
@@ -1457,23 +1475,41 @@ for(i in 1:length(samples)){
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
 
+if(is.null(nrow(reference_CountsPerBiotype_perSample))){
+reference_CountsPerBiotype_perSample <-  t(as.matrix(reference_CountsPerBiotype_perSample))
+}
+
 for(i in 1:length(samples)){
   reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(paste0("^",samples[i],"_"), colnames(counts_per_biotype))]
 }
 
+# Now check still, how many of the NoFeatureReads were used to estiamte novel miRNA
+novel_mirna_counts <- apply(novel.quant[,-c(1:4)], 2, sum)
 
 overall_stats <- rbind(qcRemovedReads_perSample,
                        contamination_trnaReads_perSample,
                        contamination_phixReads_perSample,
-                       mirbaseAssigned_MatureReads_perSample,
-                       mirbaseAssigned_HairpinReads_perSample,
+                       mirbaseAssigned_species_MatureReads_perSample,
+                       mirbaseAssigned_species_HairpinReads_perSample,
                        refUnassigned_AmbiguityReads_perSample,
-                       refUnassigned_NoFeatureReads_perSample,
+                       refUnassigned_NoFeatureReads_perSample-novel_mirna_counts,
+                       novel_mirna_counts,
                        reference_CountsPerBiotype_perSample,
                        refUnassigned_UnmappedReads_perSample
                        )
 
+rownames(overall_stats)[7] <- "refUnassigned_NoFeatureReads_perSample (w/o novel)"
 colnames(overall_stats) <- samples
+#rownames(overall_stats) <- c("qcRemovedReads_perSample",
+#                             "contamination_trnaReads_perSample",
+#                             "contamination_phixReads_perSample",
+#                             "mirbaseAssigned_MatureReads_perSample",
+#                             "mirbaseAssigned_HairpinReads_perSample",
+#                             "refUnassigned_AmbiguityReads_perSample",
+#                             "refUnassigned_NoFeatureReads_perSample (w/o novel)",
+#                             "novel_mirna_counts",
+#                             "reference_CountsPerBiotype_perSample",
+#                             "refUnassigned_UnmappedReads_perSample" )
 
 #for(i in 1:length(samples)) unconsideredReads[i] <- conc.reads[i] - sum(fc.expr.stats[-12,(i+1)]) - sum(star.hairpin_species[,(i+1)]) - sum(star.mature_species[,(i+1)]) - trna.mapped.reads[i] - phix.mapped.reads[i]
 ```
@@ -1501,7 +1537,7 @@ revVec <- function(x) x[(length(x):1)]
 par(mar=c(15,5,2,22), xpd=TRUE)
 barplot(overall_stats, col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[min(11, nrow(overall_stats))]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
@@ -1528,7 +1564,7 @@ par(mar=c(15,5,2,22), xpd=TRUE)
 
 barplot(t(t(overall_stats)/apply(overall_stats,2,sum)), col = colorCode[,2], las=2)
 # Take the tenth largest value and only use biotypes that belong to this group and more reads
-threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[11]
+threshold <- sort(apply(overall_stats,1,sum),decreasing = TRUE)[min(11, nrow(overall_stats))]
 colorCodeSmall <- colorCode[apply(overall_stats,1,sum)>=threshold,]
 legend("topright", inset=c(-0.4,0), legend=revVec(colorCodeSmall[,1]), fill=revVec(colorCodeSmall[,2]))
 ```
@@ -1555,11 +1591,13 @@ barplot(unconsideredReads, las=2, col=reportColours[1])
 Here we use this object: star.mature_species.rpkm
 
 ```{r}
-cluster.data <- trna.quant.rpkm
-#colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(trna.quant.rpkm.dist)           
-plot(hc)  
+if(ncol(trna.quant.rpkm)>2){
+  cluster.data <- trna.quant.rpkm
+  #colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  trna.quant.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(trna.quant.rpkm.dist)           
+  plot(hc)    
+}
 ```
 
 
@@ -1568,11 +1606,14 @@ plot(hc)
 Here we use this object: star.mature_species.rpkm
 
 ```{r}
-cluster.data <- star.mature_species.rpkm
-colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.mature_species.rpkm.dist)           
-plot(hc)  
+if(ncol(star.mature_species.rpkm)>2){
+  cluster.data <- star.mature_species.rpkm
+  colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.mature_species.rpkm.dist)           
+  plot(hc)    
+}
+
 ```
 
 ### Hierarchical clustering for protein coding genes (STAR)
@@ -1580,11 +1621,15 @@ plot(hc)
 Here we use this object: star.protein_coding.rpkm
 
 ```{r}
-cluster.data <- star.protein_coding.rpkm
-colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
-star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-hc <- hclust(star.mature_species.rpkm.dist)           
-plot(hc)  
+
+if(!is.null(star.protein_coding.rpkm)){
+  cluster.data <- star.protein_coding.rpkm
+  colnames(cluster.data) <- gsub("_star_mature_species.txt", "", colnames(cluster.data))
+  star.mature_species.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+  hc <- hclust(star.mature_species.rpkm.dist)           
+  plot(hc)    
+}
+
 ```
 
 ### Hierarchical clustering for Novel predictions (STAR)
@@ -1594,10 +1639,12 @@ Here we use this object: novel.rpkm
 
 ```{r}
 if(novelDetected){
-  cluster.data <- novel.rpkm
-  star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
-  hc <- hclust(star.novel.rpkm.dist)           
-  plot(hc)  
+  if(ncol(novel.rpkm)>2){
+    cluster.data <- novel.rpkm
+    star.novel.rpkm.dist <- as.dist(1-cor(as.matrix(cluster.data)))
+    hc <- hclust(star.novel.rpkm.dist)           
+    plot(hc)  
+  }
 }
 ```
 
@@ -1653,7 +1700,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(3, ncol(expr.PCA$x))])
 ```
 
 ```{r}
@@ -1666,7 +1713,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("topright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1700,15 +1747,17 @@ if(sampleInfo.avail){
 ### PCA - Reference-protein_coding (STAR)
 
 ```{r performPCA_protein_coding}
-expr.PCA <- prcomp(t(star.protein_coding.rpkm))
-expr.PCA.protein_coding <- expr.PCA
+if(!is.null(star.protein_coding.rpkm)){
+  expr.PCA <- prcomp(t(star.protein_coding.rpkm))
+  expr.PCA.protein_coding <- expr.PCA  
+}
 ```
 
 This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1721,7 +1770,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1766,7 +1815,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1779,7 +1828,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1821,7 +1870,7 @@ This is just the plain PCA, without using any colouring schemes.
 
 ```{r}
 palette("default")
-pairs(expr.PCA$x[,1:3])
+pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)])
 ```
 
 ```{r}
@@ -1834,7 +1883,7 @@ if(sampleInfo.avail){
     for(i in 2:ncol(sampleInfo)){
       tmpTitle <- paste("#### 3C: ",colnames(sampleInfo)[i],"\n")
       cat(sprintf(tmpTitle))
-      pairs(expr.PCA$x[,1:3], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+      pairs(expr.PCA$x[,1:min(ncol(expr.PCA$x), 3)], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
       par(xpd=TRUE)
       legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
       par(xpd=FALSE)
@@ -1917,6 +1966,7 @@ if(sampleInfo.avail){
 First, the PCA based t-SNE run (using the PCA-based reduced data as input)
 
 ```{r, results="asis"}
+if(length(samples)>2){
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(expr.PCA.mature_species$x[,1:cols], k=5)
 if(sampleInfo.avail){
@@ -1933,12 +1983,14 @@ if(sampleInfo.avail){
 }
   }else {
    plot(TSNEout, pch=20)
+  }
 }
 ```
 
 And then the run for the original data
 
 ```{r, eval=FALSE, results="asis"}
+if(length(samples)>2){
 cols <- min(ncol(expr.PCA.mature_species$x),10)
 TSNEout <- tsne(star.mature_species.rpkm, k=5)
 if(sampleInfo.avail){
@@ -1955,18 +2007,46 @@ if(sampleInfo.avail){
 }
   }else {
    plot(TSNEout, pch=20)
+  }
 }
 ```
 
 ### t-SNE - Reference-protein_coding (STAR)
 First for the PCA reduced input data
 ```{r, results="asis"}
-cols <- min(ncol(expr.PCA.protein_coding$x),10)
-TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
-if(sampleInfo.avail){
+if(length(samples)>2){
+  if(!is.null(star.protein_coding.rpkm)){
+    cols <- min(ncol(expr.PCA.protein_coding$x),10)
+    TSNEout <- tsne(expr.PCA.protein_coding$x[,1:cols], k=5)
+    if(sampleInfo.avail){
+      if(ncol(sampleInfo)>1){
+      for(i in 2:ncol(sampleInfo)){
+        tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+        cat(sprintf(tmpTitle))
+        plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+        par(xpd=TRUE)
+        legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+        par(xpd=FALSE)
+        cat(sprintf("\n\n"))
+      }
+    }
+      }else {
+       plot(TSNEout, pch=20)
+      }
+  }
+}
+```
+
+And then for the original data as well
+
+```{r, eval=FALSE, results="asis"}
+if(!is.null(star.protein_coding.rpkm)){
+  cols <- min(ncol(expr.PCA.protein_coding$x),10)
+  TSNEout <- tsne(star.protein_coding.rpkm, k=5)
+  if(sampleInfo.avail){
   if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
-    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA-based)\n")
+    tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
     cat(sprintf(tmpTitle))
     plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
     par(xpd=TRUE)
@@ -1974,42 +2054,24 @@ if(sampleInfo.avail){
     par(xpd=FALSE)
     cat(sprintf("\n\n"))
   }
-}
-  }else {
-   plot(TSNEout, pch=20)
-}
-```
-
-And then for the original data as well
-
-```{r, eval=FALSE, results="asis"}
-cols <- min(ncol(expr.PCA.protein_coding$x),10)
-TSNEout <- tsne(star.protein_coding.rpkm, k=5)
-if(sampleInfo.avail){
-if(ncol(sampleInfo)>1){
-for(i in 2:ncol(sampleInfo)){
-  tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(Orig.data based)\n")
-  cat(sprintf(tmpTitle))
-  plot(TSNEout, col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-  par(xpd=TRUE)
-  legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-  par(xpd=FALSE)
-  cat(sprintf("\n\n"))
-}
-}
-} else {
-   plot(TSNEout, pch=20)
+  }
+  } else {
+     plot(TSNEout, pch=20)
+  }
 }
 ```
 ### Kernel PCA - Mature_species.fa (STAR)
 PCA-based data
 ```{r}
+if(length(samples)>2){
 # Kernel PCA
 cols <- min(min(dim(expr.PCA.mature_species$x)),10)-1
 KPCAres <- kpca(expr.PCA.mature_species$x[,1:cols])
+}
 ```
 
 ```{r, results="asis"}
+if(length(samples)>2){
 if(sampleInfo.avail){
 if(ncol(sampleInfo)>1){
   for(i in 2:ncol(sampleInfo)){
@@ -2025,6 +2087,7 @@ if(ncol(sampleInfo)>1){
   }else {
    ndim <- min(ncol(rotated(KPCAres)), 10)
    plot(rotated(KPCAres)[,1:ndim], pch=20)
+  }
 }
 ```
 Original data
@@ -2055,27 +2118,35 @@ if(ncol(sampleInfo)>1){
 ### Kernel PCA - Reference-protein_coding (STAR)
 PCA-based data
 ```{r}
-# Kernel PCA
-cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
-KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+if(length(samples)>2){
+  if(!is.null(star.protein_coding.rpkm)){
+    # Kernel PCA
+    cols <- min(min(dim(expr.PCA.protein_coding$x)),10)-1
+    KPCAres <- kpca(expr.PCA.protein_coding$x[,1:cols])
+  }
+}
 ```
 
 ```{r, results="asis"}
-if(sampleInfo.avail){
-if(ncol(sampleInfo)>1){
-  for(i in 2:ncol(sampleInfo)){
-      tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA based data)\n")
-      cat(sprintf(tmpTitle))
-      pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
-      par(xpd=TRUE)
-      legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
-      par(xpd=FALSE)
-      cat(sprintf("\n\n"))
+if(length(samples)>2){
+  if(!is.null(star.protein_coding.rpkm)){
+      if(sampleInfo.avail){
+        if(ncol(sampleInfo)>1){
+          for(i in 2:ncol(sampleInfo)){
+              tmpTitle <- paste("#### ",colnames(sampleInfo)[i],"(PCA based data)\n")
+              cat(sprintf(tmpTitle))
+              pairs(rotated(KPCAres)[,1:cols], col=pca.colours[,i], pch=20, oma=c(3,3,3,15))
+              par(xpd=TRUE)
+              legend("bottomright", fill=pca.legend[[i-1]], legend=names(pca.legend[[i-1]]))
+              par(xpd=FALSE)
+              cat(sprintf("\n\n"))
+          }
+      }
+    } else {
+       ndim <- min(ncol(rotated(KPCAres)), 10)
+       plot(rotated(KPCAres)[,1:ndim], pch=20)
+    }
   }
-}
-} else {
-   ndim <- min(ncol(rotated(KPCAres)), 10)
-   plot(rotated(KPCAres)[,1:ndim], pch=20)
 }
 ```
 
@@ -2213,6 +2284,149 @@ if(sampleInfo.avail){
   }
 } else {
    plot(lleres$Y[,1:5], pch=20)
+}
+```
+
+## Differentially gene expression
+In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we will perform pairwise group comparisons here.
+
+```{r import the data}
+# Hairpin
+  hp <- read.table(file.path(projFolder, "QUANTIFICATION", "mirbase_hairpin_species_star-counts.tsv"), header=TRUE)
+  colnames(hp)[1] <- "gene"
+  
+# mature
+  mature <- read.table(file.path(projFolder, "QUANTIFICATION", "mirbase_mature_species_star-counts.tsv"), header=TRUE)
+  colnames(mature)[1] <- "gene"
+  
+# tRNA
+  trna <- read.table(file.path(projFolder, "QUANTIFICATION", "trna_counts.tsv"), header=TRUE)
+  colnames(trna)[1] <- "gene"
+  
+# reference
+  ref <- read.table(file.path(projFolder, "QUANTIFICATION", "reference_counts.tsv"), header=TRUE)
+  colnames(ref)[1] <- "gene"
+  
+# novel
+  novel <- read.table(file.path(projFolder, "QUANTIFICATION", "novel_counts.tsv"), header=TRUE)
+  colnames(novel)[1] <- "gene"
+```
+
+```{r merge the data together}    
+# Now merge the count data
+  allCounts <- rbind(hp,
+                     mature,
+                     trna[,-2],
+                     ref,
+                     novel[,-c(2,3,4)])
+
+  #rownames(allCounts) <- allCounts[,1]
+  #allCounts <- allCounts[,-1]
+```
+
+```{r remove low abundances}
+# Remove low abundance rows
+  geneCounts <- apply(allCounts[,-1], 1, sum)
+  allCounts.filtered <- allCounts[geneCounts>abundanceRemove, ]
+```
+
+```{r calculate normalisation factors}
+# calculate normalization factors
+  allData <- DGEList(counts=allCounts[,-1])
+  allData <- calcNormFactors(allData)
+```
+
+```{r get normcounts object}
+# normalize counts using the normalization factors
+  normCounts <- cpm(allData, normalized.lib.sizes=TRUE)
+  write.table(normCounts, file.path(projFolder, "RESULTS", "normalisedCounts.tsv"), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+```
+
+```{r create group object}
+if(do.DEtesting){
+  group <- rep("UNKNOWN", ncol(allCounts)-1)
+  realColnames <- strsplit(readLines(file.path(projFolder, "QUANTIFICATION", "mirbase_hairpin_species_star-counts.tsv"), n=1), "\t")[[1]][-1]
+
+  foundGroups <- unique(sampleInfo$DEgroup)
+  
+  for(i in 1:length(foundGroups)){
+    groupSamples <- sampleInfo$sampleID[sampleInfo$DEgroup==foundGroups[i]]
+    
+    group[which(is.element(realColnames, groupSamples))] <- paste0("Group",foundGroups[i])
+  }  
+  
+  group <- factor(group)
+}
+```
+
+```{r do de testing}
+if(do.DEtesting){
+  # perform differential expression analysis using negative binomial model
+    design <- model.matrix(~group+0)
+    y <- DGEList(counts=normCounts)
+    y <- estimateDisp(y, design)
+    fit <- glmQLFit(y, design)
+}
+```
+
+```{r core function for DE testing}
+  giveMeResults <- function(g1, g2, groupVector=gsub("group", "", colnames(fit$design)), fitIn=fit, FDR=de.fdr, filePath=NULL, biotype.split=TRUE){
+    
+    totalGroups <- length(groupVector)
+    x <- rep(0, totalGroups)
+    
+    x[groupVector==g1] <- 1
+    x[groupVector==g2] <- -1
+    qlf <- glmQLFTest(fitIn, contrast = x)
+    if(substr(qlf$comparison, 1,1)=="-"){
+      comparison <- gsub(" ", "vs", gsub("-", "",gsub("1\\*group", "", qlf$comparison)))  
+    } else {
+      comparison <- gsub("group", "", gsub("^1\\*", "", gsub(" -1\\*", "vs", gsub("1*groupgroup", "", qlf$comparison))))
+    }
+    
+    #cat(g1, "and", g2,"\n")
+    #print(comparison)
+    #cat("-----------------------------------------------------\n")
+    
+    DEgenes <- topTags(qlf, n=nrow(normCounts))[["table"]]
+    DEgenes <- data.frame(gene=rownames(DEgenes), DEgenes)
+    
+    out <- DEgenes[DEgenes$FDR<FDR,]
+    
+    if(!is.null(filePath)){
+      write.table(out, file.path(filePath, paste0("edgeR-", comparison, ".tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      
+      if(biotype.split){
+        out.hp <- out[is.element(out$gene, hp$gene),]
+        write.table(out.hp, file.path(filePath, paste0("edgeR-", comparison, "-hp.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.mature <- out[is.element(out$gene, mature$gene),]
+        write.table(out.mature, file.path(filePath, paste0("edgeR-", comparison, "-mature.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.trna <- out[is.element(out$gene, trna$gene),]
+        write.table(out.trna, file.path(filePath, paste0("edgeR-", comparison, "-trna.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+        
+        out.ref <- out[is.element(out$gene, ref$gene),]
+        write.table(out.ref, file.path(filePath, paste0("edgeR-", comparison, "-ref.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      
+        out.novel <- out[is.element(out$gene, novel$gene),]
+        write.table(out.novel, file.path(filePath, paste0("edgeR-", comparison, "-novel.tsv")), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+      }
+      
+    }
+    
+    out
+  }
+```
+
+```{r now do the DE testing}
+if(do.DEtesting){
+  for(g1 in 1:(length(foundGroups)-1)){
+    for(g2 in (g1+1):length(foundGroups)){
+      if(!dir.exists(file.path(projFolder, "RESULTS", "edgeR"))) dir.create(file.path(projFolder, "RESULTS", "edgeR"))
+      out <- giveMeResults(g1=paste0("Group",foundGroups[g1]), g2=paste0("Group",foundGroups[g2]), filePath = file.path(projFolder, "RESULTS", "edgeR"))  
+    }
+  }
 }
 ```
 
