@@ -63,22 +63,34 @@ rule bash_prepare_mirdb_references:
     resources:
         time=cluster["__default__"]["time"],
         mem=cluster["__default__"]["mem-per-cpu"]
-    singularity: config["singularity"]["bowtie"]
     params:
         species=config["params"]["species-id"]
     shell:""" 
-     # Change bases U to T
-     sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
-     sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
+     echo "# Change bases U to T" >> {log}
+     sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature} 2>> {log}
+     sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin} 2>> {log}
 
-     # Filter species
-     grep -A 1 --no-group-separator '{params.species}' {output.mature}  > {output.matureSpecies}
-     grep -A 1 --no-group-separator '{params.species}' {output.hairpin}  > {output.hairpinSpecies}
+     echo "# Filter species" >> {log}
+     grep -A 1 --no-group-separator '{params.species}' {output.mature}  > {output.matureSpecies} 2>> {log} || true
+     grep -A 1 --no-group-separator '{params.species}' {output.hairpin}  > {output.hairpinSpecies} 2>> {log} || true
      
-     grep -e '>' {output.mature} | wc -l >> {output.stats}
-     grep -e '>' {output.matureSpecies} | wc -l >> {output.stats}
-     grep -e '>' {output.hairpin} | wc -l >> {output.stats}
-     grep -e '>' {output.hairpinSpecies} | wc -l >> {output.stats}
+     # Check if the output files are empty and apply fallback
+     if [[ ! -s {output.matureSpecies} ]]; then
+         echo "Empty matureSpecies file, use the base filtered instead" >> {log}
+         cp {output.mature} {output.matureSpecies} 2>> {log}
+     fi
+
+     if [[ ! -s {output.hairpinSpecies} ]]; then
+         echo "Empty hairpinSpecies file, use the base filtered instead" >> {log}
+         cp {output.hairpin} {output.hairpinSpecies} 2>> {log}
+     fi
+
+
+     echo "# Get the line stats" >> {log}
+     grep -e '>' {output.mature} | wc -l >> {output.stats} 2>> {log}
+     grep -e '>' {output.matureSpecies} | wc -l >> {output.stats} 2>> {log}
+     grep -e '>' {output.hairpin} | wc -l >> {output.stats} 2>> {log}
+     grep -e '>' {output.hairpinSpecies} | wc -l >> {output.stats} 2>> {log}
     """
     
 rule bowtie_createIndex_mature:
@@ -168,6 +180,31 @@ rule bowtie_createIndex_hairpinSpecies:
      # The input input line is correct, as I want to create the index with the same prefix
       bowtie-build {input} {input} > {log} 2>&1;
     """
+
+if config["otherRef"] == "":
+    pass
+else:
+    rule bowtie_createIndex_other:
+        """
+        Create Bowtie Index for other databases(BOWTIE).
+        """
+        input:
+            config["otherRef"]
+        output:
+            "%s.1.ebwt" % (config["otherRef"])
+        log:
+            "%s/logs/BOWTIE/bowtie_index_other.log" % (config["project-folder"])
+        benchmark:
+            "%s/benchmark/BOWTIE/bowtie_index_other.benchmark.tsv" % (config["project-folder"])
+        threads: cluster["bowtie_createIndex_other"]["cpus-per-task"]
+        resources:
+            time=cluster["bowtie_createIndex_other"]["time"],
+            mem=cluster["bowtie_createIndex_other"]["mem-per-cpu"]
+        singularity: config["singularity"]["bowtie"]
+        shell:"""
+         # The input input line is correct, as I want to create the index with the same prefix
+          bowtie-build {input} {input} > {log} 2>&1;
+        """
     
 rule bowtie_createIndex_reference:
     """
@@ -215,7 +252,7 @@ rule star_createIndex_mature:
     shell:"""
         mkdir -p {params.tmpdirTop}
 
-        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeChrBinNbits 5 --genomeSAindexNbases 6  --limitGenomeGenerateRAM 150000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """ 
     
 rule star_createIndex_mature_species:
@@ -242,7 +279,7 @@ rule star_createIndex_mature_species:
     shell:"""
         mkdir -p {params.tmpdirTop}
      
-        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeChrBinNbits 5 --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """ 
 
 rule star_createIndex_hairpin:
@@ -269,7 +306,7 @@ rule star_createIndex_hairpin:
     shell:"""
         mkdir -p {params.tmpdirTop}
     
-        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """ 
     
 rule star_createIndex_hairpin_species:
@@ -296,7 +333,7 @@ rule star_createIndex_hairpin_species:
     shell:"""
         mkdir -p {params.tmpdirTop}
         
-        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+        STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6  --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """ 
 
 rule star_createIndex_reference:
@@ -322,6 +359,6 @@ rule star_createIndex_reference:
     singularity: config["singularity"]["star"]
     shell:"""
         mkdir -p {params.tmpdirTop}
-        
-        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --genomeChrBinNbits 15 --limitGenomeGenerateRAM 65000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log}
+
+        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --genomeChrBinNbits 3 --limitGenomeGenerateRAM 220000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """    

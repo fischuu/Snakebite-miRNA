@@ -9,8 +9,8 @@ import yaml
 ##### Snakebite miRNA pipeline #####
 ##### Daniel Fischer (daniel.fischer@luke.fi)
 ##### Natural Resources Institute Finland (Luke)
-##### Version: 0.11.20
-version = "0.11.20"
+##### Version: 0.11.21
+version = "0.11.21"
 
 ##### set minimum snakemake version #####
 min_version("6.0")
@@ -106,6 +106,9 @@ if(config["matureRef"][0]!='/'):
 if(config["hairpinRef"][0]!='/'):
     config["hairpinRef"] = config["project-folder"] + '/' + config["hairpinRef"]
 
+if(config["otherRef"] and config["otherRef"][0] != '/'):
+    config["otherRef"] = config["project-folder"] + '/' + config["otherRef"]
+
 if(config["reference"][0]!='/'):
     config["reference"] = config["project-folder"] + '/' + config["reference"]
 
@@ -121,6 +124,7 @@ config["phixIndex"] = config["phixRef"]
 config["matureIndex"] =  "%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
 config["matureSpeciesIndex"] =  "%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"])
 config["hairpinIndex"] =  "%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
+config["otherIndex"] = config["otherRef"]
 config["referenceIndex"] = config["reference"]
 config["matureSTARIndex"] = config["starbase"]+"/Mature"
 config["hairpinSTARIndex"] = config["starbase"]+"/Hairpin"
@@ -228,6 +232,7 @@ rule all:
         expand("%s/STATS/BOWTIE/PhiX/{samples}_PhiX.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/BOWTIE/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/BOWTIE/Hairpin/{samples}_hairpin.flagstat" % (config["project-folder"]), samples=samples),
+  #      expand("%s/STATS/BOWTIE/Other/{samples}_other.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Mature/{samples}_mature.flagstat" % (config["project-folder"]), samples=samples),
         expand("%s/STATS/STAR/Reference/{samples}_reference.flagstat" % (config["project-folder"]), samples=samples),
       # ALIGNMENTS
@@ -236,6 +241,7 @@ rule all:
         expand("%s/FASTA/STAR/Reference_softclipped/{samples}_reference_softclipped.fasta.gz" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/BOWTIE/Mature/{samples}_bowtie_mature_seqkit.txt" % (config["project-folder"]), samples=samples),
+  #      expand("%s/QUANTIFICATION/BOWTIE/Other/{samples}_bowtie_other_seqkit.txt" % (config["project-folder"]), samples=samples),
         expand("%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_exon_fc.txt" % (config["project-folder"]), samples=samples),
       # NOVEL MIRNA
         expand("%s/QUANTIFICATION/STAR/Novel_genes/{samples}_star_novelMirna_bedtools.txt" % (config["project-folder"]), samples=samples),

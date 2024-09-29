@@ -67,6 +67,32 @@ rule seqkit_quantify_hairpin_BOWTIE:
         seqkit bam -C {input.bam} 2> {log} && cat {log} > {output}
     """
 
+if config["otherRef"] == "":
+    pass
+else:
+    rule seqkit_quantify_other_BOWTIE:
+        """
+        Quantify the BOWTIE aligned reads to otherRef.fa (seqkit).
+        """
+        input:
+            bam="%s/BAM/BOWTIE/Other/{samples}_other.bam" % (config["project-folder"]),
+            bai="%s/BAM/BOWTIE/Other/{samples}_other.bam.bai" % (config["project-folder"])
+        output:
+            "%s/QUANTIFICATION/BOWTIE/Other/{samples}_bowtie_other_seqkit.txt" % (config["project-folder"])
+        log:
+            "%s/logs/SEQKIT/seqkit_bowtie_otherfa.{samples}.log" % (config["project-folder"])
+        benchmark:
+            "%s/benchmark/seqkit/seqkit_bowtie_otherfa.{samples}.benchmark.tsv" % (config["project-folder"])
+        threads: cluster["seqkit_quantify_other_BOWTIE"]["cpus-per-task"]
+        resources:
+            time=cluster["seqkit_quantify_other_BOWTIE"]["time"],
+            mem=cluster["seqkit_quantify_other_BOWTIE"]["mem-per-cpu"]
+        singularity: config["singularity"]["seqkit"]
+        shell:"""
+        # This is needed, as the desired output is in stderr, but when I capture that in a file, I get a non-zero exit error
+            seqkit bam -C {input.bam} 2> {log} && cat {log} > {output}
+        """
+
 rule featureCounts_quantify_reference_BOWTIE:
     """
     Quantify the BOWTIE aligned reads to reference (featureCounts).

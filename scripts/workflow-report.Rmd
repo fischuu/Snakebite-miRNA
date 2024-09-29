@@ -758,6 +758,7 @@ datatable(trna.quant.rpkm)
 
 ```{r export trna counts}
 write.table(trna.quant, file.path(projFolder, "QUANTIFICATION","trna_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+write.table(data.frame(ID=rownames(trna.quant.rpkm),trna.quant.rpkm), file.path(projFolder, "QUANTIFICATION","trna_rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Mature.fa
@@ -813,6 +814,8 @@ datatable(mirbase_mature_quant.rpkm)
 
 ```{r}
 write.table(mirbase_mature_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+write.table(data.frame(ID=rownames(mirbase_mature_quant.rpkm),mirbase_mature_quant.rpkm), file.path(projFolder, "QUANTIFICATION","mirbase_mature_star-rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Mature_Species.fa
@@ -875,6 +878,8 @@ datatable(mirbase_mature_species_quant.rpkm)
 
 ```{r}
 write.table(mirbase_mature_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_mature_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+write.table(data.frame(ID=rownames(mirbase_mature_species_quant.rpkm),mirbase_mature_species_quant.rpkm), file.path(projFolder, "QUANTIFICATION","mirbase_mature_species_star-rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 
@@ -928,6 +933,7 @@ datatable(mirbase_hairpin_quant.rpkm)
 
 ```{r}
 write.table(mirbase_hairpin_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+write.table(data.frame(ID=rownames(mirbase_hairpin_quant.rpkm),mirbase_hairpin_quant.rpkm), file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_star-rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ## Mirbase - Hairpin_Species.fa
@@ -978,6 +984,7 @@ datatable(mirbase_hairpin_species_quant.rpkm)
 
 ```{r}
 write.table(mirbase_hairpin_species_quant, file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_species_star-counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+write.table(data.frame(ID=rownames(mirbase_hairpin_species_quant.rpkm),mirbase_hairpin_species_quant.rpkm), file.path(projFolder, "QUANTIFICATION","mirbase_hairpin_species_star-rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 ```
 
 ### Differences Mature.fa and Mature_Species.fa
@@ -1072,9 +1079,6 @@ colnames(fc.expr.star) <- sub("_reference_star.bam", "",colnames(fc.expr.star))
 #fc.expr.star.tmm <- t(t(fc.expr.star[,-1])/(scale.factors*conc.reads))
 #rownames(fc.expr.star.tmm) <- fc.expr.star[,1]
 
-# Export the matrix to QUANTIFICATION folder
-  write.table(fc.expr.star, file.path(projFolder, "QUANTIFICATION","reference_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
-
 # Do the RPKM normalisation
 alignmentStats <- mapply(cbind,sapply((sapply(fc.in,"[",3)),"[",2))
 alignmentStats <- alignmentStats[-2,]
@@ -1088,6 +1092,13 @@ fc.expr.star.rpkm <- tmp[,2:(length(mio.reads.mapped)+1)]
 fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/gene.length)
 fc.expr.star.rpkm <- t(t(fc.expr.star.rpkm)/mio.reads.mapped)
 rownames(fc.expr.star.rpkm) <- tmp[,1]
+```
+
+```{r}
+# Export the matrix to QUANTIFICATION folder
+  write.table(fc.expr.star, file.path(projFolder, "QUANTIFICATION","reference_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+  write.table(data.frame(ID=rownames(fc.expr.star.rpkm),fc.expr.star.rpkm), file.path(projFolder, "QUANTIFICATION","reference_rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
 ```
 
 ```{r}
@@ -1290,6 +1301,10 @@ if(novelDetected){
 
 ```{r}
 write.table(novel.quant, file.path(projFolder, "QUANTIFICATION","novel_counts.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+if(novelDetected){
+  write.table(data.frame(ID=rownames(novel.rpkm),novel.rpkm), file.path(projFolder, "QUANTIFICATION","novel_rpkm.tsv"), sep="\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+}
 ```
 
 ### Visualisation of novel loci
@@ -2339,7 +2354,7 @@ In case there is a column named 'DEgroup' inside the sampleInfo.tsv file, we wil
 ```{r get normcounts object}
 # normalize counts using the normalization factors
   normCounts <- cpm(allData, normalized.lib.sizes=TRUE)
-  write.table(normCounts, file.path(projFolder, "RESULTS", "normalisedCounts.tsv"), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
+#  write.table(normCounts, file.path(projFolder, "RESULTS", "normalisedCounts.tsv"), sep="\t", col.names = TRUE, row.names = FALSE, quote = FALSE)
 ```
 
 ```{r create group object}

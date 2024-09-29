@@ -8,6 +8,9 @@ module load snakemake
 export APPTAINER_TMPDIR="/scratch/project_2001310/tmp"
 export APPTAINER_CACHEDIR="/scratch/project_2001310/tmp"
 
+# In case of crashed runs, there might be a tmpo folder that creates errors during restart, catch that
+rm -rf STAR_tmp/
+
 snakemake -s $pipelineFolder/Snakebite-miRNA.smk \
           --configfile $projectFolder/Snakebite-miRNA_config.yaml \
           --cluster-config $projectFolder/Snakebite-miRNA_server-config.yaml \
