@@ -27,6 +27,8 @@ params:
     threads: 20
   star: 
     limitBAMsortRAM: "12000000000"
+    genomeChrBinNbits: 14
+    limitGenomeGenerateRAM: 65000000000
   cutadapt:
     adapter3p: ""
     adapter5p: ""

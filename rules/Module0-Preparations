@@ -351,7 +351,9 @@ rule star_createIndex_reference:
     params:
         index=config["referenceSTARIndex"],
         tmpdir="%s/STAR_tmp/Reference" % (config["project-folder"]),
-        tmpdirTop="%s/STAR_tmp" % (config["project-folder"])
+        tmpdirTop="%s/STAR_tmp" % (config["project-folder"]),
+        chrbin=config["params"]["star"]["genomeChrBinNbits"],
+        genomeram=config["params"]["star"]["limitGenomeGenerateRAM"]
     threads: cluster["star_createIndex_reference"]["cpus-per-task"]
     resources:
         time=cluster["star_createIndex_reference"]["time"],
@@ -360,5 +362,5 @@ rule star_createIndex_reference:
     shell:"""
         mkdir -p {params.tmpdirTop}
 
-        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --genomeChrBinNbits 3 --limitGenomeGenerateRAM 220000000000 --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
+        STAR --runThreadN {threads}  --outTmpDir {params.tmpdir} --genomeChrBinNbits {params.chrbin} --limitGenomeGenerateRAM {params.genomeram} --runMode genomeGenerate --genomeDir {params.index} --genomeFastaFiles {input.fasta}  2> {log} 1>&2
     """    
