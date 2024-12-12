@@ -22,8 +22,8 @@ rule SortedBamToMpileup:
         mem=cluster["SortedBamToMpileup"]["mem-per-cpu"]
     group: "star_alignments"
     shell:"""
-        samtools mpileup -d 100 -B -C 50 -f {input.reference} {input.bam} > {output.mpileup}
-        {params.pipe}/scripts/uniqueMpileup.sh {output.mpileup} > {output.unique}
+        samtools mpileup -d 100 -B -C 50 -f {input.reference} {input.bam} > {output.mpileup} 2>> {log}
+        {params.pipe}/scripts/uniqueMpileup.sh {output.mpileup} > {output.unique} 2> {log}
         {params.pipe}/scripts/mpileupToBed.sh {output.unique} 10 > {output.bed} 2> {log}
     """
 

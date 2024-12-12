@@ -1174,6 +1174,8 @@ if(length(biotypes)>1){
    
   counts_per_biotype[i,] <- apply(fc.expr.star[is.element(fc.expr.star$Geneid, biotype.genes),-1],2,sum)
 }
+} else {
+  counts_per_biotype <- apply(fc.expr.star[,-1], 2, sum)
 }
 
 counts_per_biotype <- rbind(apply(star.hairpin_species[,-1],2,sum), 
@@ -1444,48 +1446,58 @@ for(i in 1:length(samples)){
 names(rawReads_perSample) <- samples
 
 qcRemovedReads_perSample <- c()
+# THAT IS A QUICK FIX FOR SAMPLENAMES WITH TRUE SUBSETS!!! THIS IS NOT GENERIC, WHEN _S IS NOT PRESENT (OR PART OF THE FILENAME, THIS WILL FAIL) FIX THAT ASAP!!!!
+samples_trimmed.reads <- sapply(strsplit(names(trimmed.reads),"_S"),"[",1)
 for(i in 1:length(samples)){
-  qcRemovedReads_perSample[i] <- rawReads_perSample[grep(paste0("^",samples[i]), names(rawReads_perSample))]-sum(trimmed.reads[grep(paste0("^", samples[i]), names(trimmed.reads))])
+  qcRemovedReads_perSample[i] <- rawReads_perSample[is.element(names(rawReads_perSample), samples[i])]-sum(trimmed.reads[is.element(samples_trimmed.reads, samples[i])])
 }
 
 refAssignedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refAssignedReads_perSample[i] <- fc.expr.stats[1,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
+  refAssignedReads_perSample[i] <- fc.expr.stats[1,is.element(colnames(fc.expr.stats), samples.adj[i])]
 }
 
 refUnassigned_AmbiguityReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
+  refUnassigned_AmbiguityReads_perSample[i] <- fc.expr.stats[2,is.element(colnames(fc.expr.stats), samples.adj[i])]
 }
 
 refUnassigned_NoFeatureReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
+  refUnassigned_NoFeatureReads_perSample[i] <- fc.expr.stats[8,is.element(colnames(fc.expr.stats), samples.adj[i])]
 }
 
 refUnassigned_UnmappedReads_perSample <- c() 
 for(i in 1:length(samples)){
-  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,grep(paste0("^", samples.adj[i]), colnames(fc.expr.stats))]
+  refUnassigned_UnmappedReads_perSample[i] <- fc.expr.stats[14,is.element(colnames(fc.expr.stats), samples.adj[i])]
 }
 
 mirbaseAssigned_species_MatureReads_perSample <- c()
+adjustedColnames <- colnames(star.mature_species)
+adjustedColnames <- sapply(strsplit(adjustedColnames, "_star"),"[",1)
 for(i in 1:length(samples)){
-  mirbaseAssigned_species_MatureReads_perSample[i] <- sum(star.mature_species[,grep(paste0("^", samples.adj[i]), colnames(star.mature_species))])
+  mirbaseAssigned_species_MatureReads_perSample[i] <- sum(star.mature_species[,is.element(adjustedColnames, samples.adj[i])])
 }
 
 mirbaseAssigned_species_HairpinReads_perSample <- c()
+adjustedColnames <- colnames(star.hairpin_species)
+adjustedColnames <- sapply(strsplit(adjustedColnames, "_star"),"[",1)
 for(i in 1:length(samples)){
-  mirbaseAssigned_species_HairpinReads_perSample[i] <- sum(star.hairpin_species[,grep(paste0("^", samples.adj[i]), colnames(star.hairpin_species))])
+  mirbaseAssigned_species_HairpinReads_perSample[i] <- sum(star.hairpin_species[,is.element(adjustedColnames, samples.adj[i])])
 }
 
 contamination_trnaReads_perSample <- c()
+adjustedColnames <- names(trna.mapped.reads)
+adjustedColnames <- sapply(strsplit(adjustedColnames, "_tRNA"),"[",1)
 for(i in 1:length(samples)){
-  contamination_trnaReads_perSample[i] <- trna.mapped.reads[grep(paste0("^", samples.adj[i]), names(trna.mapped.reads))]
+  contamination_trnaReads_perSample[i] <- trna.mapped.reads[is.element(adjustedColnames, samples.adj[i])]
 }
 
+adjustedColnames <- names(phix.mapped.reads)
+adjustedColnames <- sapply(strsplit(adjustedColnames, "_PhiX"),"[",1)
 contamination_phixReads_perSample <- c()
 for(i in 1:length(samples)){
-  contamination_phixReads_perSample[i] <- phix.mapped.reads[grep(paste0("^", samples.adj[i]), names(phix.mapped.reads))]
+  contamination_phixReads_perSample[i] <- phix.mapped.reads[is.element(adjustedColnames, samples.adj[i])]
 }
 
 reference_CountsPerBiotype_perSample <- counts_per_biotype[-c(1:2),]
@@ -1494,9 +1506,14 @@ if(is.null(nrow(reference_CountsPerBiotype_perSample))){
 reference_CountsPerBiotype_perSample <-  t(as.matrix(reference_CountsPerBiotype_perSample))
 }
 
+
+# Need to adjust the colnames, in case there is a true subset available for the sample names
+adjustedColnames <- colnames(counts_per_biotype)
+adjustedColnames <- sapply(strsplit(adjustedColnames, "_star"),"[",1)
 for(i in 1:length(samples)){
-  reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),grep(paste0("^",samples[i],"_"), colnames(counts_per_biotype))]
+  reference_CountsPerBiotype_perSample[,i] <- counts_per_biotype[-c(1:2),is.element(adjustedColnames, samples[i])]
 }
+reference_CountsPerBiotype_perSample <- as.vector(reference_CountsPerBiotype_perSample)
 
 # Now check still, how many of the NoFeatureReads were used to estiamte novel miRNA
 novel_mirna_counts <- apply(novel.quant[,-c(1:4)], 2, sum)
@@ -1506,7 +1523,7 @@ overall_stats <- rbind(qcRemovedReads_perSample,
                        contamination_phixReads_perSample,
                        mirbaseAssigned_species_MatureReads_perSample,
                        mirbaseAssigned_species_HairpinReads_perSample,
-                       refUnassigned_AmbiguityReads_perSample,
+                       unlist(refUnassigned_AmbiguityReads_perSample),
                        refUnassigned_NoFeatureReads_perSample-novel_mirna_counts,
                        novel_mirna_counts,
                        reference_CountsPerBiotype_perSample,

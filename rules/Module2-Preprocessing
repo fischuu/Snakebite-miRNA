@@ -35,10 +35,10 @@ rule cutadapt_trimming:
       then
           if [ "{params.adapter3p}" = "" ];
           then
-             echo "NOTE!!! No 3' or 5' adapter trimming performed!!!"
+             echo "NOTE!!! No 3' or 5' adapter trimming performed!!!" &>> {log};
              cp {input} {output.fastqAdapter}
           else
-              echo "NOTE!!! No 5' adapter trimming performed!!!"
+              echo "NOTE!!! No 5' adapter trimming performed!!!" &>> {log};
               cutadapt -a {params.adapter3p} \
                        -j {threads} \
                        -o {output.fastqAdapter} {input} &>> {log};
@@ -50,7 +50,7 @@ rule cutadapt_trimming:
                    
           if [ "{params.adapter3p}" = "" ];
           then
-              echo "WARNING!!! No 3' adapter trimming performed!!!"
+              echo "WARNING!!! No 3' adapter trimming performed!!!" &>> {log};
               cp {params.fastq5pAdapter} {output.fastqAdapter}
           else 
               cutadapt -a {params.adapter3p} \

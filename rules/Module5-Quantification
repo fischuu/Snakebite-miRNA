@@ -133,7 +133,7 @@ rule featureCounts_quantify_reference_STAR:
         bam="%s/BAM/STAR/Reference/{samples}_reference_star.bam" % (config["project-folder"])
     output:
         file="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_fc.txt" % (config["project-folder"]),
-        exon="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_exon_fc.txt" % (config["project-folder"])
+    #    exon="%s/QUANTIFICATION/STAR/Reference/{samples}_star_reference_exon_fc.txt" % (config["project-folder"])
     log:
         "%s/logs/FC/featureCounts_star_reference.{samples}.log" % (config["project-folder"])
     benchmark:
@@ -156,14 +156,6 @@ rule featureCounts_quantify_reference_STAR:
                       -t {params.tOption} \
                       -g {params.gOption} \
                       -o {output.file} \
-                      {input.bam} 2> {log}
-
-        featureCounts --primary -M \
-                      -T {threads} \
-                      -a {params.annot} \
-                      -t {params.tOption2} \
-                      -g {params.gOption} \
-                      -o {output.exon} \
                       {input.bam} 2> {log}
 
     """
