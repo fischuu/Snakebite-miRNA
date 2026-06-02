@@ -1,0 +1,11 @@
+# Paths and parameters relative to references
+---
+references:
+  tRNARef: "References/tRNA/bosTau8-tRNAs.fa"
+  phixRef: "References/phix/phix174.fa"
+  matureRef: "References/mature.fa"
+  hairpinRef: "References/hairpin.fa"
+  otherRef: ""
+  reference: "References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  refAnnot: "References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
+  starbase: "References/STAR"

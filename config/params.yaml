@@ -1,0 +1,36 @@
+# Execution parameters
+---
+params:
+  protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
+  species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
+  bowtie:
+    m: 1
+    mMulti: 5
+    k: 1
+    threads: 20
+  star: 
+    limitBAMsortRAM: "12000000000"
+    genomeChrBinNbits: 14
+    limitGenomeGenerateRAM: 65000000000
+  cutadapt:
+    adapter3p: ""
+    adapter5p: ""
+    minLength: 16
+    qualtrim: 30
+    fiveprimetrim: 0
+    threeprimetrim: 0
+  fastx:
+    length: 20
+  featureCounts:
+    gOption: "gene_id"
+    tOption: "gene"
+    tOption2: "exon"
+  extractSoftClipped:
+    length: 15
+  stringtie:
+    tpm: 0
+  novel:
+    minCover: 10         # minimum number of samples that have reads covering a locus (=number of samples and NOT number of reads!)
+  de:
+    minAbundance: 10
+    FDR: 0.1
