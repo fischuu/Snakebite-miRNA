@@ -13,9 +13,12 @@ import yaml
 ##### set minimum snakemake version #####
 min_version("9.0")
 
+# Debug level, 2 is more finer
 DEBUG = True
+DEBUG2 = False
 
-##### Pipeline version #####
+import re
+
 def get_version_from_changelog(default="XX.XX"):
     try:
         # workflow.basedir is the folder containing Snakefile
@@ -44,29 +47,87 @@ def get_version_from_changelog(default="XX.XX"):
 # set the pipeline version
 version = get_version_from_changelog()
 
+
+
 def debug(msg):
     if DEBUG:
         print(f"[DEBUG] {msg}")
+        
+def debug2(msg):
+    if DEBUG2:
+        print(f"[DEBUG2] {msg}")
 
 debug("Starting workflow setup...")
 debug(f"Workflow version: {version}")
 
 # Load configuration files
-debug("Loading configuration files...")
+debug2("Loading configuration files...")
 
-debug(f"Reading: {config['params-file']}")
+debug2(f"Reading: {config['params-file']}")
 params = yaml.load(open(config["params-file"], "r"), Loader=yaml.SafeLoader)
 
-debug(f"Reading: {config['docker-file']}")
+debug2(f"Reading: {config['docker-file']}")
 docker = yaml.load(open(config["docker-file"], "r"), Loader=yaml.SafeLoader)
 
-debug(f"Reading: {config['features-file']}")
+debug2(f"Reading: {config['features-file']}")
 features = yaml.load(open(config["features-file"], "r"), Loader=yaml.SafeLoader)
 
-debug(f"Reading sample metadata: {config['sample-file']}")
-#samples = pd.read_table(config["sample-file"], comment="#", dtype="str")
-samplesheet = pd.read_table(config["sample-file"]).set_index("sample_id", comment="#", dtype="str", drop=False)
+debug2(f"Reading sample metadata: {config['sample-file']}")
+samples = pd.read_table(config["sample-file"], comment="#", dtype="str")
 
 # Process sample information
 debug("Processing sample metadata...")
-SAMPLES=list(set(list(samplesheet.sample_id)))
+
+debug2("Generating global variables from sample metadata...")
+
+SAMPLES = samples.sample_id.unique()
+
+wildcard_constraints:
+    SAMPLES="|".join(SAMPLES)
+
+debug(f"Found {len(SAMPLES)} unique samples.")
+
+SAMPLE_LIBRARY = samples[["sample_id", "library_id"]].values.tolist()
+debug(f"Generated sample-library pairs: {len(SAMPLE_LIBRARY)}")
+
+# Load paths and features
+debug2("Loading pipeline-specific paths and feature settings...")
+
+def choose_temp(primary, fallback1=None, fallback2=None):
+    """Choose a temporary storage path with fallbacks based on non-empty strings."""
+    for path in [primary, fallback1, fallback2]:
+        if path != "":  # check if string is not empty
+            return path
+    raise RuntimeError("No temporary storage available!")
+
+
+# Fallback chain: shm -> nvme -> tmp
+TMP_LOCATION = choose_temp(config["shm_storage"], config["nvme_storage"], config["tmp_storage"])
+
+debug(f"Temp-storage location: {TMP_LOCATION}" )
+
+config["pipeline_folder"] = config["pipeline_folder"].rstrip('/') + '/'
+debug(f"Used pipeline folder: " + config["pipeline_folder"]  )
+
+# Import the escalation orders
+import yaml
+
+# --- Load one-line comma-separated ESCALATION config ---
+with open("config/escalation.yaml") as f:
+    raw = yaml.safe_load(f)
+
+ESCALATION_CONFIG = {k: [x.strip() for x in v.split(",")] for k, v in raw.items()}
+
+# Import subworkflows
+debug("Including subworkflows...")
+
+include: "rules/folders.smk"
+include: "rules/helpers/__main__.smk"
+include: "rules/reads/__main__.smk"
+include: "rules/preprocess/__main__.smk"
+
+rule all:
+    """Run the entire pipeline"""
+    input:
+        rules.reads.input,
+        rules.preprocess.input,

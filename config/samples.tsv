@@ -1,5 +1,5 @@
 sample_id	library_id	filename
-Affeli_1_GH	L001	Affeli_1_GH_S14_L001_R1_001.fastq.gz
-Airam_1_RL	L001	Airam_1_RL_S13_L001_R1_001.fastq.gz
-Hurmuri_1_GH	L001	Hurmuri_1_GH_S3_L001_R1_001.fastq.gz
-Hyna_1_GL	L001	Hyna_1_GL_S15_L001_R1_001.fastq.gz
+Affeli_1_GH	L001	reads/Affeli_1_GH_S14_L001_R1_001.fastq.gz
+Airam_1_RL	L001	reads/Airam_1_RL_S13_L001_R1_001.fastq.gz
+Hurmuri_1_GH	L001	reads/Hurmuri_1_GH_S3_L001_R1_001.fastq.gz
+Hyna_1_GL	L001	reads/Hyna_1_GL_S15_L001_R1_001.fastq.gz
