@@ -3,5 +3,5 @@ rule reads__fastqc:
     input:
         [
             READS / f"{sample}.{library}_fastqc.zip"
-            for sample, library in SAMPLE_LIBRARY
+            for sample, library in SAMPLES_LIBRARY
         ],

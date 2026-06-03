@@ -3,28 +3,28 @@ rule preprocess__cutadapt_run:
     Trimming adapter sequences (CUTADAPT).
     """
     input:
-        READS / "{sample}.{library}.fq.gz",
+        READS / "{samples}.{library}.fq.gz",
     output:
-        fastqAdapter = CUTADAPT / "{samples}_trimmed_onlyAdapter.fastq.gz",
-        fastq = CUTADAPT / "{samples}_trimmed.fastq.gz",
-        wclin = READS / "{samples}.wcl",
-        wcloutAdapter = CUTADAPT / "{samples}_trimmed_onlyAdapter.wcl",
-        wclout = CUTADAPT / "{samples}_trimmed.wcl",
-        wccin = READS / "{samples}.wcc",
-        wccoutAdapter = CUTADAPT / "{samples}_trimmed_onlyAdapter.wcc",
-        wccout = CUTADAPT / "{samples}_trimmed.wcc"
+        fastqAdapter = CUTADAPT / "{samples}.{library}_trimmed_onlyAdapter.fastq.gz",
+        fastq = CUTADAPT / "{samples}.{library}_trimmed.fastq.gz",
+        wclin = READS / "{samples}.{library}.wcl",
+        wcloutAdapter = CUTADAPT / "{samples}.{library}_trimmed_onlyAdapter.wcl",
+        wclout = CUTADAPT / "{samples}.{library}_trimmed.wcl",
+        wccin = READS / "{samples}.{library}.wcc",
+        wccoutAdapter = CUTADAPT / "{samples}.{library}_trimmed_onlyAdapter.wcc",
+        wccout = CUTADAPT / "{samples}.{library}_trimmed.wcc"
     log:
-        CUTADAPT / "logs/cutadapt.{samples}.log"
+        CUTADAPT / "logs/cutadapt.{samples}.{library}.log"
     benchmark:
-        CUTADAPT / "benchmark/cutadapt.{samples}.benchmark.tsv"
+        CUTADAPT / "benchmark/cutadapt.{samples}.{library}.benchmark.tsv"
     params:
-        fastq5pAdapter = CUTADAPT / "{samples}_trimmed_only5pAdapter.fastq.gz",    
-        adapter5p=params["cutadapt"]["adapter5p"],
-        adapter3p=params["cutadapt"]["adapter3p"],
-        minLength=params["cutadapt"]["minLength"],
-        qualtrim=params["cutadapt"]["qualtrim"],
-        fiveprimetrim=params["cutadapt"]["fiveprimetrim"],
-        threeprimetrim=params["cutadapt"]["threeprimetrim"]
+        fastq5pAdapter = CUTADAPT / "{samples}.{library}_trimmed_only5pAdapter.fastq.gz",    
+        adapter5p=params["preprocess"]["cutadapt"]["adapter5p"],
+        adapter3p=params["preprocess"]["cutadapt"]["adapter3p"],
+        minLength=params["preprocess"]["cutadapt"]["minLength"],
+        qualtrim=params["preprocess"]["cutadapt"]["qualtrim"],
+        fiveprimetrim=params["preprocess"]["cutadapt"]["fiveprimetrim"],
+        threeprimetrim=params["preprocess"]["cutadapt"]["threeprimetrim"]
     threads: esc("cpus", "preprocess__cutadapt")
     resources:
         runtime=esc("runtime", "preprocess__cutadapt"),
@@ -34,7 +34,7 @@ rule preprocess__cutadapt_run:
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__cutadapt')['nvme']}",
         attempt=get_attempt,
     retries: len(get_escalation_order("preprocess__cutadapt"))
-    singularity: config["singularity"]["cutadapt"]
+    container: docker["cutadapt"]
     shell:"""
       if [ "{params.adapter5p}" = "" ];
       then
@@ -82,6 +82,6 @@ rule preprocess__cutadapt:
     """Run cutadapt"""
     input:
         [
-            READS / f"{samples}_trimmed.fastq.gz"
-            for sample in SAMPLES
+            CUTADAPT / f"{samples}.{library}_trimmed_onlyAdapter.fastq.gz"
+            for samples, library in SAMPLES_LIBRARY
         ],

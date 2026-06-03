@@ -87,8 +87,8 @@ wildcard_constraints:
 
 debug(f"Found {len(SAMPLES)} unique samples.")
 
-SAMPLE_LIBRARY = samples[["sample_id", "library_id"]].values.tolist()
-debug(f"Generated sample-library pairs: {len(SAMPLE_LIBRARY)}")
+SAMPLES_LIBRARY = samples[["sample_id", "library_id"]].values.tolist()
+debug(f"Generated sample-library pairs: {len(SAMPLES_LIBRARY)}")
 
 # Load paths and features
 debug2("Loading pipeline-specific paths and feature settings...")

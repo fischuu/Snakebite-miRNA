@@ -1,5 +1,14 @@
 # Execution parameters
 ---
+preprocess:
+  cutadapt:
+    adapter3p: ""
+    adapter5p: ""
+    minLength: 16
+    qualtrim: 30
+    fiveprimetrim: 0
+    threeprimetrim: 0
+
 params:
   protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
   species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
@@ -12,13 +21,6 @@ params:
     limitBAMsortRAM: "12000000000"
     genomeChrBinNbits: 14
     limitGenomeGenerateRAM: 65000000000
-  cutadapt:
-    adapter3p: ""
-    adapter5p: ""
-    minLength: 16
-    qualtrim: 30
-    fiveprimetrim: 0
-    threeprimetrim: 0
   fastx:
     length: 20
   featureCounts:

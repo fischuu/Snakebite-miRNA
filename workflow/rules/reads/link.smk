@@ -20,5 +20,5 @@ rule reads__link:
     input:
         [
             READS / f"{sample}.{library}.fq.gz"
-            for sample, library in SAMPLE_LIBRARY
+            for sample, library in SAMPLES_LIBRARY
         ],
