@@ -164,3 +164,32 @@ rule preparation__bowtie_hairpin_species_index:
      # The input input line is correct, as I want to create the index with the same prefix
       bowtie-build {input} {input} > {log} 2>&1;
     """
+
+rule preparation__bowtie_reference_index:
+    """
+    Create reference Bowtie Index (BOWTIE).
+    """
+    input:
+        features["references"]["reference"]
+    output:
+        features["references"]["reference"] + ".1.ebwt"
+    log:
+        PREPA_BOWTIE / "log" / "bowtie_index_reference.log"
+    benchmark:
+        PREPA_BOWTIE / "benchmark" / "bowtie_index_reference.benchmark.tsv"
+    threads: esc("cpus", "preparation__bowtie_reference_index")
+    resources:
+        runtime=esc("runtime", "preparation__bowtie_reference_index"),
+        mem_mb=esc("mem_mb", "preparation__bowtie_reference_index"),
+        cpus_per_task=esc("cpus", "preparation__bowtie_reference_index"),
+        slurm_partition=esc("partition", "preparation__bowtie_reference_index"),
+        gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preparation__bowtie_reference_index')['nvme']}",
+        attempt=get_attempt,
+    retries: len(get_escalation_order("preparation__bowtie_reference_index"))
+    container: docker["bowtie"]
+    params: 
+        output=PREPA_BOWTIE
+    shell:"""
+     # The input input line is correct, as I want to create the index with the same prefix
+      bowtie-build {input} {input} > {log} 2>&1;
+    """

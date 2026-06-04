@@ -1,5 +1,6 @@
 include: "__functions__.smk"
 include: "bowtie.smk"
+include: "samtools.smk"
 
 rule alignment:
     """Perform the alignment"""

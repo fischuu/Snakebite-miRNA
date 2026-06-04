@@ -15,3 +15,8 @@ cp genome.fa $PROJECTFOLDER/references/phix.fa
 # Mirbase
 wget https://www.mirbase.org/download/mature.fa
 wget https://www.mirbase.org/download/hairpin.fa
+
+# Reference
+wget https://ftp.ensembl.org/pub/release-115/fasta/bos_taurus/dna/Bos_taurus.ARS-UCD2.0.dna.toplevel.fa.gz
+gunzip Bos_taurus.ARS-UCD2.0.dna.toplevel.fa.gz
+wget https://ftp.ensembl.org/pub/release-115/gtf/bos_taurus/Bos_taurus.ARS-UCD2.0.115.gtf.gz

@@ -2,6 +2,7 @@ helpers__fastqc: medium
 
 preparation__bowtie_trna_index: medium
 preparation__bowtie_phix_index: medium
+preparation__bowtie_reference_index: medium
 preparation__bash_prepare_mirdb_references: small
 preparation__bowtie_mature_index: medium
 preparation__bowtie_hairpin_index: medium
@@ -18,6 +19,7 @@ alignment__bowtie_hairpin_run: medium
 alignment__bowtie_mature_species_run: medium
 alignment__bowtie_hairpin_species_run: medium
 alignment__bowtie_reference_run: medium
+alignment__bowtie_other_run: medium
 alignment__samtools_mature_flagstats_run: medium
 alignment__samtools_hairpin_flagstats_run: medium
 alignment__samtools_mature_species_flagstats_run: medium

@@ -128,6 +128,35 @@ rule alignment__samtools_reference_flagstats_run:
         samtools index {input}
     """    
 
+if features["references"]["otherref"] == "":
+    pass
+else:
+    rule alignment__samtools_other_flagstats_run:
+        """
+        Get mapping stats (samtools).
+        """
+        input:
+            ALIGN_BOWTIE_OTHER / "bam" / "{samples}.{library}_other.bam"
+        output:
+            flagstat=ALIGN_BOWTIE_OTHER / "stats" / "{samples}.{library}_other.flagstat",
+            stats=ALIGN_BOWTIE_OTHER / "stats" / "/{samples}.{library}_other.stats",
+            bai=ALIGN_BOWTIE_OTHER / "bam" / "{samples}.{library}_other.bam.bai",
+        threads: esc("cpus", "alignment__samtools_other_flagstats")
+        resources:
+            runtime=esc("runtime", "alignment__samtools_other_flagstats"),
+            mem_mb=esc("mem_mb", "alignment__samtools_other_flagstats"),
+            cpus_per_task=esc("cpus", "alignment__samtools_other_flagstats"),
+            slurm_partition=esc("partition", "alignment__samtools_other_flagstats"),
+            gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'alignment__samtools_other_flagstats')['nvme']}",
+            attempt=get_attempt,
+        retries: len(get_escalation_order("alignment__samtools_other_flagstats"))
+        container: docker["samtools"]
+        shell:"""
+            samtools flagstat {input} > {output.flagstat};
+            samtools stats {input} > {output.stats};
+            samtools index {input}
+        """    
+
 rule alignment__samtools_mature_flagstats:
     """Run samtools mature stats"""
     input:
@@ -167,3 +196,15 @@ rule alignment__samtools_reference_flagstats:
             ALIGN_BOWTIE_REF / "stats" / f"{samples}.{library}_reference.flagstat"
             for samples, library in SAMPLES_LIBRARY
         ],
+        
+if features["references"]["otherref"] == "":
+    pass
+else:
+    rule alignment__samtools_other_flagstats:
+        """Run samtools other stats"""
+        input:
+            [
+                ALIGN_BOWTIE_OTHER / "stats" / f"{samples}.{library}_other.flagstat"
+                for samples, library in SAMPLES_LIBRARY
+            ],
+        
