@@ -11,3 +11,7 @@ wget https://webdata.illumina.com/downloads/productfiles/igenomes/phix/PhiX_Illu
 tar -xzvf PhiX_Illumina_RTA.tar.gz
 cd PhiX/Illumina/RTA/Sequence/WholeGenomeFasta
 cp genome.fa $PROJECTFOLDER/references/phix.fa
+
+# Mirbase
+wget https://www.mirbase.org/download/mature.fa
+wget https://www.mirbase.org/download/hairpin.fa

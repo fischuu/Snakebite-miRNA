@@ -37,7 +37,7 @@ rule decontamination__bowtie_trna_run:
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -t -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -t -k {params.k} -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
         
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}
@@ -85,12 +85,11 @@ rule decontamination__bowtie_phix_run:
         attempt=get_attempt,
     retries: len(get_escalation_order("decontamination__bowtie_phix_run"))
     container: docker["bowtie"]
-
     shell:"""
         mkdir -p {params.bamFolder}
         mkdir -p {params.fastqFolder}
 
-        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
+        bowtie --best --strata --threads {threads} -k {params.k} -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS - > {output.file} 2> {log};
         
         # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
         touch {output.mappedReads}

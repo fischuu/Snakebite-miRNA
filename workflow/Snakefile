@@ -127,9 +127,12 @@ include: "rules/reads/__main__.smk"
 include: "rules/preparation/__main__.smk"
 include: "rules/preprocess/__main__.smk"
 include: "rules/decontamination/__main__.smk"
+include: "rules/alignment/__main__.smk"
 
 rule all:
     """Run the entire pipeline"""
     input:
         rules.reads.input,
         rules.preprocess.input,
+        rules.decontamination.input,
+        rules.alignment.input,

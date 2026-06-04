@@ -1,4 +1,5 @@
 include: "__functions__.smk"
+include: "bash.smk"
 include: "bowtie.smk"
 
 rule preparation:

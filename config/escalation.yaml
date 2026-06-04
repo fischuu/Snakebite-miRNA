@@ -2,6 +2,9 @@ helpers__fastqc: medium
 
 preparation__bowtie_trna_index: medium
 preparation__bowtie_phix_index: medium
+preparation__bash_prepare_mirdb_references: small
+preparation__bowtie_mature_index: medium
+preparation__bowtie_hairpin_index: medium
 
 preprocess__cutadapt: medium
 
@@ -9,3 +12,6 @@ decontamination__bowtie_trna_run: medium
 decontamination__bowtie_phix_run: medium
 decontamination__samtools_trna_flagstats_run: medium
 decontamination__samtools_phix_flagstats_run: medium
+
+alignment__bowtie_mature_run: medium
+alignment__bowtie_hairpin_run: medium

@@ -3,8 +3,8 @@
 references:
   trnaref: "references/bosTau9-mature-tRNAs.fa"
   phixref: "references/phix.fa"
-  matureRef: "References/mature.fa"
-  hairpinRef: "References/hairpin.fa"
+  matureref: "references/mature.fa"
+  hairpinref: "references/hairpin.fa"
   otherRef: ""
   reference: "References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
   refAnnot: "References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"

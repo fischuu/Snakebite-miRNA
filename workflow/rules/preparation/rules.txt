@@ -1,77 +1,4 @@
 
-
-rule bash_prepare_mirdb_references:
-    """
-    Filter and adjust the mirDB references
-    """
-    input:
-        mature=config["matureRef"],
-        hairpin=config["hairpinRef"]
-    output:
-        mature="%s/References/mature_basesAdjusted.fa" % (config["project-folder"]),
-        matureSpecies="%s/References/mature_basesAdjusted_species.fa" % (config["project-folder"]),
-        hairpin="%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"]),
-        hairpinSpecies="%s/References/hairpin_basesAdjusted_species.fa" % (config["project-folder"]),
-        stats="%s/STATS/mirdb.stats" % (config["project-folder"])
-    log:
-        "%s/logs/BASH/prepare_mirdb_references.log" % (config["project-folder"])
-    benchmark:
-        "%s/benchmark/BASH/prepare_mirdb_references.benchmark.tsv" % (config["project-folder"])
-    threads: cluster["__default__"]["cpus-per-task"]
-    resources:
-        time=cluster["__default__"]["time"],
-        mem=cluster["__default__"]["mem-per-cpu"]
-    params:
-        species=config["params"]["species-id"]
-    shell:""" 
-     echo "# Change bases U to T" >> {log}
-     sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature} 2>> {log}
-     sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin} 2>> {log}
-
-     echo "# Filter species" >> {log}
-     grep -A 1 --no-group-separator '{params.species}' {output.mature}  > {output.matureSpecies} 2>> {log} || true
-     grep -A 1 --no-group-separator '{params.species}' {output.hairpin}  > {output.hairpinSpecies} 2>> {log} || true
-     
-     # Check if the output files are empty and apply fallback
-     if [[ ! -s {output.matureSpecies} ]]; then
-         echo "Empty matureSpecies file, use the base filtered instead" >> {log}
-         cp {output.mature} {output.matureSpecies} 2>> {log}
-     fi
-
-     if [[ ! -s {output.hairpinSpecies} ]]; then
-         echo "Empty hairpinSpecies file, use the base filtered instead" >> {log}
-         cp {output.hairpin} {output.hairpinSpecies} 2>> {log}
-     fi
-
-
-     echo "# Get the line stats" >> {log}
-     grep -e '>' {output.mature} | wc -l >> {output.stats} 2>> {log}
-     grep -e '>' {output.matureSpecies} | wc -l >> {output.stats} 2>> {log}
-     grep -e '>' {output.hairpin} | wc -l >> {output.stats} 2>> {log}
-     grep -e '>' {output.hairpinSpecies} | wc -l >> {output.stats} 2>> {log}
-    """
-    
-rule bowtie_createIndex_mature:
-    """
-    Create Bowtie Index for mature(BOWTIE).
-    """
-    input:
-        "%s/References/mature_basesAdjusted.fa" % (config["project-folder"])
-    output:
-        "%s/References/mature_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
-    log:
-        "%s/logs/BOWTIE/bowtie_index_mature.log" % (config["project-folder"])
-    benchmark:
-        "%s/benchmark/BOWTIE/bowtie_index_mature.benchmark.tsv" % (config["project-folder"])
-    threads: cluster["bowtie_createIndex_mature"]["cpus-per-task"]
-    resources:
-        time=cluster["bowtie_createIndex_mature"]["time"],
-        mem=cluster["bowtie_createIndex_mature"]["mem-per-cpu"]
-    singularity: config["singularity"]["bowtie"]
-    shell:"""
-     # The input input line is correct, as I want to create the index with the same prefix
-      bowtie-build {input} {input} > {log} 2>&1;
-    """
     
 rule bowtie_createIndex_matureSpecies:
     """
@@ -95,28 +22,7 @@ rule bowtie_createIndex_matureSpecies:
       bowtie-build {input} {input} > {log} 2>&1;
     """
 
-rule bowtie_createIndex_hairpin:
-    """
-    Create Bowtie Index for hairpin(BOWTIE).
-    """
-    input:
-        "%s/References/hairpin_basesAdjusted.fa" % (config["project-folder"])
-    output:
-        "%s/References/hairpin_basesAdjusted.fa.1.ebwt" % (config["project-folder"])
-    log:
-        "%s/logs/BOWTIE/bowtie_index_hairpin.log" % (config["project-folder"])
-    benchmark:
-        "%s/benchmark/BOWTIE/bowtie_index_hairpin.benchmark.tsv" % (config["project-folder"])
-    threads: cluster["bowtie_createIndex_hairpin"]["cpus-per-task"]
-    resources:
-        time=cluster["bowtie_createIndex_hairpin"]["time"],
-        mem=cluster["bowtie_createIndex_hairpin"]["mem-per-cpu"]
-    singularity: config["singularity"]["bowtie"]
-    shell:"""
-     # The input input line is correct, as I want to create the index with the same prefix
-      bowtie-build {input} {input} > {log} 2>&1;
-    """
-    
+
 rule bowtie_createIndex_hairpinSpecies:
     """
     Create Bowtie Index for hairpin(BOWTIE).
