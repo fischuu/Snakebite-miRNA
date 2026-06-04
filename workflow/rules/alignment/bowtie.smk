@@ -205,6 +205,59 @@ rule alignment__bowtie_hairpin_species_run:
         sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
         sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
     """
+    
+rule alignment__bowtie_reference_run::
+    """
+    Map non-tRNA, non-phiX samples against the reference genome (bowtie).
+    """
+    input:
+        reads = DECON_BOWTIE_PHIX / "unmapped" / "{samples}.{library}_PhiX_unmapped.fastq",
+        index = features["references"]["reference"] + ".1.ebwt"
+    output:
+        mappedReads = ALIGN_BOWTIE_REF / "mapped" / "{samples}.{library}_reference_mapped.fastq" ,
+        unmappedReads = ALIGN_BOWTIE_REF / "unmapped" / "{samples}.{library}_reference_unmapped.fastq" ,
+        file = ALIGN_BOWTIE_REF / "bam" / "{samples}.{library}_reference.bam" ,
+        wclmapped = ALIGN_BOWTIE_REF / "mapped" / "{samples}.{library}_reference_mapped.wcl" ,
+        wclunmapped = ALIGN_BOWTIE_REF / "unmapped" / "{samples}.{library}_reference_unmapped.wcl" ,
+        wccmapped = ALIGN_BOWTIE_REF / "mapped" / "{samples}.{library}_reference_mapped.wcc" ,
+        wccunmapped = ALIGN_BOWTIE_REF / "unmapped" / "{samples}.{library}_reference_unmapped.wcc" 
+    params:
+        bamFolder=ALIGN_BOWTIE_REF / "bam",
+        fastqFolder=ALIGN_BOWTIE_REF,
+        index=features["references"]["reference"],
+        m=params["alignment"]["bowtie"]["m"],
+        k=params["alignment"]["bowtie"]["k"]
+    log:
+        ALIGN_BOWTIE_REF / "logs" / "bowtie_map_reference.{samples}.{library}.log"
+    benchmark:
+        ALIGN_BOWTIE_REF / "benchmark" / "bowtie_map_reference.{samples}.{library}.benchmark.tsv"
+    threads: esc("cpus", "alignment__bowtie_reference_run")
+    resources:
+        runtime=esc("runtime", "alignment__bowtie_reference_run"),
+        mem_mb=esc("mem_mb", "alignment__bowtie_reference_run"),
+        cpus_per_task=esc("cpus", "alignment__bowtie_reference_run"),
+        slurm_partition=esc("partition", "alignment__bowtie_reference_run"),
+        gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'alignment__bowtie_reference_run')['nvme']}",
+        attempt=get_attempt,
+    retries: len(get_escalation_order("alignment__bowtie_reference_run"))
+    container: docker["bowtie"]
+    shell:"""
+        mkdir -p {params.bamFolder}
+        mkdir -p {params.fastqFolder}
+
+        bowtie --best --strata --threads {threads} -k 50 -a -e 99999 --sam --al {output.mappedReads} --un {output.unmappedReads} {params.index} {input.reads} | samtools view -bS | samtools sort - > {output.file} 2> {log};
+
+        # I need to do this in case that there is a 0.00% alignment rate. In that case no files are created...
+        touch {output.mappedReads}
+        touch {output.unmappedReads}
+        touch {output.file}
+        
+        wc -l {output.mappedReads} > {output.wclmapped}
+        wc -l {output.unmappedReads} > {output.wclunmapped}
+        sed -n '2~4p' {output.mappedReads}| wc -c > {output.wccmapped}
+        sed -n '2~4p' {output.unmappedReads}| wc -c  > {output.wccunmapped}
+    """
+    
 
 rule alignment__bowtie_mature:
     """Run bowtie mature"""
@@ -235,5 +288,13 @@ rule alignment__bowtie_hairpin_species:
     input:
         [
             ALIGN_BOWTIE_HAIRPIN_SPECIES / "bam" / f"{samples}.{library}_hairpin_species.bam"
+            for samples, library in SAMPLES_LIBRARY
+        ],
+        
+rule alignment__bowtie_reference:
+    """Run bowtie reference"""
+    input:
+        [
+            ALIGN_BOWTIE_REF / "bam" / f"{samples}.{library}_reference.bam"
             for samples, library in SAMPLES_LIBRARY
         ],

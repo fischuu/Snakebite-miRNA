@@ -15,3 +15,10 @@ decontamination__samtools_phix_flagstats_run: medium
 
 alignment__bowtie_mature_run: medium
 alignment__bowtie_hairpin_run: medium
+alignment__bowtie_mature_species_run: medium
+alignment__bowtie_hairpin_species_run: medium
+alignment__bowtie_reference_run: medium
+alignment__samtools_mature_flagstats_run: medium
+alignment__samtools_hairpin_flagstats_run: medium
+alignment__samtools_mature_species_flagstats_run: medium
+alignment__samtools_hairpin_species_flagstats_run: medium

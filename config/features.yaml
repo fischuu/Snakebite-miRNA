@@ -6,6 +6,6 @@ references:
   matureref: "references/mature.fa"
   hairpinref: "references/hairpin.fa"
   otherRef: ""
-  reference: "References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  reference: "references/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
   refAnnot: "References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"
   starbase: "References/STAR"
