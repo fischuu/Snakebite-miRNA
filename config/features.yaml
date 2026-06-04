@@ -1,8 +1,8 @@
 # Paths and parameters relative to references
 ---
 references:
-  tRNARef: "References/tRNA/bosTau8-tRNAs.fa"
-  phixRef: "References/phix/phix174.fa"
+  trnaref: "references/bosTau9-mature-tRNAs.fa"
+  phixref: "references/phix.fa"
   matureRef: "References/mature.fa"
   hairpinRef: "References/hairpin.fa"
   otherRef: ""

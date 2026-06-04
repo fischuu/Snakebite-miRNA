@@ -9,14 +9,17 @@ preprocess:
     fiveprimetrim: 0
     threeprimetrim: 0
 
-params:
-  protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
-  species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
+decontamination:
   bowtie:
     m: 1
     mMulti: 5
     k: 1
     threads: 20
+
+
+params:
+  protocol: "" # Use settings for "illumina" "nextflex" or "qiagen". Keep empty for own protocol (then cutadapt needss to be configured!)
+  species-id: "bta"  # used to filter mature.fa and hairpin.fa, check for required identifier.
   star: 
     limitBAMsortRAM: "12000000000"
     genomeChrBinNbits: 14

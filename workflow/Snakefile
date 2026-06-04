@@ -124,7 +124,9 @@ debug("Including subworkflows...")
 include: "rules/folders.smk"
 include: "rules/helpers/__main__.smk"
 include: "rules/reads/__main__.smk"
+include: "rules/preparation/__main__.smk"
 include: "rules/preprocess/__main__.smk"
+include: "rules/decontamination/__main__.smk"
 
 rule all:
     """Run the entire pipeline"""

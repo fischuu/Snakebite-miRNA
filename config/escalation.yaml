@@ -1,3 +1,11 @@
 helpers__fastqc: medium
 
+preparation__bowtie_trna_index: medium
+preparation__bowtie_phix_index: medium
+
 preprocess__cutadapt: medium
+
+decontamination__bowtie_trna_run: medium
+decontamination__bowtie_phix_run: medium
+decontamination__samtools_trna_flagstats_run: medium
+decontamination__samtools_phix_flagstats_run: medium
