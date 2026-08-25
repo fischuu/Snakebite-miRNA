@@ -1,0 +1,62 @@
+---
+title: "Snakebite-miRNA -- Reads module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+
+samples <- readr::read_tsv(file.path(project_folder, sample_file), show_col_types = FALSE)
+```
+
+## Overview
+
+This report covers the **reads** module: FastQC/MultiQC quality control of every raw
+sequencing lane, before any trimming or contamination removal.
+
+```{r sample-sheet}
+preview_table(samples, n = nrow(samples), caption = "Sample sheet")
+```
+
+`r nrow(samples)` raw lanes across `r length(unique(samples$sample_id))` samples were processed.
+
+## Raw read FastQC summary
+
+```{r raw-fastqc, results='asis'}
+rows <- purrr::pmap(samples, function(sample_id, library_id, ...) {
+  zip_path <- file.path(project_folder, "QC", "RAW", sprintf("%s.%s_fastqc.zip", sample_id, library_id))
+  df <- parse_fastqc_zip(zip_path)
+  if (nrow(df) == 0) return(NULL)
+  tibble::tibble(
+    sample_id = sample_id, library_id = library_id,
+    total_sequences = df[["Total Sequences"]],
+    pct_gc = df[["%GC"]],
+    sequence_length = df[["Sequence length"]]
+  )
+})
+fastqc_summary <- dplyr::bind_rows(rows)
+preview_table(fastqc_summary, n = nrow(fastqc_summary), caption = "Raw FastQC basic statistics per lane")
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "reads")
+runtime_table(bench, caption = "reads module: runtime and peak memory per rule")
+resource_allocation_table(bench, "reads", project_folder,
+                           caption = "reads module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=3}
+runtime_plot(bench, title = "reads module: total runtime per rule")
+```

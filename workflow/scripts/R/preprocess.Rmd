@@ -1,0 +1,67 @@
+---
+title: "Snakebite-miRNA -- Preprocess module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+
+samples <- readr::read_tsv(file.path(project_folder, sample_file), show_col_types = FALSE)
+```
+
+## Overview
+
+This report covers the **preprocess** module: cutadapt adapter/quality trimming per
+lane, followed by concatenation of every sample's lanes into a single FASTQ.
+
+```{r trimmed-fastqc, results='asis'}
+rows <- purrr::pmap(samples, function(sample_id, library_id, ...) {
+  zip_path <- file.path(project_folder, "QC", "TRIMMED", sprintf("%s.%s_trimmed_fastqc.zip", sample_id, library_id))
+  df <- parse_fastqc_zip(zip_path)
+  if (nrow(df) == 0) return(NULL)
+  tibble::tibble(
+    sample_id = sample_id, library_id = library_id,
+    total_sequences = df[["Total Sequences"]],
+    sequence_length = df[["Sequence length"]]
+  )
+})
+trimmed_summary <- dplyr::bind_rows(rows)
+preview_table(trimmed_summary, n = nrow(trimmed_summary), caption = "Trimmed FastQC basic statistics per lane")
+```
+
+## Concatenated read counts
+
+```{r concatenated-fastqc, results='asis'}
+sample_ids <- unique(samples$sample_id)
+rows <- purrr::map(sample_ids, function(s) {
+  zip_path <- file.path(project_folder, "QC", "CONCATENATED", sprintf("%s_R1_fastqc.zip", s))
+  df <- parse_fastqc_zip(zip_path)
+  if (nrow(df) == 0) return(NULL)
+  tibble::tibble(sample_id = s, total_sequences = df[["Total Sequences"]])
+})
+concat_summary <- dplyr::bind_rows(rows)
+preview_table(concat_summary, n = nrow(concat_summary), caption = "Concatenated read counts per sample")
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "preprocess")
+runtime_table(bench, caption = "preprocess module: runtime and peak memory per rule")
+resource_allocation_table(bench, "preprocess", project_folder,
+                           caption = "preprocess module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=3}
+runtime_plot(bench, title = "preprocess module: total runtime per rule")
+```

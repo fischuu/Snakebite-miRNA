@@ -1,0 +1,9 @@
+# Paths to references and databases, relative to project_folder unless absolute
+---
+references:
+  tRNA: "References/tRNA/bosTau8-tRNAs.fa"
+  phix: "References/phix/phix174.fa"
+  mature: "References/mature.fa"
+  hairpin: "References/hairpin.fa"
+  genome: "References/ARS12/Bos_taurus.ARS-UCD1.2.dna.primary_assembly.fa"
+  annotation: "References/ARS12/Bos_taurus.ARS-UCD1.2.95.gtf"

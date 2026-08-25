@@ -1,0 +1,78 @@
+---
+title: "Snakebite-miRNA -- Align module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+
+samples <- readr::read_tsv(file.path(project_folder, sample_file), show_col_types = FALSE)
+sample_ids <- unique(samples$sample_id)
+```
+
+## Overview
+
+This report covers the **align** module: Bowtie and STAR alignment of decontaminated
+reads against the mature/hairpin miRBase references and the host reference genome, plus
+extraction of soft-clipped read portions for novel-miRNA discovery.
+
+## Bowtie alignment rates
+
+```{r bowtie-flagstat}
+mature_bt <- collect_flagstats(project_folder, "STATS/BOWTIE/Mature/%s_mature.flagstat", sample_ids)
+hairpin_bt <- collect_flagstats(project_folder, "STATS/BOWTIE/Hairpin/%s_hairpin.flagstat", sample_ids)
+bowtie_combined <- dplyr::bind_rows(
+  dplyr::mutate(mature_bt, reference = "mature"),
+  dplyr::mutate(hairpin_bt, reference = "hairpin")
+)
+preview_table(bowtie_combined, n = nrow(bowtie_combined), caption = "Bowtie mapping rate per sample and reference")
+```
+
+## STAR alignment rates
+
+```{r star-flagstat}
+mature_star <- collect_flagstats(project_folder, "STATS/STAR/Mature/%s_mature.flagstat", sample_ids)
+genome_star <- collect_flagstats(project_folder, "STATS/STAR/Reference/%s_reference.flagstat", sample_ids)
+star_combined <- dplyr::bind_rows(
+  dplyr::mutate(mature_star, reference = "mature"),
+  dplyr::mutate(genome_star, reference = "genome")
+)
+preview_table(star_combined, n = nrow(star_combined), caption = "STAR mapping rate per sample and reference")
+```
+
+```{r alignment-plot, fig.width=7, fig.height=3.5}
+plot_df <- dplyr::bind_rows(
+  dplyr::mutate(bowtie_combined, aligner = "Bowtie"),
+  dplyr::mutate(star_combined, aligner = "STAR")
+)
+if (nrow(plot_df) > 0) {
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = sample_id, y = mapped_pct, fill = interaction(aligner, reference))) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::labs(title = "Alignment rate per sample", x = NULL, y = "Mapped reads (%)", fill = NULL) +
+    ggplot2::theme_minimal(base_size = 10) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+}
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "align")
+runtime_table(bench, caption = "align module: runtime and peak memory per rule")
+resource_allocation_table(bench, "align", project_folder,
+                           caption = "align module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=4}
+runtime_plot(bench, title = "align module: total runtime per rule")
+```

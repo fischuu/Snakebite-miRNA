@@ -1,0 +1,44 @@
+rule reference__mirdb__prepare:
+    """Adjust miRBase mature.fa/hairpin.fa (U->T) and filter them down to one species"""
+    input:
+        mature=features["references"]["mature"],
+        hairpin=features["references"]["hairpin"],
+    output:
+        mature=REFDIR / "mature_basesAdjusted.fa",
+        mature_species=REFDIR / "mature_basesAdjusted_species.fa",
+        hairpin=REFDIR / "hairpin_basesAdjusted.fa",
+        hairpin_species=REFDIR / "hairpin_basesAdjusted_species.fa",
+        stats=Path("STATS/mirdb.stats"),
+    log:
+        "logs/reference/mirdb_prepare.log"
+    benchmark:
+        "benchmark/reference/mirdb_prepare.tsv"
+    params:
+        species=params["species_id"],
+    threads: esc("cpus", "reference__mirdb__prepare")
+    resources:
+        runtime=esc("runtime", "reference__mirdb__prepare"),
+        mem_mb=esc("mem_mb", "reference__mirdb__prepare"),
+        cpus_per_task=esc("cpus", "reference__mirdb__prepare"),
+        slurm_partition=esc("partition", "reference__mirdb__prepare"),
+        gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__mirdb__prepare')['nvme']}",
+        attempt=get_attempt,
+    retries: len(get_escalation_order("reference__mirdb__prepare"))
+    container:
+        docker["bowtie"]
+    shell:
+        """
+        exec > {log} 2>&1
+        sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
+        sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
+
+        grep -A 1 --no-group-separator '{params.species}' {output.mature} > {output.mature_species}
+        grep -A 1 --no-group-separator '{params.species}' {output.hairpin} > {output.hairpin_species}
+
+        {{
+            grep -ce '>' {output.mature}
+            grep -ce '>' {output.mature_species}
+            grep -ce '>' {output.hairpin}
+            grep -ce '>' {output.hairpin_species}
+        }} > {output.stats}
+        """

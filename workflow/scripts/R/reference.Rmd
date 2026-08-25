@@ -1,0 +1,67 @@
+---
+title: "Snakebite-miRNA -- Reference module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+```
+
+## Overview
+
+This report covers the **reference** module: preparation of the miRBase mature/hairpin
+references (base adjustment and species filtering) and the Bowtie/STAR index builds used
+by every downstream alignment step.
+
+## mirDB species filtering
+
+```{r mirdb-stats}
+stats <- parse_mirdb_stats(file.path(project_folder, "STATS", "mirdb.stats"))
+preview_table(stats, n = nrow(stats), caption = "Number of sequences before/after species filtering")
+```
+
+## Indices built
+
+```{r index-check, results='asis'}
+indices <- tibble::tribble(
+  ~index, ~path,
+  "Bowtie: tRNA",           "References/tRNA/bosTau8-tRNAs.fa.1.ebwt",
+  "Bowtie: PhiX",           "References/phix/phix174.fa.1.ebwt",
+  "Bowtie: mature",         "References/mature_basesAdjusted.fa.1.ebwt",
+  "Bowtie: mature_species", "References/mature_basesAdjusted_species.fa.1.ebwt",
+  "Bowtie: hairpin",        "References/hairpin_basesAdjusted.fa.1.ebwt",
+  "Bowtie: hairpin_species","References/hairpin_basesAdjusted_species.fa.1.ebwt",
+  "Bowtie: genome",         "References/ARS12/*.1.ebwt",
+  "STAR: mature",           "References/STAR/Mature/chrName.txt",
+  "STAR: mature_species",   "References/STAR/MatureSpecies/chrName.txt",
+  "STAR: hairpin",          "References/STAR/Hairpin/chrName.txt",
+  "STAR: hairpin_species",  "References/STAR/HairpinSpecies/chrName.txt",
+  "STAR: genome",           "References/STAR/Reference/chrName.txt",
+)
+indices$built <- file.exists(file.path(project_folder, indices$path)) |
+  vapply(indices$path, function(p) length(Sys.glob(file.path(project_folder, p))) > 0, logical(1))
+preview_table(indices, n = nrow(indices), caption = "Reference index build status")
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "reference")
+runtime_table(bench, caption = "reference module: runtime and peak memory per rule")
+resource_allocation_table(bench, "reference", project_folder,
+                           caption = "reference module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=3}
+runtime_plot(bench, title = "reference module: total runtime per rule")
+```

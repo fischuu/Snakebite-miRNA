@@ -1,0 +1,36 @@
+# Execution parameters
+---
+species_id: "bta"  # used to filter mature.fa and hairpin.fa; check the identifier required for your species
+protocol: ""        # "illumina", "nextflex", "qiagen" or "lexogen" preset; keep empty for a custom protocol (then set preprocess.cutadapt.adapter5p/adapter3p yourself)
+
+preprocess:
+  cutadapt:
+    adapter5p: ""
+    adapter3p: ""
+    min_length: 16
+    qualtrim: 30
+    fiveprimetrim: 0
+    threeprimetrim: 0
+
+align:
+  bowtie:
+    m: 1
+    k: 1
+    threads: 20
+  star:
+    limit_bam_sort_ram: "1436064474"
+  extract_softclipped:
+    length: 15
+
+quantify:
+  featurecounts:
+    g_option: "gene_id"
+    t_option: "gene"
+    t_option_exon: "exon"
+
+novel_mirna:
+  min_cover: 10   # minimum number of samples with reads covering a locus (a sample count, not a read count)
+
+report:
+  min_abundance: 10   # minimum total counts for a feature to be kept in the differential-expression analysis
+  fdr: 0.1

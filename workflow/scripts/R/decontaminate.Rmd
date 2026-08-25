@@ -1,0 +1,67 @@
+---
+title: "Snakebite-miRNA -- Decontaminate module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+
+samples <- readr::read_tsv(file.path(project_folder, sample_file), show_col_types = FALSE)
+sample_ids <- unique(samples$sample_id)
+```
+
+## Overview
+
+This report covers the **decontaminate** module: removal of tRNA and PhiX
+(sequencing-control) contamination from the concatenated reads, via Bowtie mapping.
+
+## tRNA mapping rates
+
+```{r trna-flagstat}
+trna <- collect_flagstats(project_folder, "STATS/BOWTIE/tRNA/%s_tRNA.flagstat", sample_ids)
+preview_table(trna, n = nrow(trna), caption = "tRNA mapping rate per sample")
+```
+
+## PhiX mapping rates
+
+```{r phix-flagstat}
+phix <- collect_flagstats(project_folder, "STATS/BOWTIE/PhiX/%s_PhiX.flagstat", sample_ids)
+preview_table(phix, n = nrow(phix), caption = "PhiX mapping rate per sample")
+```
+
+```{r contamination-plot, fig.width=7, fig.height=3.5}
+combined <- dplyr::bind_rows(
+  dplyr::mutate(trna, reference = "tRNA"),
+  dplyr::mutate(phix, reference = "PhiX")
+)
+if (nrow(combined) > 0) {
+  ggplot2::ggplot(combined, ggplot2::aes(x = sample_id, y = mapped_pct, fill = reference)) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::labs(title = "Contamination mapping rate per sample", x = NULL, y = "Mapped reads (%)") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+}
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "decontaminate")
+runtime_table(bench, caption = "decontaminate module: runtime and peak memory per rule")
+resource_allocation_table(bench, "decontaminate", project_folder,
+                           caption = "decontaminate module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=3}
+runtime_plot(bench, title = "decontaminate module: total runtime per rule")
+```

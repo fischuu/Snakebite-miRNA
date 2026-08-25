@@ -1,0 +1,13 @@
+# Paths to used docker containers, the defaults should be correct for most of the users and should
+# only need adjustments in expert usage situations.
+---
+bedtools: "docker://fischuu/bedtools:2.30-0.1"
+bowtie: "docker://fischuu/bowtie:1.2.2-0.3"
+cutadapt: "docker://fischuu/cutadapt:2.8-0.3"
+fastqc: "docker://fischuu/gbs:0.2"
+multiqc: "docker://fischuu/gbs:0.2"
+samtools: "docker://fischuu/samtools:1.9-0.2"
+star: "docker://fischuu/star:2.7.3a-0.2"
+subread: "docker://fischuu/subread:2.0.1-0.1"
+seqkit: "docker://fischuu/seqkit:2.1.0-0.2"
+r_report: "docker://fischuu/r-gbs:4.1.2-0.4"

@@ -4,6 +4,22 @@
 #####                                                                      #####
 ################################################################################
 
+Version 1.0.*:
+--------------------------------------------------------------------------------
+1: Complete rewrite onto the Snakebite module/escalation/docker architecture (as used by
+   Snakebite-Holoruminant-MetaG): module-per-directory rule layout, config/ split into
+   config.yaml/features.yaml/params.yaml/.docker.yml/escalation.yaml/samples.tsv, per-rule
+   resource escalation via esc()/get_resources(), one PDF report per module (runtime and
+   allocated-vs-actual resource tables included), and a modern SLURM executor profile
+   replacing the old --cluster-config/--cluster invocation. samples.tsv now merges the old
+   sampleSheet.tsv and sampleInfo.tsv into one table (sample_id, library_id, read1, group,
+   de_group). Functionally unchanged from 0.12.0 (same tools, same parameters, same wcl/wcc
+   bookkeeping files replaced by reading counts directly out of FastQC/cutadapt/flagstat
+   output instead of maintaining separate word-count sidecar files). The Stringtie-based
+   novel-miRNA path (unused since 0.3.25) was dropped as dead code. The bowtie-only genome
+   alignment branch (never reachable from `rule all` in the old pipeline either) is kept
+   available for on-demand use but is not part of the default `align` target.
+
 0.12.0 Stable release
 --------------------------------------------------------------------------------
 

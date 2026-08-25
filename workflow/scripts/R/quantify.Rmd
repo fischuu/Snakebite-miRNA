@@ -1,0 +1,67 @@
+---
+title: "Snakebite-miRNA -- Quantify module report"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+if (!exists("project_folder")) {
+  project_folder <- getwd()
+  pipeline_folder <- getwd()
+  features_file <- "config/features.yaml"
+  sample_file <- "config/samples.tsv"
+}
+
+source(file.path(pipeline_folder, "workflow", "scripts", "R", "report_helpers.R"))
+
+samples <- readr::read_tsv(file.path(project_folder, sample_file), show_col_types = FALSE)
+sample_ids <- unique(samples$sample_id)
+```
+
+## Overview
+
+This report covers the **quantify** module: miRNA-level quantification (seqkit,
+per-reference read counts) and gene-level quantification (featureCounts) against the
+host genome annotation, plus counts over the predicted novel-miRNA loci.
+
+## featureCounts assignment summary (genome, STAR)
+
+```{r fc-summary, results='asis'}
+rows <- purrr::map(sample_ids, function(s) {
+  path <- file.path(project_folder, "QUANTIFICATION", "STAR", "Reference", sprintf("%s_star_reference_fc.txt", s))
+  df <- parse_featurecounts_summary(path)
+  if (nrow(df) == 0) return(NULL)
+  df$sample_id <- s
+  df
+})
+fc_summary <- dplyr::bind_rows(rows)
+preview_table(fc_summary, n = nrow(fc_summary), caption = "featureCounts assignment summary per sample (genome, STAR)")
+```
+
+## Novel-miRNA locus counts
+
+```{r novel-counts, results='asis'}
+rows <- purrr::map(sample_ids, function(s) {
+  path <- file.path(project_folder, "QUANTIFICATION", "STAR", "Novel_genes", sprintf("%s_star_novelMirna_bedtools.txt", s))
+  df <- safe_read_tsv(path, col_names = FALSE)
+  if (nrow(df) == 0) return(NULL)
+  tibble::tibble(sample_id = s, n_loci = nrow(df), total_reads = sum(df[[ncol(df)]], na.rm = TRUE))
+})
+novel_summary <- dplyr::bind_rows(rows)
+preview_table(novel_summary, n = nrow(novel_summary), caption = "Reads over predicted novel-miRNA loci per sample")
+```
+
+## Runtime and resource usage
+
+```{r runtime}
+bench <- discover_benchmarks(project_folder, "quantify")
+runtime_table(bench, caption = "quantify module: runtime and peak memory per rule")
+resource_allocation_table(bench, "quantify", project_folder,
+                           caption = "quantify module: allocated vs. actual resource usage")
+```
+
+```{r runtime-plot, fig.width=7, fig.height=3}
+runtime_plot(bench, title = "quantify module: total runtime per rule")
+```

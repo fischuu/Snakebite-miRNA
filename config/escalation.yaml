@@ -1,0 +1,77 @@
+reads__fastqc__run: medium
+reads__multiqc__run: small
+
+reference__mirdb__prepare: small
+reference__bowtie_index__trna: small
+reference__bowtie_index__phix: small
+reference__bowtie_index__mature: small
+reference__bowtie_index__mature_species: small
+reference__bowtie_index__hairpin: small
+reference__bowtie_index__hairpin_species: small
+reference__bowtie_index__genome: large
+reference__star_index__mature: medium
+reference__star_index__mature_species: medium
+reference__star_index__hairpin: medium
+reference__star_index__hairpin_species: medium
+reference__star_index__genome: medium
+
+preprocess__cutadapt__run: medium
+preprocess__concatenate__run: small
+preprocess__fastqc__trimmed: medium
+preprocess__fastqc__concatenated: medium
+preprocess__multiqc__trimmed: small
+preprocess__multiqc__concatenated: small
+
+decontaminate__bowtie__trna: medium
+decontaminate__samtools__trna_flagstat: medium
+decontaminate__fastqc__trna: medium
+decontaminate__multiqc__trna: small
+decontaminate__bowtie__phix: medium
+decontaminate__samtools__phix_flagstat: medium
+decontaminate__fastqc__phix: medium
+decontaminate__multiqc__phix: small
+
+align__bowtie__mature: medium
+align__samtools__mature_flagstat: medium
+align__bowtie__mature_species: medium
+align__samtools__mature_species_flagstat: medium
+align__bowtie__hairpin: medium
+align__samtools__hairpin_flagstat: medium
+align__bowtie__genome: small
+align__samtools__genome_flagstat: small
+align__fastqc__mature: medium
+align__multiqc__mature: small
+align__fastqc__hairpin: medium
+align__multiqc__hairpin: small
+align__star__mature: medium
+align__samtools__star_mature_flagstat: medium
+align__star__mature_species: medium
+align__samtools__star_mature_species_flagstat: medium
+align__star__hairpin: medium
+align__samtools__star_hairpin_flagstat: medium
+align__star__hairpin_species: medium
+align__samtools__star_hairpin_species_flagstat: medium
+align__star__genome: medium
+align__samtools__star_genome_flagstat: medium
+align__samtools__remove_secondary: medium
+align__extract_softclipped__run: small
+
+quantify__seqkit__mature_bowtie: medium
+quantify__seqkit__mature_species_bowtie: medium
+quantify__seqkit__hairpin_bowtie: medium
+quantify__featurecounts__genome_bowtie: medium
+quantify__featurecounts__genome_star: medium
+quantify__samtools__mirbase_star: medium
+quantify__bedtools__novel_mirna: medium
+
+novel_mirna__samtools__mpileup: medium
+novel_mirna__bedtools__join_loci: small
+novel_mirna__bedtools__intersect_annotation: small
+
+report__reads: medium
+report__reference: small
+report__preprocess: medium
+report__decontaminate: medium
+report__align: medium
+report__quantify: medium
+report__novel_mirna: medium

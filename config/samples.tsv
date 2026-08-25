@@ -1,0 +1,5 @@
+sample_id	library_id	read1	group	de_group
+Sample1_test_S12	L001	FASTQ/RAW/Sample1_test_S12_L001_R1_001.fastq.gz	1	1
+Sample1_test_S12	L002	FASTQ/RAW/Sample1_test_S12_L002_R1_001.fastq.gz	1	1
+Sample2_test_S8	L001	FASTQ/RAW/Sample2_test_S8_L001_R1_001.fastq.gz	2	2
+Sample2_test_S8	L002	FASTQ/RAW/Sample2_test_S8_L002_R1_001.fastq.gz	2	2
