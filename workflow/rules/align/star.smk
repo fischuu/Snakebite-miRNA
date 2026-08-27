@@ -28,6 +28,7 @@ rule align__star__mature:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {output.logdir} {params.tmpdir}
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
@@ -108,6 +109,7 @@ rule align__star__mature_species:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {output.logdir} {params.tmpdir}
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
@@ -188,6 +190,7 @@ rule align__star__hairpin:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {output.logdir} {params.tmpdir}
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
@@ -268,6 +271,7 @@ rule align__star__hairpin_species:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {output.logdir} {params.tmpdir}
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
@@ -348,6 +352,7 @@ rule align__star__genome:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {output.logdir} {params.tmpdir}
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \

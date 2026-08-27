@@ -25,6 +25,7 @@ rule reference__star_index__mature:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {params.index}
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
@@ -58,6 +59,7 @@ rule reference__star_index__mature_species:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {params.index}
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
@@ -91,6 +93,7 @@ rule reference__star_index__hairpin:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {params.index}
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
@@ -124,6 +127,7 @@ rule reference__star_index__hairpin_species:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {params.index}
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
@@ -157,6 +161,7 @@ rule reference__star_index__genome:
     shell:
         """
         exec > {log} 2>&1
+        rm -rf {params.tmpdir}
         mkdir -p {params.index}
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeChrBinNbits 15 \
              --limitGenomeGenerateRAM 65000000000 --runMode genomeGenerate \
