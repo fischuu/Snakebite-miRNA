@@ -4,15 +4,15 @@ rule reference__mirdb__prepare:
         mature=features["references"]["mature"],
         hairpin=features["references"]["hairpin"],
     output:
-        mature=REFDIR / "mature_basesAdjusted.fa",
-        mature_species=REFDIR / "mature_basesAdjusted_species.fa",
-        hairpin=REFDIR / "hairpin_basesAdjusted.fa",
-        hairpin_species=REFDIR / "hairpin_basesAdjusted_species.fa",
-        stats=Path("STATS/mirdb.stats"),
+        mature=MIRBASE / "mature_basesAdjusted.fa",
+        mature_species=MIRBASE / "mature_basesAdjusted_species.fa",
+        hairpin=MIRBASE / "hairpin_basesAdjusted.fa",
+        hairpin_species=MIRBASE / "hairpin_basesAdjusted_species.fa",
+        stats=MIRBASE / "mirdb.stats",
     log:
-        "logs/reference/mirdb_prepare.log"
+        MIRBASE / "mirdb_prepare.log"
     benchmark:
-        "benchmark/reference/mirdb_prepare.tsv"
+        MIRBASE / "benchmark/mirdb_prepare.tsv"
     params:
         species=params["species_id"],
     threads: esc("cpus", "reference__mirdb__prepare")

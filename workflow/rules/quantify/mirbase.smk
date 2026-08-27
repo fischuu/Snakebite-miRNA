@@ -6,14 +6,14 @@ rule quantify__samtools__mirbase_star:
         hairpin=rules.align__star__hairpin.output.bam,
         hairpin_species=rules.align__star__hairpin_species.output.bam,
     output:
-        mature=QUANT_STAR / "Mirbase" / "{sample_id}_star_mature.txt",
-        mature_species=QUANT_STAR / "Mirbase" / "{sample_id}_star_mature_species.txt",
-        hairpin=QUANT_STAR / "Mirbase" / "{sample_id}_star_hairpin.txt",
-        hairpin_species=QUANT_STAR / "Mirbase" / "{sample_id}_star_hairpin_species.txt",
+        mature=QUANT_STAR / "mirbase" / "{sample_id}_star_mature.txt",
+        mature_species=QUANT_STAR / "mirbase" / "{sample_id}_star_mature_species.txt",
+        hairpin=QUANT_STAR / "mirbase" / "{sample_id}_star_hairpin.txt",
+        hairpin_species=QUANT_STAR / "mirbase" / "{sample_id}_star_hairpin_species.txt",
     log:
-        "logs/quantify/mirbase_star.{sample_id}.log"
+        QUANT_STAR / "mirbase" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/mirbase_star.{sample_id}.tsv"
+        QUANT_STAR / "mirbase" / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "quantify__samtools__mirbase_star")
     resources:
         runtime=esc("runtime", "quantify__samtools__mirbase_star"),
@@ -40,11 +40,11 @@ rule quantify__bedtools__novel_mirna:
         bam=rules.align__samtools__remove_secondary.output,
         bed=rules.novel_mirna__bedtools__intersect_annotation.output.bed,
     output:
-        QUANT_STAR / "Novel_genes" / "{sample_id}_star_novelMirna_bedtools.txt"
+        QUANT_STAR / "novel_mirna" / "{sample_id}_star_novelMirna_bedtools.txt"
     log:
-        "logs/quantify/novel_mirna_bedtools.{sample_id}.log"
+        QUANT_STAR / "novel_mirna" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/novel_mirna_bedtools.{sample_id}.tsv"
+        QUANT_STAR / "novel_mirna" / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "quantify__bedtools__novel_mirna")
     resources:
         runtime=esc("runtime", "quantify__bedtools__novel_mirna"),

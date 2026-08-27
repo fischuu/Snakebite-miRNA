@@ -8,9 +8,9 @@ rule novel_mirna__samtools__mpileup:
         unique=MPILEUP / "{sample_id}.mpileup.unique",
         bed=MPILEUP / "{sample_id}.bed",
     log:
-        "logs/novel_mirna/mpileup.{sample_id}.log"
+        MPILEUP / "{sample_id}.log"
     benchmark:
-        "benchmark/novel_mirna/mpileup.{sample_id}.tsv"
+        MPILEUP / "benchmark/{sample_id}.tsv"
     params:
         unique_script=os.path.join(SCRIPT_FOLDER, "novel_mirna", "uniqueMpileup.sh"),
         bed_script=os.path.join(SCRIPT_FOLDER, "novel_mirna", "mpileupToBed.sh"),
@@ -41,9 +41,9 @@ rule novel_mirna__bedtools__join_loci:
         merged=MPILEUP / "merged.bed",
         joined=MPILEUP / "joinedLoci.bed",
     log:
-        "logs/novel_mirna/join_loci.log"
+        MPILEUP / "join_loci.log"
     benchmark:
-        "benchmark/novel_mirna/join_loci.tsv"
+        MPILEUP / "benchmark/join_loci.tsv"
     params:
         join_script=os.path.join(SCRIPT_FOLDER, "novel_mirna", "getJoinedLoci.sh"),
         cover=params["novel_mirna"]["min_cover"],
@@ -74,13 +74,13 @@ rule novel_mirna__bedtools__intersect_annotation:
         annotation=features["references"]["annotation"],
         fasta=features["references"]["genome"],
     output:
-        bed=REFDIR / "novelLoci.bed",
-        fasta=REFDIR / "novelLoci.fa",
-        unfiltered=temp(REFDIR / "novelLoci_unfiltered.bed"),
+        bed=NOVEL_LOCI / "novelLoci.bed",
+        fasta=NOVEL_LOCI / "novelLoci.fa",
+        unfiltered=temp(NOVEL_LOCI / "novelLoci_unfiltered.bed"),
     log:
-        "logs/novel_mirna/intersect_annotation.log"
+        NOVEL_LOCI / "intersect_annotation.log"
     benchmark:
-        "benchmark/novel_mirna/intersect_annotation.tsv"
+        NOVEL_LOCI / "benchmark/intersect_annotation.tsv"
     params:
         filter_script=os.path.join(SCRIPT_FOLDER, "novel_mirna", "filterNovelMirna.sh"),
     threads: esc("cpus", "novel_mirna__bedtools__intersect_annotation")

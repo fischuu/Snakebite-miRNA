@@ -6,9 +6,9 @@ rule preprocess__cutadapt__run:
         fastq_adapter=TRIMMED / "{sample_id}.{library_id}_trimmed_onlyAdapter.fastq.gz",
         fastq=TRIMMED / "{sample_id}.{library_id}_trimmed.fastq.gz",
     log:
-        "logs/preprocess/cutadapt.{sample_id}.{library_id}.log"
+        TRIMMED / "{sample_id}.{library_id}_cutadapt.log"
     benchmark:
-        "benchmark/preprocess/cutadapt.{sample_id}.{library_id}.tsv"
+        TRIMMED / "benchmark/{sample_id}.{library_id}.tsv"
     params:
         fastq_5p_adapter=str(TRIMMED / "{sample_id}.{library_id}_trimmed_only5pAdapter.fastq.gz"),
         adapter5p=params["preprocess"]["cutadapt"]["adapter5p"],

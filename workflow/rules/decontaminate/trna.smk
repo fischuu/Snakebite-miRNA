@@ -4,13 +4,13 @@ rule decontaminate__bowtie__trna:
         reads=rules.preprocess__concatenate__run.output.fastq,
         index=rules.reference__bowtie_index__trna.output,
     output:
-        mapped=TRNA_FASTQ / "mapped" / "{sample_id}_tRNA_mapped.fastq",
-        unmapped=TRNA_FASTQ / "unmapped" / "{sample_id}_tRNA_unmapped.fastq",
-        bam=TRNA_BAM / "{sample_id}_tRNA.bam",
+        mapped=TRNA / "mapped" / "{sample_id}_tRNA_mapped.fastq",
+        unmapped=TRNA / "unmapped" / "{sample_id}_tRNA_unmapped.fastq",
+        bam=TRNA / "{sample_id}_tRNA.bam",
     log:
-        "logs/decontaminate/bowtie_trna.{sample_id}.log"
+        TRNA / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/decontaminate/bowtie_trna.{sample_id}.tsv"
+        TRNA / "benchmark/bowtie.{sample_id}.tsv"
     params:
         index=features["references"]["tRNA"],
         m=params["align"]["bowtie"]["m"],
@@ -41,14 +41,14 @@ rule decontaminate__samtools__trna_flagstat:
     input:
         rules.decontaminate__bowtie__trna.output.bam
     output:
-        flagstat=TRNA_STATS / "{sample_id}_tRNA.flagstat",
-        stats=TRNA_STATS / "{sample_id}_tRNA.stats",
-        idxstats=TRNA_STATS / "{sample_id}_tRNA.idxstats",
-        sorted_bam=TRNA_BAM / "{sample_id}_tRNA.sorted.bam",
+        flagstat=TRNA / "{sample_id}_tRNA.flagstat",
+        stats=TRNA / "{sample_id}_tRNA.stats",
+        idxstats=TRNA / "{sample_id}_tRNA.idxstats",
+        sorted_bam=TRNA / "{sample_id}_tRNA.sorted.bam",
     log:
-        "logs/decontaminate/samtools_trna_flagstat.{sample_id}.log"
+        TRNA / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/decontaminate/samtools_trna_flagstat.{sample_id}.tsv"
+        TRNA / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "decontaminate__samtools__trna_flagstat")
     resources:
         runtime=esc("runtime", "decontaminate__samtools__trna_flagstat"),
@@ -76,14 +76,14 @@ rule decontaminate__fastqc__trna:
         mapped=rules.decontaminate__bowtie__trna.output.mapped,
         unmapped=rules.decontaminate__bowtie__trna.output.unmapped,
     output:
-        mapped=QC / "tRNA" / "{sample_id}_tRNA_mapped_fastqc.zip",
-        unmapped=QC / "tRNA" / "{sample_id}_tRNA_unmapped_fastqc.zip",
+        mapped=TRNA / "{sample_id}_tRNA_mapped_fastqc.zip",
+        unmapped=TRNA / "{sample_id}_tRNA_unmapped_fastqc.zip",
     log:
-        QC / "tRNA" / "{sample_id}_fastqc.log"
+        TRNA / "{sample_id}_fastqc.log"
     benchmark:
-        "benchmark/decontaminate/fastqc_trna.{sample_id}.tsv"
+        TRNA / "benchmark/fastqc.{sample_id}.tsv"
     params:
-        outfolder=str(QC / "tRNA"),
+        outfolder=str(TRNA),
     threads: esc("cpus", "decontaminate__fastqc__trna")
     resources:
         runtime=esc("runtime", "decontaminate__fastqc__trna"),
@@ -106,15 +106,15 @@ rule decontaminate__fastqc__trna:
 rule decontaminate__multiqc__trna:
     """Aggregate the tRNA mapped/unmapped FastQC reports (MultiQC)"""
     input:
-        mapped=expand(str(QC / "tRNA" / "{sample_id}_tRNA_mapped_fastqc.zip"), sample_id=SAMPLES),
-        unmapped=expand(str(QC / "tRNA" / "{sample_id}_tRNA_unmapped_fastqc.zip"), sample_id=SAMPLES),
+        mapped=expand(str(TRNA / "{sample_id}_tRNA_mapped_fastqc.zip"), sample_id=SAMPLES),
+        unmapped=expand(str(TRNA / "{sample_id}_tRNA_unmapped_fastqc.zip"), sample_id=SAMPLES),
     output:
-        mapped=directory(QC / "tRNA" / "multiqc_mapped"),
-        unmapped=directory(QC / "tRNA" / "multiqc_unmapped"),
+        mapped=directory(TRNA / "multiqc_mapped"),
+        unmapped=directory(TRNA / "multiqc_unmapped"),
     log:
-        QC / "tRNA" / "multiqc.log"
+        TRNA / "multiqc.log"
     benchmark:
-        "benchmark/decontaminate/multiqc_trna.tsv"
+        TRNA / "benchmark/multiqc.tsv"
     threads: esc("cpus", "decontaminate__multiqc__trna")
     resources:
         runtime=esc("runtime", "decontaminate__multiqc__trna"),

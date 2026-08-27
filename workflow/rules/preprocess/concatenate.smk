@@ -6,9 +6,9 @@ rule preprocess__concatenate__run:
         fastq=CONCATENATED / "{sample_id}_R1.fastq.gz",
         report=CONCATENATED / "{sample_id}_R1.fastq.gz.report",
     log:
-        "logs/preprocess/concatenate.{sample_id}.log"
+        CONCATENATED / "{sample_id}.log"
     benchmark:
-        "benchmark/preprocess/concatenate.{sample_id}.tsv"
+        CONCATENATED / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "preprocess__concatenate__run")
     resources:
         runtime=esc("runtime", "preprocess__concatenate__run"),

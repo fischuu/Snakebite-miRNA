@@ -30,7 +30,7 @@ host genome annotation, plus counts over the predicted novel-miRNA loci.
 
 ```{r fc-summary, results='asis'}
 rows <- purrr::map(sample_ids, function(s) {
-  path <- file.path(project_folder, "QUANTIFICATION", "STAR", "Reference", sprintf("%s_star_reference_fc.txt", s))
+  path <- file.path(project_folder, "results", "quantify", "star", "genome", sprintf("%s_star_reference_fc.txt", s))
   df <- parse_featurecounts_summary(path)
   if (nrow(df) == 0) return(NULL)
   df$sample_id <- s
@@ -44,7 +44,7 @@ preview_table(fc_summary, n = nrow(fc_summary), caption = "featureCounts assignm
 
 ```{r novel-counts, results='asis'}
 rows <- purrr::map(sample_ids, function(s) {
-  path <- file.path(project_folder, "QUANTIFICATION", "STAR", "Novel_genes", sprintf("%s_star_novelMirna_bedtools.txt", s))
+  path <- file.path(project_folder, "results", "quantify", "star", "novel_mirna", sprintf("%s_star_novelMirna_bedtools.txt", s))
   df <- safe_read_tsv(path, col_names = FALSE)
   if (nrow(df) == 0) return(NULL)
   tibble::tibble(sample_id = s, n_loci = nrow(df), total_reads = sum(df[[ncol(df)]], na.rm = TRUE))

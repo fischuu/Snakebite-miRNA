@@ -14,17 +14,23 @@ suppressPackageStartupMessages({
 
 # ---- Runtime / resource statistics (from Snakemake `benchmark:` files) ----
 
-#' Every benchmark TSV for one module lives directly under
-#' "<project_folder>/benchmark/<module>/", named "<rule_slug>.<wildcards...>.tsv"
-#' (or just "<rule_slug>.tsv" for wildcard-free rules). Combine them into one
-#' data frame with a "rule" column derived from the filename.
+#' Recursively find every benchmark TSV under one module's results folder and
+#' combine them into one data frame, with a "rule" column derived from the
+#' file's position in the folder tree.
 discover_benchmarks <- function(project_folder, module) {
-  root <- file.path(project_folder, "benchmark", module)
+  root <- file.path(project_folder, "results", module)
   if (!dir.exists(root)) {
     return(empty_benchmark_table())
   }
 
-  paths <- list.files(root, pattern = "\\.tsv$", recursive = TRUE, full.names = TRUE)
+  paths <- list.files(
+    root,
+    pattern = "\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  paths <- paths[grepl("benchmark", paths, ignore.case = TRUE)]
+
   if (length(paths) == 0) {
     return(empty_benchmark_table())
   }
@@ -34,7 +40,7 @@ discover_benchmarks <- function(project_folder, module) {
     if (is.null(df) || nrow(df) == 0) {
       return(NULL)
     }
-    df$rule <- benchmark_label(p)
+    df$rule <- benchmark_label(root, p)
     df
   })
   rows <- compact(rows)
@@ -53,14 +59,33 @@ empty_benchmark_table <- function() {
   )
 }
 
-#' Derive the rule label from a benchmark file's name: everything before the
-#' first "." (wildcards -- sample_id, library_id -- follow as further
-#' dot-separated segments and never appear in the rule slug itself).
-#'   "bowtie_mature.Sample1_test_S12.tsv" -> "bowtie_mature"
-#'   "join_loci.tsv"                     -> "join_loci"
-benchmark_label <- function(path) {
-  base <- sub("\\.tsv$", "", basename(path))
-  sub("\\..*$", "", base)
+#' Derive a readable rule label from a benchmark file's path relative to the
+#' module's results root. Two naming conventions are used across the
+#' pipeline's rules, and both need to collapse to a sensible label:
+#'   - "<tool>/benchmark/<wildcard>.tsv"        -> group by <tool>
+#'     (e.g. results/align/bowtie/mature/benchmark/bowtie.Sample1.tsv -> "mature")
+#'   - "<tool>/<wildcard>/benchmark_<step>.tsv" -> distinguish sub-steps
+#'     (not currently used by this pipeline's rules, but handled the same way
+#'     Snakebite-Holoruminant-MetaG does, for consistency)
+benchmark_label <- function(root, path) {
+  rel <- sub(paste0("^", root, "/?"), "", path)
+  parts <- strsplit(rel, "/", fixed = TRUE)[[1]]
+  if (tolower(parts[1]) == "benchmark") {
+    # No intermediate tool subfolder at all (e.g. results/reads/benchmark/*.tsv)
+    # -- fall back to the module's own name as the label.
+    return(basename(root))
+  }
+  tool <- parts[1]
+  if (length(parts) <= 1) {
+    return(tool)
+  }
+  parent <- parts[length(parts) - 1]
+  if (tolower(parent) == "benchmark") {
+    return(tool)
+  }
+  base <- sub("\\.tsv$", "", parts[length(parts)])
+  base <- sub("^benchmark_?", "", base)
+  if (nchar(base) == 0 || base == tool) tool else paste0(tool, ": ", base)
 }
 
 #' One row per rule: number of jobs, total/mean/max runtime, peak memory.

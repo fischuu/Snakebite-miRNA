@@ -4,13 +4,13 @@ rule decontaminate__bowtie__phix:
         reads=rules.decontaminate__bowtie__trna.output.unmapped,
         index=rules.reference__bowtie_index__phix.output,
     output:
-        mapped=PHIX_FASTQ / "mapped" / "{sample_id}_PhiX_mapped.fastq",
-        unmapped=PHIX_FASTQ / "unmapped" / "{sample_id}_PhiX_unmapped.fastq",
-        bam=PHIX_BAM / "{sample_id}_PhiX.bam",
+        mapped=PHIX / "mapped" / "{sample_id}_PhiX_mapped.fastq",
+        unmapped=PHIX / "unmapped" / "{sample_id}_PhiX_unmapped.fastq",
+        bam=PHIX / "{sample_id}_PhiX.bam",
     log:
-        "logs/decontaminate/bowtie_phix.{sample_id}.log"
+        PHIX / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/decontaminate/bowtie_phix.{sample_id}.tsv"
+        PHIX / "benchmark/bowtie.{sample_id}.tsv"
     params:
         index=features["references"]["phix"],
         m=params["align"]["bowtie"]["m"],
@@ -40,12 +40,12 @@ rule decontaminate__samtools__phix_flagstat:
     input:
         rules.decontaminate__bowtie__phix.output.bam
     output:
-        flagstat=PHIX_STATS / "{sample_id}_PhiX.flagstat",
-        stats=PHIX_STATS / "{sample_id}_PhiX.stats",
+        flagstat=PHIX / "{sample_id}_PhiX.flagstat",
+        stats=PHIX / "{sample_id}_PhiX.stats",
     log:
-        "logs/decontaminate/samtools_phix_flagstat.{sample_id}.log"
+        PHIX / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/decontaminate/samtools_phix_flagstat.{sample_id}.tsv"
+        PHIX / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "decontaminate__samtools__phix_flagstat")
     resources:
         runtime=esc("runtime", "decontaminate__samtools__phix_flagstat"),
@@ -70,14 +70,14 @@ rule decontaminate__fastqc__phix:
         mapped=rules.decontaminate__bowtie__phix.output.mapped,
         unmapped=rules.decontaminate__bowtie__phix.output.unmapped,
     output:
-        mapped=QC / "PhiX" / "{sample_id}_PhiX_mapped_fastqc.zip",
-        unmapped=QC / "PhiX" / "{sample_id}_PhiX_unmapped_fastqc.zip",
+        mapped=PHIX / "{sample_id}_PhiX_mapped_fastqc.zip",
+        unmapped=PHIX / "{sample_id}_PhiX_unmapped_fastqc.zip",
     log:
-        QC / "PhiX" / "{sample_id}_fastqc.log"
+        PHIX / "{sample_id}_fastqc.log"
     benchmark:
-        "benchmark/decontaminate/fastqc_phix.{sample_id}.tsv"
+        PHIX / "benchmark/fastqc.{sample_id}.tsv"
     params:
-        outfolder=str(QC / "PhiX"),
+        outfolder=str(PHIX),
     threads: esc("cpus", "decontaminate__fastqc__phix")
     resources:
         runtime=esc("runtime", "decontaminate__fastqc__phix"),
@@ -100,15 +100,15 @@ rule decontaminate__fastqc__phix:
 rule decontaminate__multiqc__phix:
     """Aggregate the PhiX mapped/unmapped FastQC reports (MultiQC)"""
     input:
-        mapped=expand(str(QC / "PhiX" / "{sample_id}_PhiX_mapped_fastqc.zip"), sample_id=SAMPLES),
-        unmapped=expand(str(QC / "PhiX" / "{sample_id}_PhiX_unmapped_fastqc.zip"), sample_id=SAMPLES),
+        mapped=expand(str(PHIX / "{sample_id}_PhiX_mapped_fastqc.zip"), sample_id=SAMPLES),
+        unmapped=expand(str(PHIX / "{sample_id}_PhiX_unmapped_fastqc.zip"), sample_id=SAMPLES),
     output:
-        mapped=directory(QC / "PhiX" / "multiqc_mapped"),
-        unmapped=directory(QC / "PhiX" / "multiqc_unmapped"),
+        mapped=directory(PHIX / "multiqc_mapped"),
+        unmapped=directory(PHIX / "multiqc_unmapped"),
     log:
-        QC / "PhiX" / "multiqc.log"
+        PHIX / "multiqc.log"
     benchmark:
-        "benchmark/decontaminate/multiqc_phix.tsv"
+        PHIX / "benchmark/multiqc.tsv"
     threads: esc("cpus", "decontaminate__multiqc__phix")
     resources:
         runtime=esc("runtime", "decontaminate__multiqc__phix"),

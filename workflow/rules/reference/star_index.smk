@@ -5,12 +5,12 @@ rule reference__star_index__mature:
     output:
         STAR_INDEX_MATURE / "chrName.txt"
     log:
-        "logs/reference/star_index_mature.log"
+        STAR_INDEX_MATURE / "star_index.log"
     benchmark:
-        "benchmark/reference/star_index_mature.tsv"
+        STAR_INDEX_MATURE / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_MATURE),
-        tmpdir=str(STAR_TMP / "Mature"),
+        tmpdir=str(STAR_INDEX_TMP / "mature"),
     threads: esc("cpus", "reference__star_index__mature")
     resources:
         runtime=esc("runtime", "reference__star_index__mature"),
@@ -38,12 +38,12 @@ rule reference__star_index__mature_species:
     output:
         STAR_INDEX_MATURE_SPECIES / "chrName.txt"
     log:
-        "logs/reference/star_index_mature_species.log"
+        STAR_INDEX_MATURE_SPECIES / "star_index.log"
     benchmark:
-        "benchmark/reference/star_index_mature_species.tsv"
+        STAR_INDEX_MATURE_SPECIES / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_MATURE_SPECIES),
-        tmpdir=str(STAR_TMP / "MatureSpecies"),
+        tmpdir=str(STAR_INDEX_TMP / "mature_species"),
     threads: esc("cpus", "reference__star_index__mature_species")
     resources:
         runtime=esc("runtime", "reference__star_index__mature_species"),
@@ -71,12 +71,12 @@ rule reference__star_index__hairpin:
     output:
         STAR_INDEX_HAIRPIN / "chrName.txt"
     log:
-        "logs/reference/star_index_hairpin.log"
+        STAR_INDEX_HAIRPIN / "star_index.log"
     benchmark:
-        "benchmark/reference/star_index_hairpin.tsv"
+        STAR_INDEX_HAIRPIN / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN),
-        tmpdir=str(STAR_TMP / "Hairpin"),
+        tmpdir=str(STAR_INDEX_TMP / "hairpin"),
     threads: esc("cpus", "reference__star_index__hairpin")
     resources:
         runtime=esc("runtime", "reference__star_index__hairpin"),
@@ -104,12 +104,12 @@ rule reference__star_index__hairpin_species:
     output:
         STAR_INDEX_HAIRPIN_SPECIES / "chrName.txt"
     log:
-        "logs/reference/star_index_hairpin_species.log"
+        STAR_INDEX_HAIRPIN_SPECIES / "star_index.log"
     benchmark:
-        "benchmark/reference/star_index_hairpin_species.tsv"
+        STAR_INDEX_HAIRPIN_SPECIES / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN_SPECIES),
-        tmpdir=str(STAR_TMP / "HairpinSpecies"),
+        tmpdir=str(STAR_INDEX_TMP / "hairpin_species"),
     threads: esc("cpus", "reference__star_index__hairpin_species")
     resources:
         runtime=esc("runtime", "reference__star_index__hairpin_species"),
@@ -137,12 +137,12 @@ rule reference__star_index__genome:
     output:
         STAR_INDEX_GENOME / "chrName.txt"
     log:
-        "logs/reference/star_index_genome.log"
+        STAR_INDEX_GENOME / "star_index.log"
     benchmark:
-        "benchmark/reference/star_index_genome.tsv"
+        STAR_INDEX_GENOME / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_GENOME),
-        tmpdir=str(STAR_TMP / "Reference"),
+        tmpdir=str(STAR_INDEX_TMP / "genome"),
     threads: esc("cpus", "reference__star_index__genome")
     resources:
         runtime=esc("runtime", "reference__star_index__genome"),

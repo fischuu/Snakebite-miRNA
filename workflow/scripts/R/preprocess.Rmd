@@ -26,7 +26,7 @@ lane, followed by concatenation of every sample's lanes into a single FASTQ.
 
 ```{r trimmed-fastqc, results='asis'}
 rows <- purrr::pmap(samples, function(sample_id, library_id, ...) {
-  zip_path <- file.path(project_folder, "QC", "TRIMMED", sprintf("%s.%s_trimmed_fastqc.zip", sample_id, library_id))
+  zip_path <- file.path(project_folder, "results", "preprocess", "cutadapt", sprintf("%s.%s_trimmed_fastqc.zip", sample_id, library_id))
   df <- parse_fastqc_zip(zip_path)
   if (nrow(df) == 0) return(NULL)
   tibble::tibble(
@@ -44,7 +44,7 @@ preview_table(trimmed_summary, n = nrow(trimmed_summary), caption = "Trimmed Fas
 ```{r concatenated-fastqc, results='asis'}
 sample_ids <- unique(samples$sample_id)
 rows <- purrr::map(sample_ids, function(s) {
-  zip_path <- file.path(project_folder, "QC", "CONCATENATED", sprintf("%s_R1_fastqc.zip", s))
+  zip_path <- file.path(project_folder, "results", "preprocess", "concatenate", sprintf("%s_R1_fastqc.zip", s))
   df <- parse_fastqc_zip(zip_path)
   if (nrow(df) == 0) return(NULL)
   tibble::tibble(sample_id = s, total_sequences = df[["Total Sequences"]])

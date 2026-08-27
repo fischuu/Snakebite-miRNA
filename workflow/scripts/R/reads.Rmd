@@ -34,7 +34,7 @@ preview_table(samples, n = nrow(samples), caption = "Sample sheet")
 
 ```{r raw-fastqc, results='asis'}
 rows <- purrr::pmap(samples, function(sample_id, library_id, ...) {
-  zip_path <- file.path(project_folder, "QC", "RAW", sprintf("%s.%s_fastqc.zip", sample_id, library_id))
+  zip_path <- file.path(project_folder, "results", "reads", sprintf("%s.%s_fastqc.zip", sample_id, library_id))
   df <- parse_fastqc_zip(zip_path)
   if (nrow(df) == 0) return(NULL)
   tibble::tibble(

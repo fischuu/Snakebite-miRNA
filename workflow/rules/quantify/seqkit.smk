@@ -4,11 +4,11 @@ rule quantify__seqkit__mature_bowtie:
         bam=rules.align__bowtie__mature.output.bam,
         bai=rules.align__samtools__mature_flagstat.output.bai,
     output:
-        QUANT_BOWTIE / "Mature" / "{sample_id}_bowtie_mature_seqkit.txt"
+        QUANT_BOWTIE / "mature" / "{sample_id}_bowtie_mature_seqkit.txt"
     log:
-        "logs/quantify/seqkit_mature_bowtie.{sample_id}.log"
+        QUANT_BOWTIE / "mature" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/seqkit_mature_bowtie.{sample_id}.tsv"
+        QUANT_BOWTIE / "mature" / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "quantify__seqkit__mature_bowtie")
     resources:
         runtime=esc("runtime", "quantify__seqkit__mature_bowtie"),
@@ -34,11 +34,11 @@ rule quantify__seqkit__mature_species_bowtie:
         bam=rules.align__bowtie__mature_species.output.bam,
         bai=rules.align__samtools__mature_species_flagstat.output.bai,
     output:
-        QUANT_BOWTIE / "Mature_Species" / "{sample_id}_bowtie_mature_species_seqkit.txt"
+        QUANT_BOWTIE / "mature_species" / "{sample_id}_bowtie_mature_species_seqkit.txt"
     log:
-        "logs/quantify/seqkit_mature_species_bowtie.{sample_id}.log"
+        QUANT_BOWTIE / "mature_species" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/seqkit_mature_species_bowtie.{sample_id}.tsv"
+        QUANT_BOWTIE / "mature_species" / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "quantify__seqkit__mature_species_bowtie")
     resources:
         runtime=esc("runtime", "quantify__seqkit__mature_species_bowtie"),
@@ -63,11 +63,11 @@ rule quantify__seqkit__hairpin_bowtie:
         bam=rules.align__bowtie__hairpin.output.bam,
         bai=rules.align__samtools__hairpin_flagstat.output.bai,
     output:
-        QUANT_BOWTIE / "Hairpin" / "{sample_id}_bowtie_hairpin_seqkit.txt"
+        QUANT_BOWTIE / "hairpin" / "{sample_id}_bowtie_hairpin_seqkit.txt"
     log:
-        "logs/quantify/seqkit_hairpin_bowtie.{sample_id}.log"
+        QUANT_BOWTIE / "hairpin" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/seqkit_hairpin_bowtie.{sample_id}.tsv"
+        QUANT_BOWTIE / "hairpin" / "benchmark/{sample_id}.tsv"
     threads: esc("cpus", "quantify__seqkit__hairpin_bowtie")
     resources:
         runtime=esc("runtime", "quantify__seqkit__hairpin_bowtie"),

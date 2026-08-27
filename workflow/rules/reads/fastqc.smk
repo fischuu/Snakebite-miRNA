@@ -3,14 +3,14 @@ rule reads__fastqc__run:
     input:
         get_raw_read1
     output:
-        QC / "RAW" / "{sample_id}.{library_id}_fastqc.zip",
-        html=QC / "RAW" / "{sample_id}.{library_id}_fastqc.html",
+        READS / "{sample_id}.{library_id}_fastqc.zip",
+        html=READS / "{sample_id}.{library_id}_fastqc.html",
     log:
-        QC / "RAW" / "{sample_id}.{library_id}_fastqc.log"
+        READS / "{sample_id}.{library_id}_fastqc.log"
     benchmark:
-        "benchmark/reads/fastqc.{sample_id}.{library_id}.tsv"
+        READS / "benchmark/{sample_id}.{library_id}.tsv"
     params:
-        outfolder=str(QC / "RAW"),
+        outfolder=str(READS),
         prefix=lambda wc: f"{wc.sample_id}.{wc.library_id}",
     threads: esc("cpus", "reads__fastqc__run")
     resources:
@@ -43,15 +43,15 @@ rule reads__multiqc__run:
     """Aggregate FastQC reports for every raw lane (MultiQC)"""
     input:
         [
-            QC / "RAW" / f"{sample_id}.{library_id}_fastqc.zip"
+            READS / f"{sample_id}.{library_id}_fastqc.zip"
             for sample_id, library_id in SAMPLE_LIBRARY
         ]
     output:
-        directory(QC / "RAW" / "multiqc")
+        directory(READS / "multiqc")
     log:
-        QC / "RAW" / "multiqc.log"
+        READS / "multiqc.log"
     benchmark:
-        "benchmark/reads/multiqc.tsv"
+        READS / "benchmark/multiqc.tsv"
     threads: esc("cpus", "reads__multiqc__run")
     resources:
         runtime=esc("runtime", "reads__multiqc__run"),

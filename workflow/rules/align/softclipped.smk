@@ -5,13 +5,13 @@ rule align__extract_softclipped__run:
         mature=rules.align__star__mature.output.bam,
         mature_species=rules.align__star__mature_species.output.bam,
     output:
-        genome=SOFTCLIPPED / "Reference_softclipped" / "{sample_id}_reference_softclipped.fasta.gz",
-        mature=SOFTCLIPPED / "Mature_softclipped" / "{sample_id}_mature_softclipped.fasta.gz",
-        mature_species=SOFTCLIPPED / "MatureSpecies_softclipped" / "{sample_id}_mature_species_softclipped.fasta.gz",
+        genome=SOFTCLIPPED / "genome" / "{sample_id}_reference_softclipped.fasta.gz",
+        mature=SOFTCLIPPED / "mature" / "{sample_id}_mature_softclipped.fasta.gz",
+        mature_species=SOFTCLIPPED / "mature_species" / "{sample_id}_mature_species_softclipped.fasta.gz",
     log:
-        "logs/align/extract_softclipped.{sample_id}.log"
+        SOFTCLIPPED / "extract_softclipped.{sample_id}.log"
     benchmark:
-        "benchmark/align/extract_softclipped.{sample_id}.tsv"
+        SOFTCLIPPED / "benchmark/{sample_id}.tsv"
     params:
         length=params["align"]["extract_softclipped"]["length"],
         binary=os.path.join(SCRIPT_FOLDER, "align", "extractSoftclipped"),

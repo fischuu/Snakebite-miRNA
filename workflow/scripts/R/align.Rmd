@@ -29,8 +29,8 @@ extraction of soft-clipped read portions for novel-miRNA discovery.
 ## Bowtie alignment rates
 
 ```{r bowtie-flagstat}
-mature_bt <- collect_flagstats(project_folder, "STATS/BOWTIE/Mature/%s_mature.flagstat", sample_ids)
-hairpin_bt <- collect_flagstats(project_folder, "STATS/BOWTIE/Hairpin/%s_hairpin.flagstat", sample_ids)
+mature_bt <- collect_flagstats(project_folder, "results/align/bowtie/mature/%s_mature.flagstat", sample_ids)
+hairpin_bt <- collect_flagstats(project_folder, "results/align/bowtie/hairpin/%s_hairpin.flagstat", sample_ids)
 bowtie_combined <- dplyr::bind_rows(
   dplyr::mutate(mature_bt, reference = "mature"),
   dplyr::mutate(hairpin_bt, reference = "hairpin")
@@ -41,8 +41,8 @@ preview_table(bowtie_combined, n = nrow(bowtie_combined), caption = "Bowtie mapp
 ## STAR alignment rates
 
 ```{r star-flagstat}
-mature_star <- collect_flagstats(project_folder, "STATS/STAR/Mature/%s_mature.flagstat", sample_ids)
-genome_star <- collect_flagstats(project_folder, "STATS/STAR/Reference/%s_reference.flagstat", sample_ids)
+mature_star <- collect_flagstats(project_folder, "results/align/star/mature/%s_mature.flagstat", sample_ids)
+genome_star <- collect_flagstats(project_folder, "results/align/star/genome/%s_reference.flagstat", sample_ids)
 star_combined <- dplyr::bind_rows(
   dplyr::mutate(mature_star, reference = "mature"),
   dplyr::mutate(genome_star, reference = "genome")

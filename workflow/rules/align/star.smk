@@ -4,15 +4,15 @@ rule align__star__mature:
         index=rules.reference__star_index__mature.output,
         fastq=rules.decontaminate__bowtie__phix.output.unmapped,
     output:
-        bam=MATURE_BAM_STAR / "{sample_id}_mature_star.bam",
-        logdir=directory(MATURE_BAM_STAR / "{sample_id}"),
+        bam=MATURE_STAR / "{sample_id}_mature_star.bam",
+        logdir=directory(MATURE_STAR / "{sample_id}"),
     log:
-        "logs/align/star_mature.{sample_id}.log"
+        MATURE_STAR / "star.{sample_id}.log"
     benchmark:
-        "benchmark/align/star_mature.{sample_id}.tsv"
+        MATURE_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_MATURE),
-        tmpdir=str(STAR_TMP / "Mature" / "{sample_id}"),
+        tmpdir=str(STAR_ALIGN_TMP / "mature" / "{sample_id}"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__mature")
     resources:
@@ -49,14 +49,14 @@ rule align__samtools__star_mature_flagstat:
     input:
         rules.align__star__mature.output.bam
     output:
-        flagstat=MATURE_STATS_STAR / "{sample_id}_mature.flagstat",
-        stats=MATURE_STATS_STAR / "{sample_id}_mature.stats",
-        mapped=MATURE_FASTQ / "mapped_star" / "{sample_id}_mature_mapped_star.fastq",
-        unmapped=MATURE_FASTQ / "unmapped_star" / "{sample_id}_mature_unmapped_star.fastq",
+        flagstat=MATURE_STAR / "{sample_id}_mature.flagstat",
+        stats=MATURE_STAR / "{sample_id}_mature.stats",
+        mapped=MATURE_STAR / "mapped" / "{sample_id}_mature_mapped_star.fastq",
+        unmapped=MATURE_STAR / "unmapped" / "{sample_id}_mature_unmapped_star.fastq",
     log:
-        "logs/align/samtools_star_mature.{sample_id}.log"
+        MATURE_STAR / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_star_mature_flagstat.{sample_id}.tsv"
+        MATURE_STAR / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__star_mature_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__star_mature_flagstat"),
@@ -84,15 +84,15 @@ rule align__star__mature_species:
         index=rules.reference__star_index__mature_species.output,
         fastq=rules.decontaminate__bowtie__phix.output.unmapped,
     output:
-        bam=MATURE_SPECIES_BAM_STAR / "{sample_id}_mature_species_star.bam",
-        logdir=directory(MATURE_SPECIES_BAM_STAR / "{sample_id}"),
+        bam=MATURE_SPECIES_STAR / "{sample_id}_mature_species_star.bam",
+        logdir=directory(MATURE_SPECIES_STAR / "{sample_id}"),
     log:
-        "logs/align/star_mature_species.{sample_id}.log"
+        MATURE_SPECIES_STAR / "star.{sample_id}.log"
     benchmark:
-        "benchmark/align/star_mature_species.{sample_id}.tsv"
+        MATURE_SPECIES_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_MATURE_SPECIES),
-        tmpdir=str(STAR_TMP / "Mature_Species" / "{sample_id}"),
+        tmpdir=str(STAR_ALIGN_TMP / "mature_species" / "{sample_id}"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__mature_species")
     resources:
@@ -129,14 +129,14 @@ rule align__samtools__star_mature_species_flagstat:
     input:
         rules.align__star__mature_species.output.bam
     output:
-        flagstat=MATURE_SPECIES_STATS_STAR / "{sample_id}_mature_species.flagstat",
-        stats=MATURE_SPECIES_STATS_STAR / "{sample_id}_mature_species.stats",
-        mapped=MATURE_SPECIES_FASTQ / "mapped_star" / "{sample_id}_mature_species_mapped_star.fastq",
-        unmapped=MATURE_SPECIES_FASTQ / "unmapped_star" / "{sample_id}_mature_species_unmapped_star.fastq",
+        flagstat=MATURE_SPECIES_STAR / "{sample_id}_mature_species.flagstat",
+        stats=MATURE_SPECIES_STAR / "{sample_id}_mature_species.stats",
+        mapped=MATURE_SPECIES_STAR / "mapped" / "{sample_id}_mature_species_mapped_star.fastq",
+        unmapped=MATURE_SPECIES_STAR / "unmapped" / "{sample_id}_mature_species_unmapped_star.fastq",
     log:
-        "logs/align/samtools_star_mature_species.{sample_id}.log"
+        MATURE_SPECIES_STAR / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_star_mature_species_flagstat.{sample_id}.tsv"
+        MATURE_SPECIES_STAR / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__star_mature_species_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__star_mature_species_flagstat"),
@@ -164,15 +164,15 @@ rule align__star__hairpin:
         index=rules.reference__star_index__hairpin.output,
         fastq=rules.decontaminate__bowtie__phix.output.unmapped,
     output:
-        bam=HAIRPIN_BAM_STAR / "{sample_id}_hairpin_star.bam",
-        logdir=directory(HAIRPIN_BAM_STAR / "{sample_id}"),
+        bam=HAIRPIN_STAR / "{sample_id}_hairpin_star.bam",
+        logdir=directory(HAIRPIN_STAR / "{sample_id}"),
     log:
-        "logs/align/star_hairpin.{sample_id}.log"
+        HAIRPIN_STAR / "star.{sample_id}.log"
     benchmark:
-        "benchmark/align/star_hairpin.{sample_id}.tsv"
+        HAIRPIN_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN),
-        tmpdir=str(STAR_TMP / "Hairpin" / "{sample_id}"),
+        tmpdir=str(STAR_ALIGN_TMP / "hairpin" / "{sample_id}"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__hairpin")
     resources:
@@ -209,14 +209,14 @@ rule align__samtools__star_hairpin_flagstat:
     input:
         rules.align__star__hairpin.output.bam
     output:
-        flagstat=HAIRPIN_STATS_STAR / "{sample_id}_hairpin.flagstat",
-        stats=HAIRPIN_STATS_STAR / "{sample_id}_hairpin.stats",
-        mapped=HAIRPIN_FASTQ / "mapped_star" / "{sample_id}_hairpin_mapped_star.fastq",
-        unmapped=HAIRPIN_FASTQ / "unmapped_star" / "{sample_id}_hairpin_unmapped_star.fastq",
+        flagstat=HAIRPIN_STAR / "{sample_id}_hairpin.flagstat",
+        stats=HAIRPIN_STAR / "{sample_id}_hairpin.stats",
+        mapped=HAIRPIN_STAR / "mapped" / "{sample_id}_hairpin_mapped_star.fastq",
+        unmapped=HAIRPIN_STAR / "unmapped" / "{sample_id}_hairpin_unmapped_star.fastq",
     log:
-        "logs/align/samtools_star_hairpin.{sample_id}.log"
+        HAIRPIN_STAR / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_star_hairpin_flagstat.{sample_id}.tsv"
+        HAIRPIN_STAR / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__star_hairpin_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__star_hairpin_flagstat"),
@@ -244,15 +244,15 @@ rule align__star__hairpin_species:
         index=rules.reference__star_index__hairpin_species.output,
         fastq=rules.align__samtools__star_mature_species_flagstat.output.unmapped,
     output:
-        bam=HAIRPIN_SPECIES_BAM_STAR / "{sample_id}_hairpin_species_star.bam",
-        logdir=directory(HAIRPIN_SPECIES_BAM_STAR / "{sample_id}"),
+        bam=HAIRPIN_SPECIES_STAR / "{sample_id}_hairpin_species_star.bam",
+        logdir=directory(HAIRPIN_SPECIES_STAR / "{sample_id}"),
     log:
-        "logs/align/star_hairpin_species.{sample_id}.log"
+        HAIRPIN_SPECIES_STAR / "star.{sample_id}.log"
     benchmark:
-        "benchmark/align/star_hairpin_species.{sample_id}.tsv"
+        HAIRPIN_SPECIES_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN_SPECIES),
-        tmpdir=str(STAR_TMP / "HairpinSpecies" / "{sample_id}"),
+        tmpdir=str(STAR_ALIGN_TMP / "hairpin_species" / "{sample_id}"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__hairpin_species")
     resources:
@@ -289,14 +289,14 @@ rule align__samtools__star_hairpin_species_flagstat:
     input:
         rules.align__star__hairpin_species.output.bam
     output:
-        flagstat=HAIRPIN_SPECIES_STATS_STAR / "{sample_id}_hairpin_species.flagstat",
-        stats=HAIRPIN_SPECIES_STATS_STAR / "{sample_id}_hairpin_species.stats",
-        mapped=HAIRPIN_SPECIES_FASTQ / "mapped_star" / "{sample_id}_hairpin_species_mapped_star.fastq",
-        unmapped=HAIRPIN_SPECIES_FASTQ / "unmapped_star" / "{sample_id}_hairpin_species_unmapped_star.fastq",
+        flagstat=HAIRPIN_SPECIES_STAR / "{sample_id}_hairpin_species.flagstat",
+        stats=HAIRPIN_SPECIES_STAR / "{sample_id}_hairpin_species.stats",
+        mapped=HAIRPIN_SPECIES_STAR / "mapped" / "{sample_id}_hairpin_species_mapped_star.fastq",
+        unmapped=HAIRPIN_SPECIES_STAR / "unmapped" / "{sample_id}_hairpin_species_unmapped_star.fastq",
     log:
-        "logs/align/samtools_star_hairpin_species.{sample_id}.log"
+        HAIRPIN_SPECIES_STAR / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_star_hairpin_species_flagstat.{sample_id}.tsv"
+        HAIRPIN_SPECIES_STAR / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__star_hairpin_species_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__star_hairpin_species_flagstat"),
@@ -324,15 +324,15 @@ rule align__star__genome:
         index=rules.reference__star_index__genome.output,
         fastq=rules.align__samtools__star_hairpin_species_flagstat.output.unmapped,
     output:
-        bam=GENOME_BAM_STAR / "{sample_id}_reference_star.bam",
-        logdir=directory(GENOME_BAM_STAR / "{sample_id}"),
+        bam=GENOME_STAR / "{sample_id}_reference_star.bam",
+        logdir=directory(GENOME_STAR / "{sample_id}"),
     log:
-        "logs/align/star_genome.{sample_id}.log"
+        GENOME_STAR / "star.{sample_id}.log"
     benchmark:
-        "benchmark/align/star_genome.{sample_id}.tsv"
+        GENOME_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_GENOME),
-        tmpdir=str(STAR_TMP / "Reference" / "{sample_id}"),
+        tmpdir=str(STAR_ALIGN_TMP / "genome" / "{sample_id}"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__genome")
     resources:
@@ -369,11 +369,11 @@ rule align__samtools__remove_secondary:
     input:
         rules.align__star__genome.output.bam
     output:
-        GENOME_BAM_STAR / "{sample_id}_reference_star_primary.bam"
+        GENOME_STAR / "{sample_id}_reference_star_primary.bam"
     log:
-        "logs/align/samtools_remove_secondary.{sample_id}.log"
+        GENOME_STAR / "samtools_remove_secondary.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_remove_secondary.{sample_id}.tsv"
+        GENOME_STAR / "benchmark/samtools_remove_secondary.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__remove_secondary")
     resources:
         runtime=esc("runtime", "align__samtools__remove_secondary"),
@@ -397,14 +397,14 @@ rule align__samtools__star_genome_flagstat:
     input:
         rules.align__star__genome.output.bam
     output:
-        flagstat=GENOME_STATS_STAR / "{sample_id}_reference.flagstat",
-        stats=GENOME_STATS_STAR / "{sample_id}_reference.stats",
-        mapped=GENOME_FASTQ / "mapped_star" / "{sample_id}_reference_mapped_star.fastq",
-        unmapped=GENOME_FASTQ / "unmapped_star" / "{sample_id}_reference_unmapped_star.fastq",
+        flagstat=GENOME_STAR / "{sample_id}_reference.flagstat",
+        stats=GENOME_STAR / "{sample_id}_reference.stats",
+        mapped=GENOME_STAR / "mapped" / "{sample_id}_reference_mapped_star.fastq",
+        unmapped=GENOME_STAR / "unmapped" / "{sample_id}_reference_unmapped_star.fastq",
     log:
-        "logs/align/samtools_star_genome.{sample_id}.log"
+        GENOME_STAR / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_star_genome_flagstat.{sample_id}.tsv"
+        GENOME_STAR / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__star_genome_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__star_genome_flagstat"),

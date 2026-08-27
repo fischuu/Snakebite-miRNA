@@ -89,9 +89,18 @@ order: `helpers` → `reads` → `reference` → `preprocess` → `decontaminate
 though it conceptually comes after alignment, because `quantify__bedtools__novel_mirna`
 needs `novel_mirna`'s predicted-loci BED file as an input.
 
-`workflow/rules/folders.smk` centralizes every output-path constant (`MATURE_BAM_STAR`,
-`TRNA_FASTQ`, `MPILEUP`, etc., all `pathlib.Path` objects) — check here first when tracing
-where a rule's output goes.
+`workflow/rules/folders.smk` centralizes every output-path constant (`MATURE_STAR`,
+`TRNA`, `MPILEUP`, etc., all `pathlib.Path` objects under `results/<module>/<tool>/...`) —
+check here first when tracing where a rule's output goes. This mirrors
+Snakebite-Holoruminant-MetaG's output-folder convention exactly: every module gets its own
+`results/<module>/` root, each tool/reference within that module gets its own subfolder
+(e.g. `results/align/bowtie/mature/`, `results/quantify/star/mirbase/`), and a rule's
+`log:`/`benchmark:` files live *inside* that same tool folder (benchmarks under a further
+`benchmark/` subfolder) rather than in a separate top-level tree. The only exceptions are
+the Bowtie index rules for the externally-supplied tRNA/PhiX/genome references
+(`reference/bowtie_index.smk`): `bowtie-build` writes the index alongside its input FASTA,
+which lives outside `results/` (wherever `config/features.yaml` points), so those three
+rules keep flat `logs/reference/...` / `benchmark/reference/...` log and benchmark paths.
 
 ### The read-processing chain
 
@@ -128,10 +137,15 @@ entry. Follow the existing pattern when adding a new rule, and add an entry to
 
 `workflow/scripts/R/report_helpers.R` holds shared runtime/resource-allocation helpers and
 tool-output parsers, sourced by every per-module `.Rmd` in the same folder. Benchmark files
-live under a flat `benchmark/<module>/<rule_slug>.<wildcards...>.tsv` convention at the
-project root (not nested under a `results/` tree) — `discover_benchmarks()` derives a
-rule's report label as everything before the first `.` in the benchmark filename, so rule
-slugs must never themselves contain a literal `.`.
+live nested under each module's `results/<module>/...` tree (see above) — identical
+mechanism to Snakebite-Holoruminant-MetaG: `discover_benchmarks(project_folder, module)`
+recursively globs `results/<module>/**/*.tsv` filtered to paths containing `benchmark`, and
+`benchmark_label()` derives a display label from the file's position in that tree (the
+`<tool>` path segment, e.g. `results/align/star/mature/benchmark/star.Sample1.tsv` ->
+`"mature"`; a `<tool>/<wildcard>/benchmark_<step>.tsv` layout would instead distinguish
+sub-steps as `"<tool>: <step>"`, though no rule in this pipeline currently needs that).
+Rendered PDF reports themselves (`Rreports/<module>.pdf` etc., via `PIPELINE_REPORT` in
+`folders.smk`) are a separate, un-nested convention — same as Holoruminant's `Rreports/`.
 
 ### Version string
 

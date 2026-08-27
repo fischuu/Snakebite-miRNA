@@ -3,11 +3,11 @@ rule quantify__featurecounts__genome_bowtie:
     input:
         bam=rules.align__bowtie__genome.output.bam
     output:
-        QUANT_BOWTIE / "Reference" / "{sample_id}_bowtie_reference_fc.txt"
+        QUANT_BOWTIE / "genome" / "{sample_id}_bowtie_reference_fc.txt"
     log:
-        "logs/quantify/featurecounts_genome_bowtie.{sample_id}.log"
+        QUANT_BOWTIE / "genome" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/featurecounts_genome_bowtie.{sample_id}.tsv"
+        QUANT_BOWTIE / "genome" / "benchmark/{sample_id}.tsv"
     params:
         annotation=features["references"]["annotation"],
         g_option=params["quantify"]["featurecounts"]["g_option"],
@@ -36,12 +36,12 @@ rule quantify__featurecounts__genome_star:
     input:
         bam=rules.align__star__genome.output.bam
     output:
-        gene=QUANT_STAR / "Reference" / "{sample_id}_star_reference_fc.txt",
-        exon=QUANT_STAR / "Reference" / "{sample_id}_star_reference_exon_fc.txt",
+        gene=QUANT_STAR / "genome" / "{sample_id}_star_reference_fc.txt",
+        exon=QUANT_STAR / "genome" / "{sample_id}_star_reference_exon_fc.txt",
     log:
-        "logs/quantify/featurecounts_genome_star.{sample_id}.log"
+        QUANT_STAR / "genome" / "{sample_id}.log"
     benchmark:
-        "benchmark/quantify/featurecounts_genome_star.{sample_id}.tsv"
+        QUANT_STAR / "genome" / "benchmark/{sample_id}.tsv"
     params:
         annotation=features["references"]["annotation"],
         g_option=params["quantify"]["featurecounts"]["g_option"],

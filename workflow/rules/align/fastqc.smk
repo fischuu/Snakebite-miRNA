@@ -4,14 +4,14 @@ rule align__fastqc__mature:
         mapped=rules.align__bowtie__mature.output.mapped,
         unmapped=rules.align__bowtie__mature.output.unmapped,
     output:
-        mapped=QC / "Mature" / "{sample_id}_mature_mapped_fastqc.zip",
-        unmapped=QC / "Mature" / "{sample_id}_mature_unmapped_fastqc.zip",
+        mapped=MATURE_BOWTIE / "{sample_id}_mature_mapped_fastqc.zip",
+        unmapped=MATURE_BOWTIE / "{sample_id}_mature_unmapped_fastqc.zip",
     log:
-        QC / "Mature" / "{sample_id}_fastqc.log"
+        MATURE_BOWTIE / "{sample_id}_fastqc.log"
     benchmark:
-        "benchmark/align/fastqc_mature.{sample_id}.tsv"
+        MATURE_BOWTIE / "benchmark/fastqc.{sample_id}.tsv"
     params:
-        outfolder=str(QC / "Mature"),
+        outfolder=str(MATURE_BOWTIE),
     threads: esc("cpus", "align__fastqc__mature")
     resources:
         runtime=esc("runtime", "align__fastqc__mature"),
@@ -34,15 +34,15 @@ rule align__fastqc__mature:
 rule align__multiqc__mature:
     """Aggregate the mature mapped/unmapped FastQC reports (MultiQC)"""
     input:
-        mapped=expand(str(QC / "Mature" / "{sample_id}_mature_mapped_fastqc.zip"), sample_id=SAMPLES),
-        unmapped=expand(str(QC / "Mature" / "{sample_id}_mature_unmapped_fastqc.zip"), sample_id=SAMPLES),
+        mapped=expand(str(MATURE_BOWTIE / "{sample_id}_mature_mapped_fastqc.zip"), sample_id=SAMPLES),
+        unmapped=expand(str(MATURE_BOWTIE / "{sample_id}_mature_unmapped_fastqc.zip"), sample_id=SAMPLES),
     output:
-        mapped=directory(QC / "Mature" / "multiqc_mapped"),
-        unmapped=directory(QC / "Mature" / "multiqc_unmapped"),
+        mapped=directory(MATURE_BOWTIE / "multiqc_mapped"),
+        unmapped=directory(MATURE_BOWTIE / "multiqc_unmapped"),
     log:
-        QC / "Mature" / "multiqc.log"
+        MATURE_BOWTIE / "multiqc.log"
     benchmark:
-        "benchmark/align/multiqc_mature.tsv"
+        MATURE_BOWTIE / "benchmark/multiqc.tsv"
     threads: esc("cpus", "align__multiqc__mature")
     resources:
         runtime=esc("runtime", "align__multiqc__mature"),
@@ -67,14 +67,14 @@ rule align__fastqc__hairpin:
         mapped=rules.align__bowtie__hairpin.output.mapped,
         unmapped=rules.align__bowtie__hairpin.output.unmapped,
     output:
-        mapped=QC / "Hairpin" / "{sample_id}_hairpin_mapped_fastqc.zip",
-        unmapped=QC / "Hairpin" / "{sample_id}_hairpin_unmapped_fastqc.zip",
+        mapped=HAIRPIN_BOWTIE / "{sample_id}_hairpin_mapped_fastqc.zip",
+        unmapped=HAIRPIN_BOWTIE / "{sample_id}_hairpin_unmapped_fastqc.zip",
     log:
-        QC / "Hairpin" / "{sample_id}_fastqc.log"
+        HAIRPIN_BOWTIE / "{sample_id}_fastqc.log"
     benchmark:
-        "benchmark/align/fastqc_hairpin.{sample_id}.tsv"
+        HAIRPIN_BOWTIE / "benchmark/fastqc.{sample_id}.tsv"
     params:
-        outfolder=str(QC / "Hairpin"),
+        outfolder=str(HAIRPIN_BOWTIE),
     threads: esc("cpus", "align__fastqc__hairpin")
     resources:
         runtime=esc("runtime", "align__fastqc__hairpin"),
@@ -97,15 +97,15 @@ rule align__fastqc__hairpin:
 rule align__multiqc__hairpin:
     """Aggregate the hairpin mapped/unmapped FastQC reports (MultiQC)"""
     input:
-        mapped=expand(str(QC / "Hairpin" / "{sample_id}_hairpin_mapped_fastqc.zip"), sample_id=SAMPLES),
-        unmapped=expand(str(QC / "Hairpin" / "{sample_id}_hairpin_unmapped_fastqc.zip"), sample_id=SAMPLES),
+        mapped=expand(str(HAIRPIN_BOWTIE / "{sample_id}_hairpin_mapped_fastqc.zip"), sample_id=SAMPLES),
+        unmapped=expand(str(HAIRPIN_BOWTIE / "{sample_id}_hairpin_unmapped_fastqc.zip"), sample_id=SAMPLES),
     output:
-        mapped=directory(QC / "Hairpin" / "multiqc_mapped"),
-        unmapped=directory(QC / "Hairpin" / "multiqc_unmapped"),
+        mapped=directory(HAIRPIN_BOWTIE / "multiqc_mapped"),
+        unmapped=directory(HAIRPIN_BOWTIE / "multiqc_unmapped"),
     log:
-        QC / "Hairpin" / "multiqc.log"
+        HAIRPIN_BOWTIE / "multiqc.log"
     benchmark:
-        "benchmark/align/multiqc_hairpin.tsv"
+        HAIRPIN_BOWTIE / "benchmark/multiqc.tsv"
     threads: esc("cpus", "align__multiqc__hairpin")
     resources:
         runtime=esc("runtime", "align__multiqc__hairpin"),

@@ -52,11 +52,11 @@ rule reference__bowtie_index__mature:
     input:
         rules.reference__mirdb__prepare.output.mature
     output:
-        f"{REFDIR}/mature_basesAdjusted.fa.1.ebwt"
+        f"{MIRBASE}/mature_basesAdjusted.fa.1.ebwt"
     log:
-        "logs/reference/bowtie_index_mature.log"
+        MIRBASE / "bowtie_index_mature.log"
     benchmark:
-        "benchmark/reference/bowtie_index_mature.tsv"
+        MIRBASE / "benchmark/bowtie_index_mature.tsv"
     threads: esc("cpus", "reference__bowtie_index__mature")
     resources:
         runtime=esc("runtime", "reference__bowtie_index__mature"),
@@ -76,11 +76,11 @@ rule reference__bowtie_index__mature_species:
     input:
         rules.reference__mirdb__prepare.output.mature_species
     output:
-        f"{REFDIR}/mature_basesAdjusted_species.fa.1.ebwt"
+        f"{MIRBASE}/mature_basesAdjusted_species.fa.1.ebwt"
     log:
-        "logs/reference/bowtie_index_mature_species.log"
+        MIRBASE / "bowtie_index_mature_species.log"
     benchmark:
-        "benchmark/reference/bowtie_index_mature_species.tsv"
+        MIRBASE / "benchmark/bowtie_index_mature_species.tsv"
     threads: esc("cpus", "reference__bowtie_index__mature_species")
     resources:
         runtime=esc("runtime", "reference__bowtie_index__mature_species"),
@@ -100,11 +100,11 @@ rule reference__bowtie_index__hairpin:
     input:
         rules.reference__mirdb__prepare.output.hairpin
     output:
-        f"{REFDIR}/hairpin_basesAdjusted.fa.1.ebwt"
+        f"{MIRBASE}/hairpin_basesAdjusted.fa.1.ebwt"
     log:
-        "logs/reference/bowtie_index_hairpin.log"
+        MIRBASE / "bowtie_index_hairpin.log"
     benchmark:
-        "benchmark/reference/bowtie_index_hairpin.tsv"
+        MIRBASE / "benchmark/bowtie_index_hairpin.tsv"
     threads: esc("cpus", "reference__bowtie_index__hairpin")
     resources:
         runtime=esc("runtime", "reference__bowtie_index__hairpin"),
@@ -124,11 +124,11 @@ rule reference__bowtie_index__hairpin_species:
     input:
         rules.reference__mirdb__prepare.output.hairpin_species
     output:
-        f"{REFDIR}/hairpin_basesAdjusted_species.fa.1.ebwt"
+        f"{MIRBASE}/hairpin_basesAdjusted_species.fa.1.ebwt"
     log:
-        "logs/reference/bowtie_index_hairpin_species.log"
+        MIRBASE / "bowtie_index_hairpin_species.log"
     benchmark:
-        "benchmark/reference/bowtie_index_hairpin_species.tsv"
+        MIRBASE / "benchmark/bowtie_index_hairpin_species.tsv"
     threads: esc("cpus", "reference__bowtie_index__hairpin_species")
     resources:
         runtime=esc("runtime", "reference__bowtie_index__hairpin_species"),

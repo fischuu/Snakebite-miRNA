@@ -28,14 +28,14 @@ This report covers the **decontaminate** module: removal of tRNA and PhiX
 ## tRNA mapping rates
 
 ```{r trna-flagstat}
-trna <- collect_flagstats(project_folder, "STATS/BOWTIE/tRNA/%s_tRNA.flagstat", sample_ids)
+trna <- collect_flagstats(project_folder, "results/decontaminate/trna/%s_tRNA.flagstat", sample_ids)
 preview_table(trna, n = nrow(trna), caption = "tRNA mapping rate per sample")
 ```
 
 ## PhiX mapping rates
 
 ```{r phix-flagstat}
-phix <- collect_flagstats(project_folder, "STATS/BOWTIE/PhiX/%s_PhiX.flagstat", sample_ids)
+phix <- collect_flagstats(project_folder, "results/decontaminate/phix/%s_PhiX.flagstat", sample_ids)
 preview_table(phix, n = nrow(phix), caption = "PhiX mapping rate per sample")
 ```
 

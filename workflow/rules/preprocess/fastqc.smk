@@ -3,13 +3,13 @@ rule preprocess__fastqc__trimmed:
     input:
         rules.preprocess__cutadapt__run.output.fastq
     output:
-        QC / "TRIMMED" / "{sample_id}.{library_id}_trimmed_fastqc.zip"
+        TRIMMED / "{sample_id}.{library_id}_trimmed_fastqc.zip"
     log:
-        QC / "TRIMMED" / "{sample_id}.{library_id}_fastqc.log"
+        TRIMMED / "{sample_id}.{library_id}_fastqc.log"
     benchmark:
-        "benchmark/preprocess/fastqc_trimmed.{sample_id}.{library_id}.tsv"
+        TRIMMED / "benchmark/fastqc.{sample_id}.{library_id}.tsv"
     params:
-        outfolder=str(QC / "TRIMMED"),
+        outfolder=str(TRIMMED),
     threads: esc("cpus", "preprocess__fastqc__trimmed")
     resources:
         runtime=esc("runtime", "preprocess__fastqc__trimmed"),
@@ -32,15 +32,15 @@ rule preprocess__multiqc__trimmed:
     """Aggregate FastQC reports for every trimmed lane (MultiQC)"""
     input:
         [
-            QC / "TRIMMED" / f"{sample_id}.{library_id}_trimmed_fastqc.zip"
+            TRIMMED / f"{sample_id}.{library_id}_trimmed_fastqc.zip"
             for sample_id, library_id in SAMPLE_LIBRARY
         ]
     output:
-        directory(QC / "TRIMMED" / "multiqc")
+        directory(TRIMMED / "multiqc")
     log:
-        QC / "TRIMMED" / "multiqc.log"
+        TRIMMED / "multiqc.log"
     benchmark:
-        "benchmark/preprocess/multiqc_trimmed.tsv"
+        TRIMMED / "benchmark/multiqc.tsv"
     threads: esc("cpus", "preprocess__multiqc__trimmed")
     resources:
         runtime=esc("runtime", "preprocess__multiqc__trimmed"),
@@ -63,13 +63,13 @@ rule preprocess__fastqc__concatenated:
     input:
         rules.preprocess__concatenate__run.output.fastq
     output:
-        QC / "CONCATENATED" / "{sample_id}_R1_fastqc.zip"
+        CONCATENATED / "{sample_id}_R1_fastqc.zip"
     log:
-        QC / "CONCATENATED" / "{sample_id}_fastqc.log"
+        CONCATENATED / "{sample_id}_fastqc.log"
     benchmark:
-        "benchmark/preprocess/fastqc_concatenated.{sample_id}.tsv"
+        CONCATENATED / "benchmark/fastqc.{sample_id}.tsv"
     params:
-        outfolder=str(QC / "CONCATENATED"),
+        outfolder=str(CONCATENATED),
     threads: esc("cpus", "preprocess__fastqc__concatenated")
     resources:
         runtime=esc("runtime", "preprocess__fastqc__concatenated"),
@@ -91,13 +91,13 @@ rule preprocess__fastqc__concatenated:
 rule preprocess__multiqc__concatenated:
     """Aggregate FastQC reports for every sample's concatenated FASTQ (MultiQC)"""
     input:
-        expand(str(QC / "CONCATENATED" / "{sample_id}_R1_fastqc.zip"), sample_id=SAMPLES)
+        expand(str(CONCATENATED / "{sample_id}_R1_fastqc.zip"), sample_id=SAMPLES)
     output:
-        directory(QC / "CONCATENATED" / "multiqc")
+        directory(CONCATENATED / "multiqc")
     log:
-        QC / "CONCATENATED" / "multiqc.log"
+        CONCATENATED / "multiqc.log"
     benchmark:
-        "benchmark/preprocess/multiqc_concatenated.tsv"
+        CONCATENATED / "benchmark/multiqc.tsv"
     threads: esc("cpus", "preprocess__multiqc__concatenated")
     resources:
         runtime=esc("runtime", "preprocess__multiqc__concatenated"),

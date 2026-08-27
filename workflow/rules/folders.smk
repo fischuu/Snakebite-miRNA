@@ -2,70 +2,53 @@
 SCRIPT_FOLDER = os.path.join(config["pipeline_folder"], "workflow", "scripts")
 WD = os.getcwd()
 
-RAW = Path("FASTQ/RAW/")
+# reads
+READS = Path("results/reads/")
 
 # reference
-REFDIR = Path("References/")
-STARBASE = Path("References/STAR/")
-STAR_INDEX_MATURE = STARBASE / "Mature"
-STAR_INDEX_MATURE_SPECIES = STARBASE / "MatureSpecies"
-STAR_INDEX_HAIRPIN = STARBASE / "Hairpin"
-STAR_INDEX_HAIRPIN_SPECIES = STARBASE / "HairpinSpecies"
-STAR_INDEX_GENOME = STARBASE / "Reference"
-STAR_TMP = Path("STAR_tmp/")
+REFERENCE = Path("results/reference/")
+MIRBASE = REFERENCE / "mirbase/"
+STAR_INDEX = REFERENCE / "star_index/"
+STAR_INDEX_MATURE = STAR_INDEX / "mature"
+STAR_INDEX_MATURE_SPECIES = STAR_INDEX / "mature_species"
+STAR_INDEX_HAIRPIN = STAR_INDEX / "hairpin"
+STAR_INDEX_HAIRPIN_SPECIES = STAR_INDEX / "hairpin_species"
+STAR_INDEX_GENOME = STAR_INDEX / "genome"
+STAR_INDEX_TMP = STAR_INDEX / "tmp/"
 
 # preprocess
-TRIMMED = Path("FASTQ/TRIMMED/")
-CONCATENATED = Path("FASTQ/CONCATENATED/")
+PRE = Path("results/preprocess/")
+TRIMMED = PRE / "cutadapt/"
+CONCATENATED = PRE / "concatenate/"
 
 # decontaminate
-TRNA_FASTQ = Path("FASTQ/tRNA/")
-TRNA_BAM = Path("BAM/BOWTIE/tRNA/")
-TRNA_STATS = Path("STATS/BOWTIE/tRNA/")
-PHIX_FASTQ = Path("FASTQ/PhiX/")
-PHIX_BAM = Path("BAM/BOWTIE/PhiX/")
-PHIX_STATS = Path("STATS/BOWTIE/PhiX/")
+DECONTAM = Path("results/decontaminate/")
+TRNA = DECONTAM / "trna/"
+PHIX = DECONTAM / "phix/"
 
 # align
-MATURE_FASTQ = Path("FASTQ/Mature/")
-MATURE_BAM_BOWTIE = Path("BAM/BOWTIE/Mature/")
-MATURE_BAM_STAR = Path("BAM/STAR/Mature/")
-MATURE_STATS_BOWTIE = Path("STATS/BOWTIE/Mature/")
-MATURE_STATS_STAR = Path("STATS/STAR/Mature/")
-
-MATURE_SPECIES_FASTQ = Path("FASTQ/Mature_Species/")
-MATURE_SPECIES_BAM_BOWTIE = Path("BAM/BOWTIE/Mature_Species/")
-MATURE_SPECIES_BAM_STAR = Path("BAM/STAR/Mature_Species/")
-MATURE_SPECIES_STATS_BOWTIE = Path("STATS/BOWTIE/Mature_Species/")
-MATURE_SPECIES_STATS_STAR = Path("STATS/STAR/Mature_Species/")
-
-HAIRPIN_FASTQ = Path("FASTQ/Hairpin/")
-HAIRPIN_BAM_BOWTIE = Path("BAM/BOWTIE/Hairpin/")
-HAIRPIN_BAM_STAR = Path("BAM/STAR/Hairpin/")
-HAIRPIN_STATS_BOWTIE = Path("STATS/BOWTIE/Hairpin/")
-HAIRPIN_STATS_STAR = Path("STATS/STAR/Hairpin/")
-
-HAIRPIN_SPECIES_FASTQ = Path("FASTQ/Hairpin_Species/")
-HAIRPIN_SPECIES_BAM_STAR = Path("BAM/STAR/Hairpin_Species/")
-HAIRPIN_SPECIES_STATS_STAR = Path("STATS/STAR/Hairpin_Species/")
-
-GENOME_FASTQ = Path("FASTQ/Reference/")
-GENOME_BAM_BOWTIE = Path("BAM/BOWTIE/Reference/")
-GENOME_BAM_STAR = Path("BAM/STAR/Reference/")
-GENOME_STATS_BOWTIE = Path("STATS/BOWTIE/Reference/")
-GENOME_STATS_STAR = Path("STATS/STAR/Reference/")
-
-SOFTCLIPPED = Path("FASTA/STAR/")
-
-# quantify
-QUANT_BOWTIE = Path("QUANTIFICATION/BOWTIE/")
-QUANT_STAR = Path("QUANTIFICATION/STAR/")
+ALIGN = Path("results/align/")
+MATURE_BOWTIE = ALIGN / "bowtie/mature/"
+MATURE_SPECIES_BOWTIE = ALIGN / "bowtie/mature_species/"
+HAIRPIN_BOWTIE = ALIGN / "bowtie/hairpin/"
+GENOME_BOWTIE = ALIGN / "bowtie/genome/"
+MATURE_STAR = ALIGN / "star/mature/"
+MATURE_SPECIES_STAR = ALIGN / "star/mature_species/"
+HAIRPIN_STAR = ALIGN / "star/hairpin/"
+HAIRPIN_SPECIES_STAR = ALIGN / "star/hairpin_species/"
+GENOME_STAR = ALIGN / "star/genome/"
+STAR_ALIGN_TMP = ALIGN / "star_tmp/"
+SOFTCLIPPED = ALIGN / "softclipped/"
 
 # novel_mirna
-MPILEUP = Path("MPILEUP/mpileup_reference/")
+NOVEL_MIRNA = Path("results/novel_mirna/")
+MPILEUP = NOVEL_MIRNA / "mpileup/"
+NOVEL_LOCI = NOVEL_MIRNA / "bedtools/"
 
-# QC
-QC = Path("QC/")
+# quantify
+QUANT = Path("results/quantify/")
+QUANT_BOWTIE = QUANT / "bowtie/"
+QUANT_STAR = QUANT / "star/"
 
 # reporting
-PIPELINE_REPORT = Path("PipelineReport/")
+PIPELINE_REPORT = Path("Rreports/")

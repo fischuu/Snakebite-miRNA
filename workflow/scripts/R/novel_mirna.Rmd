@@ -26,7 +26,7 @@ yield a set of candidate novel-miRNA loci.
 ## Predicted novel-miRNA loci
 
 ```{r novel-loci}
-bed <- safe_read_tsv(file.path(project_folder, "References", "novelLoci.bed"), col_names = FALSE)
+bed <- safe_read_tsv(file.path(project_folder, "results", "novel_mirna", "bedtools", "novelLoci.bed"), col_names = FALSE)
 if (nrow(bed) > 0) {
   colnames(bed)[1:3] <- c("chrom", "start", "end")
   bed$width_bp <- bed$end - bed$start

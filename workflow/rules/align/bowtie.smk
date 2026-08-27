@@ -4,15 +4,15 @@ rule align__bowtie__mature:
         reads=rules.decontaminate__bowtie__phix.output.unmapped,
         index=rules.reference__bowtie_index__mature.output,
     output:
-        mapped=MATURE_FASTQ / "mapped" / "{sample_id}_mature_mapped.fastq",
-        unmapped=MATURE_FASTQ / "unmapped" / "{sample_id}_mature_unmapped.fastq",
-        bam=MATURE_BAM_BOWTIE / "{sample_id}_mature.bam",
+        mapped=MATURE_BOWTIE / "mapped" / "{sample_id}_mature_mapped.fastq",
+        unmapped=MATURE_BOWTIE / "unmapped" / "{sample_id}_mature_unmapped.fastq",
+        bam=MATURE_BOWTIE / "{sample_id}_mature.bam",
     log:
-        "logs/align/bowtie_mature.{sample_id}.log"
+        MATURE_BOWTIE / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/align/bowtie_mature.{sample_id}.tsv"
+        MATURE_BOWTIE / "benchmark/bowtie.{sample_id}.tsv"
     params:
-        index=str(REFDIR / "mature_basesAdjusted.fa"),
+        index=str(MIRBASE / "mature_basesAdjusted.fa"),
         m=params["align"]["bowtie"]["m"],
         k=params["align"]["bowtie"]["k"],
     threads: esc("cpus", "align__bowtie__mature")
@@ -40,13 +40,13 @@ rule align__samtools__mature_flagstat:
     input:
         rules.align__bowtie__mature.output.bam
     output:
-        flagstat=MATURE_STATS_BOWTIE / "{sample_id}_mature.flagstat",
-        stats=MATURE_STATS_BOWTIE / "{sample_id}_mature.stats",
-        bai=MATURE_BAM_BOWTIE / "{sample_id}_mature.bam.bai",
+        flagstat=MATURE_BOWTIE / "{sample_id}_mature.flagstat",
+        stats=MATURE_BOWTIE / "{sample_id}_mature.stats",
+        bai=MATURE_BOWTIE / "{sample_id}_mature.bam.bai",
     log:
-        "logs/align/samtools_mature_flagstat.{sample_id}.log"
+        MATURE_BOWTIE / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_mature_flagstat.{sample_id}.tsv"
+        MATURE_BOWTIE / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__mature_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__mature_flagstat"),
@@ -72,15 +72,15 @@ rule align__bowtie__mature_species:
         reads=rules.decontaminate__bowtie__phix.output.unmapped,
         index=rules.reference__bowtie_index__mature_species.output,
     output:
-        mapped=MATURE_SPECIES_FASTQ / "mapped" / "{sample_id}_mature_species_mapped.fastq",
-        unmapped=MATURE_SPECIES_FASTQ / "unmapped" / "{sample_id}_mature_species_unmapped.fastq",
-        bam=MATURE_SPECIES_BAM_BOWTIE / "{sample_id}_mature_species.bam",
+        mapped=MATURE_SPECIES_BOWTIE / "mapped" / "{sample_id}_mature_species_mapped.fastq",
+        unmapped=MATURE_SPECIES_BOWTIE / "unmapped" / "{sample_id}_mature_species_unmapped.fastq",
+        bam=MATURE_SPECIES_BOWTIE / "{sample_id}_mature_species.bam",
     log:
-        "logs/align/bowtie_mature_species.{sample_id}.log"
+        MATURE_SPECIES_BOWTIE / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/align/bowtie_mature_species.{sample_id}.tsv"
+        MATURE_SPECIES_BOWTIE / "benchmark/bowtie.{sample_id}.tsv"
     params:
-        index=str(REFDIR / "mature_basesAdjusted_species.fa"),
+        index=str(MIRBASE / "mature_basesAdjusted_species.fa"),
         m=params["align"]["bowtie"]["m"],
         k=params["align"]["bowtie"]["k"],
     threads: esc("cpus", "align__bowtie__mature_species")
@@ -108,13 +108,13 @@ rule align__samtools__mature_species_flagstat:
     input:
         rules.align__bowtie__mature_species.output.bam
     output:
-        flagstat=MATURE_SPECIES_STATS_BOWTIE / "{sample_id}_mature_species.flagstat",
-        stats=MATURE_SPECIES_STATS_BOWTIE / "{sample_id}_mature_species.stats",
-        bai=MATURE_SPECIES_BAM_BOWTIE / "{sample_id}_mature_species.bam.bai",
+        flagstat=MATURE_SPECIES_BOWTIE / "{sample_id}_mature_species.flagstat",
+        stats=MATURE_SPECIES_BOWTIE / "{sample_id}_mature_species.stats",
+        bai=MATURE_SPECIES_BOWTIE / "{sample_id}_mature_species.bam.bai",
     log:
-        "logs/align/samtools_mature_species_flagstat.{sample_id}.log"
+        MATURE_SPECIES_BOWTIE / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_mature_species_flagstat.{sample_id}.tsv"
+        MATURE_SPECIES_BOWTIE / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__mature_species_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__mature_species_flagstat"),
@@ -140,15 +140,15 @@ rule align__bowtie__hairpin:
         reads=rules.align__bowtie__mature.output.unmapped,
         index=rules.reference__bowtie_index__hairpin.output,
     output:
-        mapped=HAIRPIN_FASTQ / "mapped" / "{sample_id}_hairpin_mapped.fastq",
-        unmapped=HAIRPIN_FASTQ / "unmapped" / "{sample_id}_hairpin_unmapped.fastq",
-        bam=HAIRPIN_BAM_BOWTIE / "{sample_id}_hairpin.bam",
+        mapped=HAIRPIN_BOWTIE / "mapped" / "{sample_id}_hairpin_mapped.fastq",
+        unmapped=HAIRPIN_BOWTIE / "unmapped" / "{sample_id}_hairpin_unmapped.fastq",
+        bam=HAIRPIN_BOWTIE / "{sample_id}_hairpin.bam",
     log:
-        "logs/align/bowtie_hairpin.{sample_id}.log"
+        HAIRPIN_BOWTIE / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/align/bowtie_hairpin.{sample_id}.tsv"
+        HAIRPIN_BOWTIE / "benchmark/bowtie.{sample_id}.tsv"
     params:
-        index=str(REFDIR / "hairpin_basesAdjusted.fa"),
+        index=str(MIRBASE / "hairpin_basesAdjusted.fa"),
         m=params["align"]["bowtie"]["m"],
         k=params["align"]["bowtie"]["k"],
     threads: esc("cpus", "align__bowtie__hairpin")
@@ -176,13 +176,13 @@ rule align__samtools__hairpin_flagstat:
     input:
         rules.align__bowtie__hairpin.output.bam
     output:
-        flagstat=HAIRPIN_STATS_BOWTIE / "{sample_id}_hairpin.flagstat",
-        stats=HAIRPIN_STATS_BOWTIE / "{sample_id}_hairpin.stats",
-        bai=HAIRPIN_BAM_BOWTIE / "{sample_id}_hairpin.bam.bai",
+        flagstat=HAIRPIN_BOWTIE / "{sample_id}_hairpin.flagstat",
+        stats=HAIRPIN_BOWTIE / "{sample_id}_hairpin.stats",
+        bai=HAIRPIN_BOWTIE / "{sample_id}_hairpin.bam.bai",
     log:
-        "logs/align/samtools_hairpin_flagstat.{sample_id}.log"
+        HAIRPIN_BOWTIE / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_hairpin_flagstat.{sample_id}.tsv"
+        HAIRPIN_BOWTIE / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__hairpin_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__hairpin_flagstat"),
@@ -213,13 +213,13 @@ rule align__bowtie__genome:
         reads=rules.align__bowtie__hairpin.output.unmapped,
         index=rules.reference__bowtie_index__genome.output,
     output:
-        mapped=GENOME_FASTQ / "mapped" / "{sample_id}_reference_mapped.fastq",
-        unmapped=GENOME_FASTQ / "unmapped" / "{sample_id}_reference_unmapped.fastq",
-        bam=GENOME_BAM_BOWTIE / "{sample_id}_reference.bam",
+        mapped=GENOME_BOWTIE / "mapped" / "{sample_id}_reference_mapped.fastq",
+        unmapped=GENOME_BOWTIE / "unmapped" / "{sample_id}_reference_unmapped.fastq",
+        bam=GENOME_BOWTIE / "{sample_id}_reference.bam",
     log:
-        "logs/align/bowtie_genome.{sample_id}.log"
+        GENOME_BOWTIE / "bowtie.{sample_id}.log"
     benchmark:
-        "benchmark/align/bowtie_genome.{sample_id}.tsv"
+        GENOME_BOWTIE / "benchmark/bowtie.{sample_id}.tsv"
     params:
         index=features["references"]["genome"],
         m=params["align"]["bowtie"]["m"],
@@ -249,13 +249,13 @@ rule align__samtools__genome_flagstat:
     input:
         rules.align__bowtie__genome.output.bam
     output:
-        flagstat=GENOME_STATS_BOWTIE / "{sample_id}_reference.flagstat",
-        stats=GENOME_STATS_BOWTIE / "{sample_id}_reference.stats",
-        bai=GENOME_BAM_BOWTIE / "{sample_id}_reference.bam.bai",
+        flagstat=GENOME_BOWTIE / "{sample_id}_reference.flagstat",
+        stats=GENOME_BOWTIE / "{sample_id}_reference.stats",
+        bai=GENOME_BOWTIE / "{sample_id}_reference.bam.bai",
     log:
-        "logs/align/samtools_genome_flagstat.{sample_id}.log"
+        GENOME_BOWTIE / "samtools_flagstat.{sample_id}.log"
     benchmark:
-        "benchmark/align/samtools_genome_flagstat.{sample_id}.tsv"
+        GENOME_BOWTIE / "benchmark/samtools_flagstat.{sample_id}.tsv"
     threads: esc("cpus", "align__samtools__genome_flagstat")
     resources:
         runtime=esc("runtime", "align__samtools__genome_flagstat"),
