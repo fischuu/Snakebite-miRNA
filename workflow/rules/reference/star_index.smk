@@ -26,7 +26,7 @@ rule reference__star_index__mature:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index}
+        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -60,7 +60,7 @@ rule reference__star_index__mature_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index}
+        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -94,7 +94,7 @@ rule reference__star_index__hairpin:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index}
+        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -128,7 +128,7 @@ rule reference__star_index__hairpin_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index}
+        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -162,7 +162,7 @@ rule reference__star_index__genome:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index}
+        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeChrBinNbits 15 \
              --limitGenomeGenerateRAM 65000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}

@@ -29,7 +29,7 @@ rule align__star__mature:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} {params.tmpdir}
+        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
@@ -110,7 +110,7 @@ rule align__star__mature_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} {params.tmpdir}
+        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
@@ -191,7 +191,7 @@ rule align__star__hairpin:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} {params.tmpdir}
+        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
@@ -272,7 +272,7 @@ rule align__star__hairpin_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} {params.tmpdir}
+        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
@@ -353,7 +353,7 @@ rule align__star__genome:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} {params.tmpdir}
+        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
         cd {params.tmpdir}/..
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
