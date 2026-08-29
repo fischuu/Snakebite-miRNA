@@ -14,7 +14,6 @@ STAR_INDEX_MATURE_SPECIES = STAR_INDEX / "mature_species"
 STAR_INDEX_HAIRPIN = STAR_INDEX / "hairpin"
 STAR_INDEX_HAIRPIN_SPECIES = STAR_INDEX / "hairpin_species"
 STAR_INDEX_GENOME = STAR_INDEX / "genome"
-STAR_INDEX_TMP = STAR_INDEX / "tmp/"
 
 # preprocess
 PRE = Path("results/preprocess/")
@@ -37,7 +36,6 @@ MATURE_SPECIES_STAR = ALIGN / "star/mature_species/"
 HAIRPIN_STAR = ALIGN / "star/hairpin/"
 HAIRPIN_SPECIES_STAR = ALIGN / "star/hairpin_species/"
 GENOME_STAR = ALIGN / "star/genome/"
-STAR_ALIGN_TMP = ALIGN / "star_tmp/"
 SOFTCLIPPED = ALIGN / "softclipped/"
 
 # novel_mirna

@@ -10,7 +10,7 @@ rule reference__star_index__mature:
         STAR_INDEX_MATURE / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_MATURE),
-        tmpdir=str(STAR_INDEX_TMP / "mature"),
+        tmpdir=str(STAR_INDEX_MATURE / "tmp"),
     threads: esc("cpus", "reference__star_index__mature")
     resources:
         runtime=esc("runtime", "reference__star_index__mature"),
@@ -26,7 +26,6 @@ rule reference__star_index__mature:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -44,7 +43,7 @@ rule reference__star_index__mature_species:
         STAR_INDEX_MATURE_SPECIES / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_MATURE_SPECIES),
-        tmpdir=str(STAR_INDEX_TMP / "mature_species"),
+        tmpdir=str(STAR_INDEX_MATURE_SPECIES / "tmp"),
     threads: esc("cpus", "reference__star_index__mature_species")
     resources:
         runtime=esc("runtime", "reference__star_index__mature_species"),
@@ -60,7 +59,6 @@ rule reference__star_index__mature_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -78,7 +76,7 @@ rule reference__star_index__hairpin:
         STAR_INDEX_HAIRPIN / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN),
-        tmpdir=str(STAR_INDEX_TMP / "hairpin"),
+        tmpdir=str(STAR_INDEX_HAIRPIN / "tmp"),
     threads: esc("cpus", "reference__star_index__hairpin")
     resources:
         runtime=esc("runtime", "reference__star_index__hairpin"),
@@ -94,7 +92,6 @@ rule reference__star_index__hairpin:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -112,7 +109,7 @@ rule reference__star_index__hairpin_species:
         STAR_INDEX_HAIRPIN_SPECIES / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN_SPECIES),
-        tmpdir=str(STAR_INDEX_TMP / "hairpin_species"),
+        tmpdir=str(STAR_INDEX_HAIRPIN_SPECIES / "tmp"),
     threads: esc("cpus", "reference__star_index__hairpin_species")
     resources:
         runtime=esc("runtime", "reference__star_index__hairpin_species"),
@@ -128,7 +125,6 @@ rule reference__star_index__hairpin_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeSAindexNbases 6 \
              --limitGenomeGenerateRAM 50000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}
@@ -146,7 +142,7 @@ rule reference__star_index__genome:
         STAR_INDEX_GENOME / "benchmark.tsv"
     params:
         index=str(STAR_INDEX_GENOME),
-        tmpdir=str(STAR_INDEX_TMP / "genome"),
+        tmpdir=str(STAR_INDEX_GENOME / "tmp"),
     threads: esc("cpus", "reference__star_index__genome")
     resources:
         runtime=esc("runtime", "reference__star_index__genome"),
@@ -162,7 +158,6 @@ rule reference__star_index__genome:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {params.index} "$(dirname {params.tmpdir})"
         STAR --runThreadN {threads} --outTmpDir {params.tmpdir} --genomeChrBinNbits 15 \
              --limitGenomeGenerateRAM 65000000000 --runMode genomeGenerate \
              --genomeDir {params.index} --genomeFastaFiles {input.fasta}

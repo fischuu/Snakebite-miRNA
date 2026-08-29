@@ -12,7 +12,8 @@ rule align__star__mature:
         MATURE_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_MATURE),
-        tmpdir=str(STAR_ALIGN_TMP / "mature" / "{sample_id}"),
+        tmpdir=str(MATURE_STAR / "{sample_id}" / "tmp"),
+        prefix=str(MATURE_STAR / "{sample_id}" / "{sample_id}_"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__mature")
     resources:
@@ -29,8 +30,7 @@ rule align__star__mature:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
-        cd {params.tmpdir}/..
+        mkdir -p {output.logdir}
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
              --outFilterMismatchNoverLmax 0.01 --outFilterMatchNmin 16 \
@@ -39,10 +39,8 @@ rule align__star__mature:
              --alignIntronMax 1 --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within \
              --outMultimapperOrder Random --runThreadN {threads} \
              --limitBAMsortRAM {params.limit_bam_sort_ram} \
-             --outFileNamePrefix {wildcards.sample_id}_
-        mv {wildcards.sample_id}_Aligned.sortedByCoord.out.bam {output.bam}
-        mv {wildcards.sample_id}_Log.final.out {wildcards.sample_id}_Log.progress.out \
-           {wildcards.sample_id}_Log.out {wildcards.sample_id}_SJ.out.tab {output.logdir}
+             --outFileNamePrefix {params.prefix}
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
         """
 
 rule align__samtools__star_mature_flagstat:
@@ -93,7 +91,8 @@ rule align__star__mature_species:
         MATURE_SPECIES_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_MATURE_SPECIES),
-        tmpdir=str(STAR_ALIGN_TMP / "mature_species" / "{sample_id}"),
+        tmpdir=str(MATURE_SPECIES_STAR / "{sample_id}" / "tmp"),
+        prefix=str(MATURE_SPECIES_STAR / "{sample_id}" / "{sample_id}_"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__mature_species")
     resources:
@@ -110,8 +109,7 @@ rule align__star__mature_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
-        cd {params.tmpdir}/..
+        mkdir -p {output.logdir}
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
              --outFilterMismatchNoverLmax 0.05 --outFilterMatchNmin 16 \
@@ -120,10 +118,8 @@ rule align__star__mature_species:
              --alignIntronMax 1 --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within \
              --outMultimapperOrder Random --runThreadN {threads} \
              --limitBAMsortRAM {params.limit_bam_sort_ram} \
-             --outFileNamePrefix {wildcards.sample_id}_
-        mv {wildcards.sample_id}_Aligned.sortedByCoord.out.bam {output.bam}
-        mv {wildcards.sample_id}_Log.final.out {wildcards.sample_id}_Log.progress.out \
-           {wildcards.sample_id}_Log.out {wildcards.sample_id}_SJ.out.tab {output.logdir}
+             --outFileNamePrefix {params.prefix}
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
         """
 
 rule align__samtools__star_mature_species_flagstat:
@@ -174,7 +170,8 @@ rule align__star__hairpin:
         HAIRPIN_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN),
-        tmpdir=str(STAR_ALIGN_TMP / "hairpin" / "{sample_id}"),
+        tmpdir=str(HAIRPIN_STAR / "{sample_id}" / "tmp"),
+        prefix=str(HAIRPIN_STAR / "{sample_id}" / "{sample_id}_"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__hairpin")
     resources:
@@ -191,8 +188,7 @@ rule align__star__hairpin:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
-        cd {params.tmpdir}/..
+        mkdir -p {output.logdir}
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
              --outFilterMismatchNoverLmax 0.05 --outFilterMatchNmin 16 \
@@ -201,10 +197,8 @@ rule align__star__hairpin:
              --alignIntronMax 1 --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within \
              --outMultimapperOrder Random --runThreadN {threads} \
              --limitBAMsortRAM {params.limit_bam_sort_ram} \
-             --outFileNamePrefix {wildcards.sample_id}_
-        mv {wildcards.sample_id}_Aligned.sortedByCoord.out.bam {output.bam}
-        mv {wildcards.sample_id}_Log.final.out {wildcards.sample_id}_Log.progress.out \
-           {wildcards.sample_id}_Log.out {wildcards.sample_id}_SJ.out.tab {output.logdir}
+             --outFileNamePrefix {params.prefix}
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
         """
 
 rule align__samtools__star_hairpin_flagstat:
@@ -255,7 +249,8 @@ rule align__star__hairpin_species:
         HAIRPIN_SPECIES_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_HAIRPIN_SPECIES),
-        tmpdir=str(STAR_ALIGN_TMP / "hairpin_species" / "{sample_id}"),
+        tmpdir=str(HAIRPIN_SPECIES_STAR / "{sample_id}" / "tmp"),
+        prefix=str(HAIRPIN_SPECIES_STAR / "{sample_id}" / "{sample_id}_"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__hairpin_species")
     resources:
@@ -272,8 +267,7 @@ rule align__star__hairpin_species:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
-        cd {params.tmpdir}/..
+        mkdir -p {output.logdir}
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
              --outFilterMismatchNoverLmax 0.05 --outFilterMatchNmin 16 \
@@ -282,10 +276,8 @@ rule align__star__hairpin_species:
              --alignIntronMax 1 --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within \
              --outMultimapperOrder Random --runThreadN {threads} \
              --limitBAMsortRAM {params.limit_bam_sort_ram} \
-             --outFileNamePrefix {wildcards.sample_id}_
-        mv {wildcards.sample_id}_Aligned.sortedByCoord.out.bam {output.bam}
-        mv {wildcards.sample_id}_Log.final.out {wildcards.sample_id}_Log.progress.out \
-           {wildcards.sample_id}_Log.out {wildcards.sample_id}_SJ.out.tab {output.logdir}
+             --outFileNamePrefix {params.prefix}
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
         """
 
 rule align__samtools__star_hairpin_species_flagstat:
@@ -336,7 +328,8 @@ rule align__star__genome:
         GENOME_STAR / "benchmark/star.{sample_id}.tsv"
     params:
         index=str(STAR_INDEX_GENOME),
-        tmpdir=str(STAR_ALIGN_TMP / "genome" / "{sample_id}"),
+        tmpdir=str(GENOME_STAR / "{sample_id}" / "tmp"),
+        prefix=str(GENOME_STAR / "{sample_id}" / "{sample_id}_"),
         limit_bam_sort_ram=params["align"]["star"]["limit_bam_sort_ram"],
     threads: esc("cpus", "align__star__genome")
     resources:
@@ -353,8 +346,7 @@ rule align__star__genome:
         """
         exec > {log} 2>&1
         rm -rf {params.tmpdir}
-        mkdir -p {output.logdir} "$(dirname {params.tmpdir})"
-        cd {params.tmpdir}/..
+        mkdir -p {output.logdir}
         STAR --genomeDir {params.index} --outTmpDir {params.tmpdir} \
              --readFilesIn {input.fastq} \
              --outFilterMismatchNoverLmax 0.05 --outFilterMatchNmin 16 \
@@ -363,10 +355,8 @@ rule align__star__genome:
              --alignIntronMax 1 --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within \
              --outMultimapperOrder Random --runThreadN {threads} \
              --limitBAMsortRAM {params.limit_bam_sort_ram} \
-             --outFileNamePrefix {wildcards.sample_id}_
-        mv {wildcards.sample_id}_Aligned.sortedByCoord.out.bam {output.bam}
-        mv {wildcards.sample_id}_Log.final.out {wildcards.sample_id}_Log.progress.out \
-           {wildcards.sample_id}_Log.out {wildcards.sample_id}_SJ.out.tab {output.logdir}
+             --outFileNamePrefix {params.prefix}
+        mv {params.prefix}Aligned.sortedByCoord.out.bam {output.bam}
         """
 
 rule align__samtools__remove_secondary:
