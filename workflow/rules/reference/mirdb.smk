@@ -15,6 +15,7 @@ rule reference__mirdb__prepare:
         MIRBASE / "benchmark/mirdb_prepare.tsv"
     params:
         species=params["species_id"],
+        dedupe_script=os.path.join(SCRIPT_FOLDER, "reference", "dedupe_fasta_names.sh"),
     threads: esc("cpus", "reference__mirdb__prepare")
     resources:
         runtime=esc("runtime", "reference__mirdb__prepare"),
@@ -29,11 +30,11 @@ rule reference__mirdb__prepare:
     shell:
         """
         exec > {log} 2>&1
-        sed '/^[^>]/s/U/T/g' {input.mature} > {output.mature}
-        sed '/^[^>]/s/U/T/g' {input.hairpin} > {output.hairpin}
+        sed '/^[^>]/s/U/T/g' {input.mature} | bash {params.dedupe_script} > {output.mature}
+        sed '/^[^>]/s/U/T/g' {input.hairpin} | bash {params.dedupe_script} > {output.hairpin}
 
-        grep -A 1 --no-group-separator '{params.species}' {output.mature} > {output.mature_species}
-        grep -A 1 --no-group-separator '{params.species}' {output.hairpin} > {output.hairpin_species}
+        grep -A 1 --no-group-separator '{params.species}' {output.mature} | bash {params.dedupe_script} > {output.mature_species}
+        grep -A 1 --no-group-separator '{params.species}' {output.hairpin} | bash {params.dedupe_script} > {output.hairpin_species}
 
         {{
             grep -ce '>' {output.mature}
