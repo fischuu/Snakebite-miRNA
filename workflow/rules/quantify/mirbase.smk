@@ -32,6 +32,7 @@ rule quantify__samtools__mirbase_star:
     shell:
         """
         exec > {log} 2>&1
+        set +u
         sort_tmp=""
         for candidate in "{params.nvme_dir}" "{params.tmp_dir}" "{params.fallback_dir}"; do
             [ -z "$candidate" ] && continue
@@ -45,6 +46,7 @@ rule quantify__samtools__mirbase_star:
             exit 1
         fi
         echo "using sort scratch directory: $sort_tmp"
+        set -u
 
         samtools view -F 256 {input.mature} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.mature}
         samtools view -F 256 {input.mature_species} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.mature_species}
