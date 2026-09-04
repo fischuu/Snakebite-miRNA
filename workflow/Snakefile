@@ -119,6 +119,7 @@ rule all:
         rules.align.input,
         rules.novel_mirna.input,
         rules.quantify.input,
+        rules.report.input,
 
 
 # ------------------------------------------------------------------------------
