@@ -28,10 +28,10 @@ rule quantify__samtools__mirbase_star:
     shell:
         """
         exec > {log} 2>&1
-        samtools view -F 256 {input.mature} | cut -f3 | sort | uniq -c > {output.mature}
-        samtools view -F 256 {input.mature_species} | cut -f3 | sort | uniq -c > {output.mature_species}
-        samtools view -F 256 {input.hairpin} | cut -f3 | sort | uniq -c > {output.hairpin}
-        samtools view -F 256 {input.hairpin_species} | cut -f3 | sort | uniq -c > {output.hairpin_species}
+        samtools view -F 256 {input.mature} | cut -f3 | sort -T "$(dirname {output.mature})" | uniq -c > {output.mature}
+        samtools view -F 256 {input.mature_species} | cut -f3 | sort -T "$(dirname {output.mature_species})" | uniq -c > {output.mature_species}
+        samtools view -F 256 {input.hairpin} | cut -f3 | sort -T "$(dirname {output.hairpin})" | uniq -c > {output.hairpin}
+        samtools view -F 256 {input.hairpin_species} | cut -f3 | sort -T "$(dirname {output.hairpin_species})" | uniq -c > {output.hairpin_species}
         """
 
 rule quantify__bedtools__novel_mirna:
