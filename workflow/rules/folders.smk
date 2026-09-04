@@ -2,6 +2,13 @@
 SCRIPT_FOLDER = os.path.join(config["pipeline_folder"], "workflow", "scripts")
 WD = os.getcwd()
 
+# Guaranteed-available scratch fallback for tools (e.g. GNU sort -T) that need
+# a writable tmp directory: nvme_storage/tmp_storage (config.yaml) may point at
+# per-job cluster paths that aren't necessarily visible inside a container, so
+# rules that use this probe those first and fall back to this project-local
+# directory, which always exists and is on the same storage as results/.
+PROJECT_TMP = Path("tmp/")
+
 # reads
 READS = Path("results/reads/")
 

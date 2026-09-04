@@ -14,6 +14,10 @@ rule quantify__samtools__mirbase_star:
         QUANT_STAR / "mirbase" / "{sample_id}.log"
     benchmark:
         QUANT_STAR / "mirbase" / "benchmark/{sample_id}.tsv"
+    params:
+        nvme_dir=config["nvme_storage"],
+        tmp_dir=config["tmp_storage"],
+        fallback_dir=str(PROJECT_TMP),
     threads: esc("cpus", "quantify__samtools__mirbase_star")
     resources:
         runtime=esc("runtime", "quantify__samtools__mirbase_star"),
@@ -28,10 +32,24 @@ rule quantify__samtools__mirbase_star:
     shell:
         """
         exec > {log} 2>&1
-        samtools view -F 256 {input.mature} | cut -f3 | sort -T "$(dirname {output.mature})" | uniq -c > {output.mature}
-        samtools view -F 256 {input.mature_species} | cut -f3 | sort -T "$(dirname {output.mature_species})" | uniq -c > {output.mature_species}
-        samtools view -F 256 {input.hairpin} | cut -f3 | sort -T "$(dirname {output.hairpin})" | uniq -c > {output.hairpin}
-        samtools view -F 256 {input.hairpin_species} | cut -f3 | sort -T "$(dirname {output.hairpin_species})" | uniq -c > {output.hairpin_species}
+        sort_tmp=""
+        for candidate in "{params.nvme_dir}" "{params.tmp_dir}" "{params.fallback_dir}"; do
+            [ -z "$candidate" ] && continue
+            if mkdir -p "$candidate" 2>/dev/null && [ -w "$candidate" ]; then
+                sort_tmp="$candidate"
+                break
+            fi
+        done
+        if [ -z "$sort_tmp" ]; then
+            echo "ERROR: no writable temp directory found among nvme_storage, tmp_storage, and the project's own tmp/ folder" >&2
+            exit 1
+        fi
+        echo "using sort scratch directory: $sort_tmp"
+
+        samtools view -F 256 {input.mature} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.mature}
+        samtools view -F 256 {input.mature_species} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.mature_species}
+        samtools view -F 256 {input.hairpin} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.hairpin}
+        samtools view -F 256 {input.hairpin_species} | cut -f3 | sort -T "$sort_tmp" | uniq -c > {output.hairpin_species}
         """
 
 rule quantify__bedtools__novel_mirna:
