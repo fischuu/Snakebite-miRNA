@@ -6,6 +6,19 @@
 
 Version 1.0.*:
 --------------------------------------------------------------------------------
+5: The defaults are for CSC's Roihu now, as Puhti and Mahti were retired on 15 October 2026. On
+   Puhti's values, jobs stopped with "Requested node configuration is not available". Your
+   project has its own copy of these files, and an update of the pipeline doesn't touch them, so
+   change them there. In config/config.yaml, take over tmp_storage, nvme_storage and the whole
+   block resource_sets. In your profile, remove the line with gres. In your run script, load
+   Snakemake with "module load bio-apps/v202603" and "module load snakemake/9.14.0", or keep
+   yours if it works.
+   No set asks for --gres=nvme anymore, which on Roihu only exists on the hugemem nodes. Time
+   limits fit the partitions, highmem runs on the large nodes of small, and full_node is a whole
+   node of medium, which no rule uses by default. The local disk is $TMPDIR, as CSC asks, because
+   $LOCAL_SCRATCH isn't there in a normal job. Only the temporary files of sort in
+   quantify__samtools__mirbase_star go there.
+   New test: tests/resources/check_resource_sets.py.
 1: Complete rewrite onto the Snakebite module/escalation/docker architecture (as used by
    Snakebite-Holoruminant-MetaG): module-per-directory rule layout, config/ split into
    config.yaml/features.yaml/params.yaml/.docker.yml/escalation.yaml/samples.tsv, per-rule

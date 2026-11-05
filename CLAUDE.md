@@ -15,8 +15,9 @@ It runs on HPC (SLURM) with every tool delivered as a Singularity/Apptainer cont
 
 ## Running the pipeline
 
-There is no build step and no test suite. All "development" happens by editing `.smk` rule
-files and dry-running Snakemake.
+There is no build step, and the only test is `tests/resources/check_resource_sets.py`, which
+checks the resource sets against the published limits of CSC's Roihu. All "development" happens by
+editing `.smk` rule files and dry-running Snakemake.
 
 The pipeline is invoked through the wrapper script, never by calling `snakemake` directly:
 
@@ -73,8 +74,9 @@ Everything a user needs to change lives in `config/`, loaded once at the top of
 - `config/.docker.yml` — one container image per tool (not per module — this pipeline mixes
   several distinct tools per module, e.g. `align` uses both `bowtie` and `star` and
   `samtools`).
-- `config/profiles/<cluster>/config.yaml` — SLURM executor profile; copy `Puhti/` for a new
-  cluster.
+- `config/profiles/<cluster>/config.yaml` — SLURM executor profile; copy `Roihu/` for a new
+  cluster. The default `resource_sets` are for CSC's Roihu, where `--gres=nvme` exists only on
+  hugemem, so `nvme` stays empty and the local disk is `$TMPDIR`.
 
 `workflow/Snakefile` parses `samples.tsv` into `SAMPLES` (unique `sample_id`s) and
 `SAMPLE_LIBRARY` (`(sample_id, library_id)` pairs) globals used throughout the rule files.
@@ -132,6 +134,14 @@ Identical mechanism to Snakebite-Holoruminant-MetaG: every rule uses
 of `workflow/Snakefile` forces `r.retries = 0` for any rule whose escalation list has ≤1
 entry. Follow the existing pattern when adding a new rule, and add an entry to
 `escalation.yaml` if it needs more than the default 3-tier escalation.
+
+### Temporary storage
+
+Only `quantify__samtools__mirbase_star` reads `nvme_storage` and `tmp_storage`, for `sort -T` in
+`count_forward_strand.sh`. It takes the first writable folder of those two and `tmp/` of the
+project, and it reads them inside `set +u`, as they can be unset variables. `$TMPDIR` has 20 GiB
+in Roihu's `small`, and the rule has a single resource set, so a full disk wouldn't get a retry. To
+use the project's `tmp/` instead, set both to `""`. No rule reads `shm_storage`.
 
 ### Report module
 
