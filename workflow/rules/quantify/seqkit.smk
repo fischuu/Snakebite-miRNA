@@ -17,7 +17,6 @@ rule quantify__seqkit__mature_bowtie:
         slurm_partition=esc("partition", "quantify__seqkit__mature_bowtie"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'quantify__seqkit__mature_bowtie')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("quantify__seqkit__mature_bowtie"))
     container:
         docker["seqkit"]
     shell:
@@ -47,7 +46,6 @@ rule quantify__seqkit__mature_species_bowtie:
         slurm_partition=esc("partition", "quantify__seqkit__mature_species_bowtie"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'quantify__seqkit__mature_species_bowtie')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("quantify__seqkit__mature_species_bowtie"))
     container:
         docker["seqkit"]
     shell:
@@ -76,7 +74,6 @@ rule quantify__seqkit__hairpin_bowtie:
         slurm_partition=esc("partition", "quantify__seqkit__hairpin_bowtie"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'quantify__seqkit__hairpin_bowtie')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("quantify__seqkit__hairpin_bowtie"))
     container:
         docker["seqkit"]
     shell:

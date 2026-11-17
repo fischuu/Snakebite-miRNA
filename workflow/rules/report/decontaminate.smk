@@ -24,7 +24,6 @@ rule report__decontaminate:
         slurm_partition=esc("partition", "report__decontaminate"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'report__decontaminate')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("report__decontaminate"))
     shell:
         """
         exec > {log} 2>&1

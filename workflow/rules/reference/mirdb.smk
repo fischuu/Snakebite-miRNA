@@ -24,7 +24,6 @@ rule reference__mirdb__prepare:
         slurm_partition=esc("partition", "reference__mirdb__prepare"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__mirdb__prepare')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__mirdb__prepare"))
     container:
         docker["bowtie"]
     shell:

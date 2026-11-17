@@ -23,7 +23,6 @@ rule decontaminate__bowtie__phix:
         slurm_partition=esc("partition", "decontaminate__bowtie__phix"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__bowtie__phix')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__bowtie__phix"))
     container:
         docker["bowtie"]
     shell:
@@ -54,7 +53,6 @@ rule decontaminate__samtools__phix_flagstat:
         slurm_partition=esc("partition", "decontaminate__samtools__phix_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__samtools__phix_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__samtools__phix_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -86,7 +84,6 @@ rule decontaminate__fastqc__phix:
         slurm_partition=esc("partition", "decontaminate__fastqc__phix"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__fastqc__phix')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__fastqc__phix"))
     container:
         docker["fastqc"]
     shell:
@@ -117,7 +114,6 @@ rule decontaminate__multiqc__phix:
         slurm_partition=esc("partition", "decontaminate__multiqc__phix"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__multiqc__phix')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__multiqc__phix"))
     container:
         docker["multiqc"]
     shell:

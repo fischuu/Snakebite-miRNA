@@ -23,7 +23,6 @@ rule decontaminate__bowtie__trna:
         slurm_partition=esc("partition", "decontaminate__bowtie__trna"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__bowtie__trna')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__bowtie__trna"))
     container:
         docker["bowtie"]
     shell:
@@ -57,7 +56,6 @@ rule decontaminate__samtools__trna_flagstat:
         slurm_partition=esc("partition", "decontaminate__samtools__trna_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__samtools__trna_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__samtools__trna_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -92,7 +90,6 @@ rule decontaminate__fastqc__trna:
         slurm_partition=esc("partition", "decontaminate__fastqc__trna"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__fastqc__trna')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__fastqc__trna"))
     container:
         docker["fastqc"]
     shell:
@@ -123,7 +120,6 @@ rule decontaminate__multiqc__trna:
         slurm_partition=esc("partition", "decontaminate__multiqc__trna"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'decontaminate__multiqc__trna')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("decontaminate__multiqc__trna"))
     container:
         docker["multiqc"]
     shell:

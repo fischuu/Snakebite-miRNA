@@ -23,7 +23,6 @@ rule align__extract_softclipped__run:
         slurm_partition=esc("partition", "align__extract_softclipped__run"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__extract_softclipped__run')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__extract_softclipped__run"))
     shell:
         """
         exec > {log} 2>&1

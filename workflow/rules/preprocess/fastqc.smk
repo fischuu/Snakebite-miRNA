@@ -18,7 +18,6 @@ rule preprocess__fastqc__trimmed:
         slurm_partition=esc("partition", "preprocess__fastqc__trimmed"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__fastqc__trimmed')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("preprocess__fastqc__trimmed"))
     container:
         docker["fastqc"]
     shell:
@@ -49,7 +48,6 @@ rule preprocess__multiqc__trimmed:
         slurm_partition=esc("partition", "preprocess__multiqc__trimmed"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__multiqc__trimmed')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("preprocess__multiqc__trimmed"))
     container:
         docker["multiqc"]
     shell:
@@ -78,7 +76,6 @@ rule preprocess__fastqc__concatenated:
         slurm_partition=esc("partition", "preprocess__fastqc__concatenated"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__fastqc__concatenated')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("preprocess__fastqc__concatenated"))
     container:
         docker["fastqc"]
     shell:
@@ -106,7 +103,6 @@ rule preprocess__multiqc__concatenated:
         slurm_partition=esc("partition", "preprocess__multiqc__concatenated"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__multiqc__concatenated')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("preprocess__multiqc__concatenated"))
     container:
         docker["multiqc"]
     shell:

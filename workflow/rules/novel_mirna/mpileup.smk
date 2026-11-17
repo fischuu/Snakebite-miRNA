@@ -22,7 +22,6 @@ rule novel_mirna__samtools__mpileup:
         slurm_partition=esc("partition", "novel_mirna__samtools__mpileup"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'novel_mirna__samtools__mpileup')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("novel_mirna__samtools__mpileup"))
     container:
         docker["samtools"]
     shell:
@@ -55,7 +54,6 @@ rule novel_mirna__bedtools__join_loci:
         slurm_partition=esc("partition", "novel_mirna__bedtools__join_loci"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'novel_mirna__bedtools__join_loci')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("novel_mirna__bedtools__join_loci"))
     container:
         docker["bedtools"]
     shell:
@@ -91,7 +89,6 @@ rule novel_mirna__bedtools__intersect_annotation:
         slurm_partition=esc("partition", "novel_mirna__bedtools__intersect_annotation"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'novel_mirna__bedtools__intersect_annotation')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("novel_mirna__bedtools__intersect_annotation"))
     container:
         docker["bedtools"]
     shell:

@@ -20,7 +20,6 @@ rule quantify__featurecounts__genome_bowtie:
         slurm_partition=esc("partition", "quantify__featurecounts__genome_bowtie"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'quantify__featurecounts__genome_bowtie')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("quantify__featurecounts__genome_bowtie"))
     container:
         docker["subread"]
     shell:
@@ -55,7 +54,6 @@ rule quantify__featurecounts__genome_star:
         slurm_partition=esc("partition", "quantify__featurecounts__genome_star"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'quantify__featurecounts__genome_star')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("quantify__featurecounts__genome_star"))
     container:
         docker["subread"]
     shell:

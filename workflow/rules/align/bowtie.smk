@@ -23,7 +23,6 @@ rule align__bowtie__mature:
         slurm_partition=esc("partition", "align__bowtie__mature"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__bowtie__mature')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__bowtie__mature"))
     container:
         docker["bowtie"]
     shell:
@@ -55,7 +54,6 @@ rule align__samtools__mature_flagstat:
         slurm_partition=esc("partition", "align__samtools__mature_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__mature_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__mature_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -91,7 +89,6 @@ rule align__bowtie__mature_species:
         slurm_partition=esc("partition", "align__bowtie__mature_species"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__bowtie__mature_species')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__bowtie__mature_species"))
     container:
         docker["bowtie"]
     shell:
@@ -123,7 +120,6 @@ rule align__samtools__mature_species_flagstat:
         slurm_partition=esc("partition", "align__samtools__mature_species_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__mature_species_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__mature_species_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -159,7 +155,6 @@ rule align__bowtie__hairpin:
         slurm_partition=esc("partition", "align__bowtie__hairpin"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__bowtie__hairpin')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__bowtie__hairpin"))
     container:
         docker["bowtie"]
     shell:
@@ -191,7 +186,6 @@ rule align__samtools__hairpin_flagstat:
         slurm_partition=esc("partition", "align__samtools__hairpin_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__hairpin_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__hairpin_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -232,7 +226,6 @@ rule align__bowtie__genome:
         slurm_partition=esc("partition", "align__bowtie__genome"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__bowtie__genome')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__bowtie__genome"))
     container:
         docker["bowtie"]
     shell:
@@ -264,7 +257,6 @@ rule align__samtools__genome_flagstat:
         slurm_partition=esc("partition", "align__samtools__genome_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__genome_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__genome_flagstat"))
     container:
         docker["samtools"]
     shell:

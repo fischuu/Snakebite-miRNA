@@ -20,7 +20,6 @@ rule align__fastqc__mature:
         slurm_partition=esc("partition", "align__fastqc__mature"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__fastqc__mature')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__fastqc__mature"))
     container:
         docker["fastqc"]
     shell:
@@ -51,7 +50,6 @@ rule align__multiqc__mature:
         slurm_partition=esc("partition", "align__multiqc__mature"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__multiqc__mature')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__multiqc__mature"))
     container:
         docker["multiqc"]
     shell:
@@ -83,7 +81,6 @@ rule align__fastqc__hairpin:
         slurm_partition=esc("partition", "align__fastqc__hairpin"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__fastqc__hairpin')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__fastqc__hairpin"))
     container:
         docker["fastqc"]
     shell:
@@ -114,7 +111,6 @@ rule align__multiqc__hairpin:
         slurm_partition=esc("partition", "align__multiqc__hairpin"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__multiqc__hairpin')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__multiqc__hairpin"))
     container:
         docker["multiqc"]
     shell:

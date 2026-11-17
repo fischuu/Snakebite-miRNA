@@ -16,7 +16,6 @@ rule reference__bowtie_index__trna:
         slurm_partition=esc("partition", "reference__bowtie_index__trna"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__trna')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__trna"))
     container:
         docker["bowtie"]
     shell:
@@ -41,7 +40,6 @@ rule reference__bowtie_index__phix:
         slurm_partition=esc("partition", "reference__bowtie_index__phix"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__phix')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__phix"))
     container:
         docker["bowtie"]
     shell:
@@ -65,7 +63,6 @@ rule reference__bowtie_index__mature:
         slurm_partition=esc("partition", "reference__bowtie_index__mature"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__mature')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__mature"))
     container:
         docker["bowtie"]
     shell:
@@ -89,7 +86,6 @@ rule reference__bowtie_index__mature_species:
         slurm_partition=esc("partition", "reference__bowtie_index__mature_species"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__mature_species')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__mature_species"))
     container:
         docker["bowtie"]
     shell:
@@ -113,7 +109,6 @@ rule reference__bowtie_index__hairpin:
         slurm_partition=esc("partition", "reference__bowtie_index__hairpin"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__hairpin')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__hairpin"))
     container:
         docker["bowtie"]
     shell:
@@ -137,7 +132,6 @@ rule reference__bowtie_index__hairpin_species:
         slurm_partition=esc("partition", "reference__bowtie_index__hairpin_species"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__hairpin_species')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__hairpin_species"))
     container:
         docker["bowtie"]
     shell:
@@ -161,7 +155,6 @@ rule reference__bowtie_index__genome:
         slurm_partition=esc("partition", "reference__bowtie_index__genome"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'reference__bowtie_index__genome')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("reference__bowtie_index__genome"))
     container:
         docker["bowtie"]
     shell:

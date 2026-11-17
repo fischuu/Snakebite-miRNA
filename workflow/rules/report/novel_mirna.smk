@@ -24,7 +24,6 @@ rule report__novel_mirna:
         slurm_partition=esc("partition", "report__novel_mirna"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'report__novel_mirna')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("report__novel_mirna"))
     shell:
         """
         exec > {log} 2>&1

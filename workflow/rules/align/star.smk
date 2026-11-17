@@ -23,7 +23,6 @@ rule align__star__mature:
         slurm_partition=esc("partition", "align__star__mature"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__star__mature')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__star__mature"))
     container:
         docker["star"]
     shell:
@@ -64,7 +63,6 @@ rule align__samtools__star_mature_flagstat:
         slurm_partition=esc("partition", "align__samtools__star_mature_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__star_mature_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__star_mature_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -102,7 +100,6 @@ rule align__star__mature_species:
         slurm_partition=esc("partition", "align__star__mature_species"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__star__mature_species')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__star__mature_species"))
     container:
         docker["star"]
     shell:
@@ -143,7 +140,6 @@ rule align__samtools__star_mature_species_flagstat:
         slurm_partition=esc("partition", "align__samtools__star_mature_species_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__star_mature_species_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__star_mature_species_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -181,7 +177,6 @@ rule align__star__hairpin:
         slurm_partition=esc("partition", "align__star__hairpin"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__star__hairpin')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__star__hairpin"))
     container:
         docker["star"]
     shell:
@@ -222,7 +217,6 @@ rule align__samtools__star_hairpin_flagstat:
         slurm_partition=esc("partition", "align__samtools__star_hairpin_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__star_hairpin_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__star_hairpin_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -260,7 +254,6 @@ rule align__star__hairpin_species:
         slurm_partition=esc("partition", "align__star__hairpin_species"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__star__hairpin_species')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__star__hairpin_species"))
     container:
         docker["star"]
     shell:
@@ -301,7 +294,6 @@ rule align__samtools__star_hairpin_species_flagstat:
         slurm_partition=esc("partition", "align__samtools__star_hairpin_species_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__star_hairpin_species_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__star_hairpin_species_flagstat"))
     container:
         docker["samtools"]
     shell:
@@ -339,7 +331,6 @@ rule align__star__genome:
         slurm_partition=esc("partition", "align__star__genome"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__star__genome')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__star__genome"))
     container:
         docker["star"]
     shell:
@@ -377,7 +368,6 @@ rule align__samtools__remove_secondary:
         slurm_partition=esc("partition", "align__samtools__remove_secondary"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__remove_secondary')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__remove_secondary"))
     container:
         docker["samtools"]
     shell:
@@ -408,7 +398,6 @@ rule align__samtools__star_genome_flagstat:
         slurm_partition=esc("partition", "align__samtools__star_genome_flagstat"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'align__samtools__star_genome_flagstat')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("align__samtools__star_genome_flagstat"))
     container:
         docker["samtools"]
     shell:

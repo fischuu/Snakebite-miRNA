@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Stands in for bowtie-build in the escalation test: a job with less memory than this fails, and leaves
+# a partial index, which is the case that would go unnoticed. Arguments: <reference> <index prefix>
+prefix=${2:?usage: bowtie-build <reference> <index prefix>}
+if [ "${SLURM_MEM_PER_NODE:-0}" -lt 400 ]; then
+    echo partial > "$prefix.1.ebwt"
+    echo "Pretending to run out of memory with ${SLURM_MEM_PER_NODE:-0} MB" >&2
+    exit 1
+fi
+echo index > "$prefix.1.ebwt"

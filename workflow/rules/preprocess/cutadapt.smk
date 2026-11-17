@@ -25,7 +25,6 @@ rule preprocess__cutadapt__run:
         slurm_partition=esc("partition", "preprocess__cutadapt__run"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'preprocess__cutadapt__run')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("preprocess__cutadapt__run"))
     container:
         docker["cutadapt"]
     shell:

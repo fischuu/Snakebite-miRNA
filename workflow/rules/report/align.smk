@@ -24,7 +24,6 @@ rule report__align:
         slurm_partition=esc("partition", "report__align"),
         gres=lambda wc, attempt: f"{get_resources(wc, attempt, 'report__align')['nvme']}",
         attempt=get_attempt,
-    retries: len(get_escalation_order("report__align"))
     shell:
         """
         exec > {log} 2>&1
